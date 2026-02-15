@@ -23,7 +23,7 @@ export default function Maintenance() {
     function handleSubmit(e) { e.preventDefault(); const d = { ...form, cost: Number(form.cost) || 0 }; if (editingId) updateMaintenanceRecord(editingId, d); else addMaintenanceRecord(d); setShowForm(false); }
 
     return (
-        <div style={{ maxWidth: 900 }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
             <div className="section-header"><div><h1 className="section-title">Maintenance</h1><p className="section-subtitle">{maintenanceRecords.filter(m => m.status === 'open').length} open issues</p></div><button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Log Issue</button></div>
 
             {maintenanceRecords.length > 0 && (

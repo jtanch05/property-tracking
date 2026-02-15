@@ -23,7 +23,7 @@ export default function Vendors() {
     function handleSubmit(e) { e.preventDefault(); if (!form.name.trim()) return; const d = { ...form, rating: Number(form.rating) || 0 }; if (editingId) updateVendor(editingId, d); else addVendor(d); setShowForm(false); }
 
     return (
-        <div style={{ maxWidth: 900 }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
             <div className="section-header"><div><h1 className="section-title">Vendors</h1><p className="section-subtitle">{vendors.length} saved contacts</p></div><button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Add Vendor</button></div>
 
             {vendors.length > 0 && (

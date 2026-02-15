@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useMemo } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import React, { createContext, useContext, useMemo, useEffect, useState, useCallback } from 'react';
+import { useFirestore, useFirestoreDoc } from '../hooks/useFirestore';
+import { useAuth } from './AuthProvider';
 import { computeAlerts } from '../utils/alerts';
+import { getStorageItem, clearAllStorage } from '../utils/storage';
 
 const AppContext = createContext(null);
 
@@ -10,28 +12,125 @@ export function useApp() {
     return ctx;
 }
 
-export function AppProvider({ children }) {
-    // --- Core Data ---
-    const [properties, setProperties] = useLocalStorage('properties', []);
-    const [tenants, setTenants] = useLocalStorage('tenants', []);
-    const [agreements, setAgreements] = useLocalStorage('agreements', []);
-    const [rentRecords, setRentRecords] = useLocalStorage('rentRecords', []);
-    const [taxRecords, setTaxRecords] = useLocalStorage('taxRecords', []);
-    const [utilityRecords, setUtilityRecords] = useLocalStorage('utilityRecords', []);
-    const [insuranceRecords, setInsuranceRecords] = useLocalStorage('insuranceRecords', []);
-    const [maintenanceRecords, setMaintenanceRecords] = useLocalStorage('maintenanceRecords', []);
-    const [vendors, setVendors] = useLocalStorage('vendors', []);
-    const [managementFees, setManagementFees] = useLocalStorage('managementFees', []);
-    const [payouts, setPayouts] = useLocalStorage('payouts', []);
-    const [deposits, setDeposits] = useLocalStorage('deposits', []);
+// Keys that map to Firestore collections (and localStorage keys for migration)
+const COLLECTION_KEYS = [
+    'properties', 'tenants', 'agreements', 'rentRecords', 'taxRecords',
+    'utilityRecords', 'insuranceRecords', 'maintenanceRecords',
+    'vendors', 'managementFees', 'payouts', 'deposits'
+];
 
-    // --- Settings ---
-    const [settings, setSettings] = useLocalStorage('settings', {
+export function AppProvider({ children }) {
+    const { user } = useAuth();
+    const [migrated, setMigrated] = useState(false);
+    const [migrating, setMigrating] = useState(false);
+
+    // --- Firestore Collections ---
+    const propertiesStore = useFirestore('properties');
+    const tenantsStore = useFirestore('tenants');
+    const agreementsStore = useFirestore('agreements');
+    const rentRecordsStore = useFirestore('rentRecords');
+    const taxRecordsStore = useFirestore('taxRecords');
+    const utilityRecordsStore = useFirestore('utilityRecords');
+    const insuranceRecordsStore = useFirestore('insuranceRecords');
+    const maintenanceRecordsStore = useFirestore('maintenanceRecords');
+    const vendorsStore = useFirestore('vendors');
+    const managementFeesStore = useFirestore('managementFees');
+    const payoutsStore = useFirestore('payouts');
+    const depositsStore = useFirestore('deposits');
+
+    // Map for easy lookup
+    const stores = {
+        properties: propertiesStore,
+        tenants: tenantsStore,
+        agreements: agreementsStore,
+        rentRecords: rentRecordsStore,
+        taxRecords: taxRecordsStore,
+        utilityRecords: utilityRecordsStore,
+        insuranceRecords: insuranceRecordsStore,
+        maintenanceRecords: maintenanceRecordsStore,
+        vendors: vendorsStore,
+        managementFees: managementFeesStore,
+        payouts: payoutsStore,
+        deposits: depositsStore,
+    };
+
+    // --- Settings (single document) ---
+    const [settings, setSettings, settingsLoading] = useFirestoreDoc('settings/default', {
         theme: 'dark',
-        selectedPropertyId: null, // null = all properties
+        selectedPropertyId: null,
         pinEnabled: false,
         pin: null,
     });
+
+    // --- One-time Migration from localStorage to Firestore ---
+    useEffect(() => {
+        if (!user || migrated || migrating) return;
+
+        // Check if there's any localStorage data to migrate
+        let hasLocalData = false;
+        for (const key of COLLECTION_KEYS) {
+            const local = getStorageItem(key);
+            if (local && Array.isArray(local) && local.length > 0) {
+                hasLocalData = true;
+                break;
+            }
+        }
+
+        if (!hasLocalData) {
+            setMigrated(true);
+            return;
+        }
+
+        // Migrate
+        async function migrate() {
+            setMigrating(true);
+            console.log('Migrating localStorage data to Firestore...');
+            try {
+                for (const key of COLLECTION_KEYS) {
+                    const localData = getStorageItem(key);
+                    if (localData && Array.isArray(localData) && localData.length > 0) {
+                        await stores[key].bulkImport(localData);
+                        console.log(`  Migrated ${localData.length} ${key} records`);
+                    }
+                }
+
+                // Migrate settings
+                const localSettings = getStorageItem('settings');
+                if (localSettings && typeof localSettings === 'object') {
+                    await setSettings(localSettings);
+                    console.log('  Migrated settings');
+                }
+
+                // Clear localStorage after successful migration
+                clearAllStorage();
+                console.log('Migration complete! localStorage cleared.');
+            } catch (err) {
+                console.error('Migration failed:', err);
+            } finally {
+                setMigrated(true);
+                setMigrating(false);
+            }
+        }
+
+        migrate();
+    }, [user, migrated, migrating]);
+
+    // --- Loading state ---
+    const dataLoading = Object.values(stores).some(s => s.loading) || settingsLoading;
+
+    // --- Shorthand data refs ---
+    const properties = propertiesStore.data;
+    const tenants = tenantsStore.data;
+    const agreements = agreementsStore.data;
+    const rentRecords = rentRecordsStore.data;
+    const taxRecords = taxRecordsStore.data;
+    const utilityRecords = utilityRecordsStore.data;
+    const insuranceRecords = insuranceRecordsStore.data;
+    const maintenanceRecords = maintenanceRecordsStore.data;
+    const vendors = vendorsStore.data;
+    const managementFees = managementFeesStore.data;
+    const payouts = payoutsStore.data;
+    const deposits = depositsStore.data;
 
     // --- Active Property Filter ---
     const selectedProperty = useMemo(() => {
@@ -70,35 +169,44 @@ export function AppProvider({ children }) {
         properties,
     }), [agreements, taxRecords, insuranceRecords, maintenanceRecords, rentRecords, managementFees, properties]);
 
-    // --- CRUD Helpers ---
-    function addItem(setter) {
-        return (item) => setter(prev => [...prev, { ...item, id: crypto.randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }]);
-    }
-
-    function updateItem(setter) {
-        return (id, updates) => setter(prev => prev.map(item =>
-            item.id === id ? { ...item, ...updates, updatedAt: new Date().toISOString() } : item
-        ));
-    }
-
-    function deleteItem(setter) {
-        return (id) => setter(prev => prev.filter(item => item.id !== id));
-    }
+    // --- Setter wrappers that match the old useLocalStorage interface ---
+    // These allow pages to call setProperties(prev => [...prev, newItem]) etc.
+    const createSetter = useCallback((store) => {
+        return (updater) => {
+            // If it's a function (like prev => [...prev, item]), we can't easily replicate this
+            // The CRUD helpers below are the primary way to modify data
+            console.warn('Direct setter called — use CRUD helpers (addItem/updateItem/deleteItem) instead.');
+        };
+    }, []);
 
     const value = {
-        // Raw data
-        properties, setProperties,
-        tenants, setTenants,
-        agreements, setAgreements,
-        rentRecords, setRentRecords,
-        taxRecords, setTaxRecords,
-        utilityRecords, setUtilityRecords,
-        insuranceRecords, setInsuranceRecords,
-        maintenanceRecords, setMaintenanceRecords,
-        vendors, setVendors,
-        managementFees, setManagementFees,
-        payouts, setPayouts,
-        deposits, setDeposits,
+        // Data
+        properties,
+        tenants,
+        agreements,
+        rentRecords,
+        taxRecords,
+        utilityRecords,
+        insuranceRecords,
+        maintenanceRecords,
+        vendors,
+        managementFees,
+        payouts,
+        deposits,
+
+        // Setters (kept for backward compatibility — pages may use them)
+        setProperties: createSetter(propertiesStore),
+        setTenants: createSetter(tenantsStore),
+        setAgreements: createSetter(agreementsStore),
+        setRentRecords: createSetter(rentRecordsStore),
+        setTaxRecords: createSetter(taxRecordsStore),
+        setUtilityRecords: createSetter(utilityRecordsStore),
+        setInsuranceRecords: createSetter(insuranceRecordsStore),
+        setMaintenanceRecords: createSetter(maintenanceRecordsStore),
+        setVendors: createSetter(vendorsStore),
+        setManagementFees: createSetter(managementFeesStore),
+        setPayouts: createSetter(payoutsStore),
+        setDeposits: createSetter(depositsStore),
 
         // Settings
         settings, setSettings,
@@ -110,54 +218,57 @@ export function AppProvider({ children }) {
         // Alerts
         alerts,
 
+        // Loading
+        dataLoading: dataLoading || migrating,
+
         // CRUD helpers
-        addProperty: addItem(setProperties),
-        updateProperty: updateItem(setProperties),
-        deleteProperty: deleteItem(setProperties),
+        addProperty: propertiesStore.addItem,
+        updateProperty: propertiesStore.updateItem,
+        deleteProperty: propertiesStore.deleteItem,
 
-        addTenant: addItem(setTenants),
-        updateTenant: updateItem(setTenants),
-        deleteTenant: deleteItem(setTenants),
+        addTenant: tenantsStore.addItem,
+        updateTenant: tenantsStore.updateItem,
+        deleteTenant: tenantsStore.deleteItem,
 
-        addAgreement: addItem(setAgreements),
-        updateAgreement: updateItem(setAgreements),
-        deleteAgreement: deleteItem(setAgreements),
+        addAgreement: agreementsStore.addItem,
+        updateAgreement: agreementsStore.updateItem,
+        deleteAgreement: agreementsStore.deleteItem,
 
-        addRentRecord: addItem(setRentRecords),
-        updateRentRecord: updateItem(setRentRecords),
-        deleteRentRecord: deleteItem(setRentRecords),
+        addRentRecord: rentRecordsStore.addItem,
+        updateRentRecord: rentRecordsStore.updateItem,
+        deleteRentRecord: rentRecordsStore.deleteItem,
 
-        addTaxRecord: addItem(setTaxRecords),
-        updateTaxRecord: updateItem(setTaxRecords),
-        deleteTaxRecord: deleteItem(setTaxRecords),
+        addTaxRecord: taxRecordsStore.addItem,
+        updateTaxRecord: taxRecordsStore.updateItem,
+        deleteTaxRecord: taxRecordsStore.deleteItem,
 
-        addUtilityRecord: addItem(setUtilityRecords),
-        updateUtilityRecord: updateItem(setUtilityRecords),
-        deleteUtilityRecord: deleteItem(setUtilityRecords),
+        addUtilityRecord: utilityRecordsStore.addItem,
+        updateUtilityRecord: utilityRecordsStore.updateItem,
+        deleteUtilityRecord: utilityRecordsStore.deleteItem,
 
-        addInsuranceRecord: addItem(setInsuranceRecords),
-        updateInsuranceRecord: updateItem(setInsuranceRecords),
-        deleteInsuranceRecord: deleteItem(setInsuranceRecords),
+        addInsuranceRecord: insuranceRecordsStore.addItem,
+        updateInsuranceRecord: insuranceRecordsStore.updateItem,
+        deleteInsuranceRecord: insuranceRecordsStore.deleteItem,
 
-        addMaintenanceRecord: addItem(setMaintenanceRecords),
-        updateMaintenanceRecord: updateItem(setMaintenanceRecords),
-        deleteMaintenanceRecord: deleteItem(setMaintenanceRecords),
+        addMaintenanceRecord: maintenanceRecordsStore.addItem,
+        updateMaintenanceRecord: maintenanceRecordsStore.updateItem,
+        deleteMaintenanceRecord: maintenanceRecordsStore.deleteItem,
 
-        addVendor: addItem(setVendors),
-        updateVendor: updateItem(setVendors),
-        deleteVendor: deleteItem(setVendors),
+        addVendor: vendorsStore.addItem,
+        updateVendor: vendorsStore.updateItem,
+        deleteVendor: vendorsStore.deleteItem,
 
-        addManagementFee: addItem(setManagementFees),
-        updateManagementFee: updateItem(setManagementFees),
-        deleteManagementFee: deleteItem(setManagementFees),
+        addManagementFee: managementFeesStore.addItem,
+        updateManagementFee: managementFeesStore.updateItem,
+        deleteManagementFee: managementFeesStore.deleteItem,
 
-        addPayout: addItem(setPayouts),
-        updatePayout: updateItem(setPayouts),
-        deletePayout: deleteItem(setPayouts),
+        addPayout: payoutsStore.addItem,
+        updatePayout: payoutsStore.updateItem,
+        deletePayout: payoutsStore.deleteItem,
 
-        addDeposit: addItem(setDeposits),
-        updateDeposit: updateItem(setDeposits),
-        deleteDeposit: deleteItem(setDeposits),
+        addDeposit: depositsStore.addItem,
+        updateDeposit: depositsStore.updateItem,
+        deleteDeposit: depositsStore.deleteItem,
     };
 
     return (

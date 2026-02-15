@@ -3,26 +3,57 @@ import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard, Building2, Users, FileText, Wallet,
     Receipt, Droplets, Shield, Wrench, Contact, Clock,
-    Settings, ChevronLeft, ChevronRight, Bell, Menu, Landmark, TrendingUp
+    Settings, ChevronLeft, ChevronRight, Bell, Menu, Landmark, TrendingUp, LogOut
 } from 'lucide-react';
 import { useApp } from '../../context/AppProvider';
+import { useAuth } from '../../context/AuthProvider';
 import './Layout.css';
 
-const NAV_ITEMS = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/properties', label: 'Properties', icon: Building2 },
-    { path: '/tenants', label: 'Tenants', icon: Users },
-    { path: '/agreements', label: 'Agreements', icon: FileText },
-    { path: '/rent', label: 'Rent & Deposits', icon: Wallet },
-    { path: '/taxes', label: 'Taxes', icon: Receipt },
-    { path: '/utilities', label: 'Utilities', icon: Droplets },
-    { path: '/insurance', label: 'Insurance', icon: Shield },
-    { path: '/maintenance', label: 'Maintenance', icon: Wrench },
-    { path: '/management-fees', label: 'Mgmt Fees', icon: Landmark },
-    { path: '/vendors', label: 'Vendors', icon: Contact },
-    { path: '/cashflow', label: 'Cash Flow', icon: TrendingUp },
-    { path: '/timeline', label: 'Timeline', icon: Clock },
-    { path: '/settings', label: 'Settings', icon: Settings },
+const NAV_SECTIONS = [
+    {
+        label: 'Overview',
+        items: [
+            { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+        ]
+    },
+    {
+        label: 'Management',
+        items: [
+            { path: '/properties', label: 'Properties', icon: Building2 },
+            { path: '/tenants', label: 'Tenants', icon: Users },
+            { path: '/agreements', label: 'Agreements', icon: FileText },
+        ]
+    },
+    {
+        label: 'Finance',
+        items: [
+            { path: '/cashflow', label: 'Cash Flow', icon: TrendingUp },
+            { path: '/rent', label: 'Rent & Deposits', icon: Wallet },
+        ]
+    },
+    {
+        label: 'Expenses',
+        items: [
+            { path: '/taxes', label: 'Taxes', icon: Receipt },
+            { path: '/utilities', label: 'Utilities', icon: Droplets },
+            { path: '/insurance', label: 'Insurance', icon: Shield },
+            { path: '/management-fees', label: 'Management Fees', icon: Landmark },
+        ]
+    },
+    {
+        label: 'Operations',
+        items: [
+            { path: '/maintenance', label: 'Maintenance', icon: Wrench },
+            { path: '/vendors', label: 'Vendors', icon: Contact },
+            { path: '/timeline', label: 'Timeline', icon: Clock },
+        ]
+    },
+    {
+        label: 'System',
+        items: [
+            { path: '/settings', label: 'Settings', icon: Settings },
+        ]
+    }
 ];
 
 // Mobile bottom nav — show only the most important items
@@ -36,7 +67,9 @@ const MOBILE_NAV_ITEMS = [
 
 export default function Layout({ children }) {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const { alerts, properties, settings, setSettings, selectedProperty } = useApp();
+    const { user, logout } = useAuth();
 
     const urgentAlerts = alerts.filter(a => a.severity === 'danger' || a.severity === 'warning');
 
@@ -80,16 +113,23 @@ export default function Layout({ children }) {
                 )}
 
                 <nav className="sidebar-nav">
-                    {NAV_ITEMS.map(item => (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                            title={item.label}
-                        >
-                            <item.icon size={20} />
-                            {!sidebarCollapsed && <span>{item.label}</span>}
-                        </NavLink>
+                    {NAV_SECTIONS.map((section, idx) => (
+                        <div key={idx} className="nav-section">
+                            {!sidebarCollapsed && section.label !== 'Overview' && (
+                                <div className="nav-section-header">{section.label}</div>
+                            )}
+                            {section.items.map(item => (
+                                <NavLink
+                                    key={item.path}
+                                    to={item.path}
+                                    className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                                    title={item.label}
+                                >
+                                    <item.icon size={20} />
+                                    {!sidebarCollapsed && <span>{item.label}</span>}
+                                </NavLink>
+                            ))}
+                        </div>
                     ))}
                 </nav>
             </aside>
@@ -115,6 +155,32 @@ export default function Layout({ children }) {
                                 <span className="alert-count">{urgentAlerts.length}</span>
                             )}
                         </NavLink>
+                        <div className="user-menu-wrapper">
+                            <button
+                                className="user-avatar-btn"
+                                onClick={() => setShowUserMenu(!showUserMenu)}
+                                title={user?.displayName || 'User'}
+                            >
+                                {user?.photoURL ? (
+                                    <img src={user.photoURL} alt="" className="user-avatar" referrerPolicy="no-referrer" />
+                                ) : (
+                                    <div className="user-avatar-fallback">
+                                        {(user?.displayName || 'U')[0].toUpperCase()}
+                                    </div>
+                                )}
+                            </button>
+                            {showUserMenu && (
+                                <div className="user-dropdown">
+                                    <div className="user-dropdown-info">
+                                        <span className="user-dropdown-name">{user?.displayName}</span>
+                                        <span className="user-dropdown-email">{user?.email}</span>
+                                    </div>
+                                    <button className="user-dropdown-item" onClick={() => { logout(); setShowUserMenu(false); }}>
+                                        <LogOut size={16} /> Sign out
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </header>
 

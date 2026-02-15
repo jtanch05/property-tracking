@@ -109,7 +109,7 @@ export default function CashFlow() {
     const maxBar = Math.max(...monthlyData.map(d => Math.max(d.income, d.expenses)), 1);
 
     return (
-        <div style={{ maxWidth: 960 }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
             <div className="section-header">
                 <div>
                     <h1 className="section-title">Cash Flow</h1>

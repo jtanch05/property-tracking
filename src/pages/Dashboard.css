@@ -1,11 +1,11 @@
-/* Dashboard Styles */
 .dashboard {
-    max-width: 900px;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--space-md);
     margin-bottom: var(--space-xl);
 }
@@ -15,6 +15,12 @@
     align-items: flex-start;
     gap: var(--space-md);
     padding: var(--space-lg);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .stat-icon {
@@ -44,12 +50,284 @@
     margin-top: 4px;
 }
 
-.dashboard-section {
+/* Dashboard Two-Column Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
     margin-bottom: var(--space-xl);
+}
+
+.dashboard-section {
+    margin-bottom: 0;
 }
 
 .dashboard-section .section-header {
     margin-bottom: var(--space-md);
+}
+
+/* Chart Legend */
+.chart-legend {
+    display: flex;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-md);
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+/* Bar Chart */
+.bar-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    height: 160px;
+    padding-top: 16px;
+}
+
+.bar-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 130px;
+}
+
+.bar {
+    width: 20px;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+    cursor: pointer;
+    min-height: 2px;
+}
+
+.bar:hover {
+    opacity: 0.8;
+}
+
+.bar-income {
+    background: var(--success);
+}
+
+.bar-expense {
+    background: var(--danger);
+    opacity: 0.75;
+}
+
+.bar-label {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+    font-weight: 500;
+}
+
+/* Expense Breakdown */
+.expense-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.breakdown-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 120px;
+    align-items: center;
+    gap: 12px;
+}
+
+.breakdown-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.breakdown-bar-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--bg-secondary);
+    overflow: hidden;
+}
+
+.breakdown-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 2px;
+}
+
+.breakdown-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.breakdown-amount {
+    font-size: var(--font-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.breakdown-pct {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+    min-width: 32px;
+    text-align: right;
+}
+
+.breakdown-total {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 12px;
+    margin-top: 4px;
+    border-top: 1px solid var(--border);
+    font-weight: 700;
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+}
+
+/* Activity List */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: 12px var(--space-lg);
+    border-bottom: 1px solid var(--border);
+    transition: background var(--transition-fast);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-item:hover {
+    background: var(--bg-hover);
+}
+
+.activity-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    flex-shrink: 0;
+}
+
+.activity-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.activity-label {
+    font-size: var(--font-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.activity-detail {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+}
+
+.activity-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.activity-amount {
+    font-size: var(--font-sm);
+    font-weight: 700;
+}
+
+.activity-amount.income {
+    color: var(--success);
+}
+
+.activity-amount.expense {
+    color: var(--danger);
+}
+
+.activity-date {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+}
+
+/* Occupancy Card */
+.occupancy-card {
+    padding: var(--space-lg) !important;
+}
+
+.occupancy-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.occupancy-label {
+    font-size: var(--font-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.occupancy-value {
+    font-size: var(--font-xl);
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.occupancy-bar-track {
+    height: 10px;
+    border-radius: 5px;
+    background: var(--bg-secondary);
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.occupancy-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.occupancy-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
 }
 
 /* Alert List */
@@ -116,14 +394,33 @@
     white-space: nowrap;
 }
 
+/* Responsive */
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 600px) {
     .stats-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
     }
 
     .stat-card {
         flex-direction: column;
         gap: var(--space-sm);
         padding: var(--space-md);
+    }
+
+    .breakdown-row {
+        grid-template-columns: 90px 1fr 90px;
+    }
+
+    .bar {
+        width: 14px;
     }
 }
