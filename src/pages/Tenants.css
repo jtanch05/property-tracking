@@ -1,0 +1,113 @@
+/* Tenants Page */
+.tenants-page {
+    max-width: 900px;
+}
+
+.filter-bar {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
+    margin-bottom: var(--space-lg);
+    flex-wrap: wrap;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-tertiary);
+    padding: 3px;
+    border-radius: var(--radius-md);
+}
+
+.tenant-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.tenant-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-lg);
+}
+
+.tenant-card-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.tenant-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tenant-avatar.active {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.tenant-avatar.vacated {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+}
+
+.tenant-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tenant-info .tenant-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--font-base);
+}
+
+.tenant-prop {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+}
+
+.tenant-contacts {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.tenant-contact {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+}
+
+.tenant-card-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+@media (max-width: 600px) {
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tenant-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-sm);
+    }
+
+    .tenant-card-right {
+        align-self: flex-end;
+    }
+}

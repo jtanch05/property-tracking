@@ -1,0 +1,110 @@
+.rent-page {
+    max-width: 900px;
+}
+
+.rent-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.rent-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-lg);
+}
+
+.rent-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.rent-status-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.rent-status-icon.paid {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.rent-status-icon.unpaid {
+    background: var(--warning-bg);
+    color: var(--warning);
+}
+
+.rent-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.rent-month {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.rent-prop {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+}
+
+.rent-overdue {
+    font-size: var(--font-xs);
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.rent-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.rent-amounts {
+    text-align: right;
+}
+
+.rent-amount {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: var(--font-md);
+    display: block;
+}
+
+.rent-paid-date {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+}
+
+.rent-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.filter-select {
+    max-width: 220px;
+    padding: 8px 32px 8px 10px;
+    font-size: var(--font-sm);
+}
+
+@media (max-width: 600px) {
+    .rent-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-sm);
+    }
+
+    .rent-right {
+        align-self: stretch;
+        justify-content: space-between;
+    }
+}

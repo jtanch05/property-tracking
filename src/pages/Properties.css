@@ -1,0 +1,124 @@
+/* Properties Page */
+.properties-page {
+    max-width: 900px;
+}
+
+.search-bar {
+    position: relative;
+    margin-bottom: var(--space-lg);
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    pointer-events: none;
+}
+
+.search-input {
+    padding-left: 42px;
+}
+
+.property-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-md);
+}
+
+.property-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    cursor: default;
+}
+
+.property-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.property-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--accent-bg);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.property-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.property-card:hover .property-actions {
+    opacity: 1;
+}
+
+.property-name {
+    font-size: var(--font-md);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.property-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: var(--space-xs);
+}
+
+.property-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+}
+
+.detail-item svg {
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+}
+
+.property-tenant {
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--font-sm);
+}
+
+.tenant-label {
+    color: var(--text-tertiary);
+}
+
+.tenant-name {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+@media (max-width: 600px) {
+    .property-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .property-actions {
+        opacity: 1;
+    }
+}

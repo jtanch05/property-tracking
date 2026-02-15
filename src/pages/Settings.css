@@ -1,0 +1,70 @@
+.settings-page {
+    max-width: 700px;
+}
+
+.settings-section {
+    margin-bottom: var(--space-xl);
+}
+
+.settings-section-title {
+    font-size: var(--font-md);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+.settings-card {
+    padding: 0;
+}
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-lg);
+    gap: var(--space-md);
+}
+
+.settings-item-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.settings-item-info svg {
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+}
+
+.settings-item-info>div {
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-label {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: var(--font-base);
+}
+
+.settings-desc {
+    font-size: var(--font-sm);
+    color: var(--text-tertiary);
+}
+
+.settings-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 var(--space-lg);
+}
+
+@media (max-width: 600px) {
+    .settings-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .settings-item button {
+        align-self: flex-end;
+    }
+}
