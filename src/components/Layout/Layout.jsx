@@ -1,108 +1,109 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import {
-    LayoutDashboard, Building2, Users, FileText, Wallet,
-    Receipt, Droplets, Shield, Wrench, Contact, Clock,
-    Settings, ChevronLeft, ChevronRight, Bell, Menu, Landmark, TrendingUp, LogOut
-} from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useApp } from '../../context/AppProvider';
 import { useAuth } from '../../context/AuthProvider';
+import {
+    LayoutDashboard, Building2, Users, FileText, Wallet, Wrench, Clock, Settings,
+    Bell, ChevronLeft, Menu, Home, BarChart3, Receipt, HardHat, LogOut
+} from 'lucide-react';
 import './Layout.css';
 
 const NAV_SECTIONS = [
     {
         label: 'Overview',
         items: [
-            { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-        ]
+            { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+            { to: '/timeline', icon: Clock, label: 'Timeline' },
+        ],
     },
     {
         label: 'Management',
         items: [
-            { path: '/properties', label: 'Properties', icon: Building2 },
-            { path: '/tenants', label: 'Tenants', icon: Users },
-            { path: '/agreements', label: 'Agreements', icon: FileText },
-        ]
+            { to: '/properties', icon: Building2, label: 'Properties' },
+            { to: '/tenants', icon: Users, label: 'Tenants' },
+            { to: '/agreements', icon: FileText, label: 'Agreements' },
+        ],
     },
     {
         label: 'Finance',
         items: [
-            { path: '/cashflow', label: 'Cash Flow', icon: TrendingUp },
-            { path: '/rent', label: 'Rent & Deposits', icon: Wallet },
-        ]
+            { to: '/rent', icon: Wallet, label: 'Rent Ledger' },
+            { to: '/cashflow', icon: BarChart3, label: 'Cash Flow' },
+        ],
     },
     {
         label: 'Expenses',
         items: [
-            { path: '/taxes', label: 'Taxes', icon: Receipt },
-            { path: '/utilities', label: 'Utilities', icon: Droplets },
-            { path: '/insurance', label: 'Insurance', icon: Shield },
-            { path: '/management-fees', label: 'Management Fees', icon: Landmark },
-        ]
+            { to: '/expenses', icon: Receipt, label: 'Expenses' },
+        ],
     },
     {
         label: 'Operations',
         items: [
-            { path: '/maintenance', label: 'Maintenance', icon: Wrench },
-            { path: '/vendors', label: 'Vendors', icon: Contact },
-            { path: '/timeline', label: 'Timeline', icon: Clock },
-        ]
+            { to: '/maintenance', icon: Wrench, label: 'Maintenance' },
+            { to: '/vendors', icon: HardHat, label: 'Vendors' },
+        ],
     },
     {
         label: 'System',
         items: [
-            { path: '/settings', label: 'Settings', icon: Settings },
-        ]
-    }
+            { to: '/settings', icon: Settings, label: 'Settings' },
+        ],
+    },
 ];
 
-// Mobile bottom nav — show only the most important items
-const MOBILE_NAV_ITEMS = [
-    { path: '/', label: 'Home', icon: LayoutDashboard },
-    { path: '/properties', label: 'Properties', icon: Building2 },
-    { path: '/rent', label: 'Rent', icon: Wallet },
-    { path: '/timeline', label: 'Timeline', icon: Clock },
-    { path: '/settings', label: 'More', icon: Menu },
+const BOTTOM_NAV = [
+    { to: '/', icon: Home, label: 'Home' },
+    { to: '/properties', icon: Building2, label: 'Properties' },
+    { to: '/rent', icon: Wallet, label: 'Rent' },
+    { to: '/expenses', icon: Receipt, label: 'Expenses' },
+    { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function Layout({ children }) {
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [showUserMenu, setShowUserMenu] = useState(false);
-    const { alerts, properties, settings, setSettings, selectedProperty } = useApp();
+    const { properties, settings, setSettings, alerts, selectedProperty } = useApp();
     const { user, logout } = useAuth();
+    const location = useLocation();
+    const [collapsed, setCollapsed] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
+    const userMenuRef = useRef(null);
 
-    const urgentAlerts = alerts.filter(a => a.severity === 'danger' || a.severity === 'warning');
+    // Close user menu on click outside
+    useEffect(() => {
+        function handleClickOutside(e) {
+            if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+                setShowUserMenu(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     function handlePropertySwitch(e) {
-        const val = e.target.value;
-        setSettings(prev => ({ ...prev, selectedPropertyId: val || null }));
+        setSettings(prev => ({ ...prev, selectedPropertyId: e.target.value || null }));
     }
 
     return (
-        <div className={`layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-            {/* Sidebar (Desktop) */}
+        <div className={`layout ${collapsed ? 'sidebar-collapsed' : ''}`}>
+            {/* Sidebar */}
             <aside className="sidebar">
                 <div className="sidebar-header">
                     <div className="sidebar-logo">
-                        <Building2 size={24} className="logo-icon" />
-                        {!sidebarCollapsed && <span className="logo-text">PropTrack</span>}
+                        <Building2 size={22} className="logo-icon" />
+                        {!collapsed && <span className="logo-text">PropTrack</span>}
                     </div>
-                    <button
-                        className="btn-icon sidebar-toggle"
-                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        aria-label="Toggle sidebar"
-                    >
-                        {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+                    <button className="btn-icon sidebar-toggle" onClick={() => setCollapsed(!collapsed)}>
+                        {collapsed ? <Menu size={18} /> : <ChevronLeft size={18} />}
                     </button>
                 </div>
 
                 {/* Property Switcher */}
-                {!sidebarCollapsed && properties.length > 0 && (
+                {!collapsed && properties.length > 0 && (
                     <div className="sidebar-switcher">
                         <select
+                            className="property-select"
                             value={settings.selectedPropertyId || ''}
                             onChange={handlePropertySwitch}
-                            className="property-select"
                         >
                             <option value="">All Properties</option>
                             {properties.map(p => (
@@ -112,29 +113,32 @@ export default function Layout({ children }) {
                     </div>
                 )}
 
+                {/* Nav */}
                 <nav className="sidebar-nav">
-                    {NAV_SECTIONS.map((section, idx) => (
-                        <div key={idx} className="nav-section">
-                            {!sidebarCollapsed && section.label !== 'Overview' && (
-                                <div className="nav-section-header">{section.label}</div>
-                            )}
-                            {section.items.map(item => (
-                                <NavLink
-                                    key={item.path}
-                                    to={item.path}
-                                    className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                                    title={item.label}
-                                >
-                                    <item.icon size={20} />
-                                    {!sidebarCollapsed && <span>{item.label}</span>}
-                                </NavLink>
-                            ))}
+                    {NAV_SECTIONS.map(section => (
+                        <div key={section.label} className="nav-section">
+                            {!collapsed && <span className="nav-section-header">{section.label}</span>}
+                            {section.items.map(item => {
+                                const Icon = item.icon;
+                                return (
+                                    <NavLink
+                                        key={item.to}
+                                        to={item.to}
+                                        end={item.to === '/'}
+                                        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                                        title={collapsed ? item.label : undefined}
+                                    >
+                                        <Icon size={18} />
+                                        {!collapsed && <span>{item.label}</span>}
+                                    </NavLink>
+                                );
+                            })}
                         </div>
                     ))}
                 </nav>
             </aside>
 
-            {/* Main Content */}
+            {/* Main Wrapper */}
             <div className="main-wrapper">
                 {/* Top Bar */}
                 <header className="topbar">
@@ -149,34 +153,33 @@ export default function Layout({ children }) {
                         )}
                     </div>
                     <div className="topbar-right">
-                        <NavLink to="/timeline" className="alert-bell">
-                            <Bell size={20} />
-                            {urgentAlerts.length > 0 && (
-                                <span className="alert-count">{urgentAlerts.length}</span>
+                        <Link to="/timeline" className="alert-bell" title="Alerts">
+                            <Bell size={18} />
+                            {alerts.length > 0 && (
+                                <span className="alert-count">{alerts.length > 9 ? '9+' : alerts.length}</span>
                             )}
-                        </NavLink>
-                        <div className="user-menu-wrapper">
-                            <button
-                                className="user-avatar-btn"
-                                onClick={() => setShowUserMenu(!showUserMenu)}
-                                title={user?.displayName || 'User'}
-                            >
+                        </Link>
+
+                        {/* User avatar & menu */}
+                        <div className="user-menu-wrapper" ref={userMenuRef}>
+                            <button className="user-avatar-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
                                 {user?.photoURL ? (
                                     <img src={user.photoURL} alt="" className="user-avatar" referrerPolicy="no-referrer" />
                                 ) : (
                                     <div className="user-avatar-fallback">
-                                        {(user?.displayName || 'U')[0].toUpperCase()}
+                                        {(user?.displayName || user?.email || '?')[0].toUpperCase()}
                                     </div>
                                 )}
                             </button>
                             {showUserMenu && (
                                 <div className="user-dropdown">
                                     <div className="user-dropdown-info">
-                                        <span className="user-dropdown-name">{user?.displayName}</span>
+                                        <span className="user-dropdown-name">{user?.displayName || 'User'}</span>
                                         <span className="user-dropdown-email">{user?.email}</span>
                                     </div>
                                     <button className="user-dropdown-item" onClick={() => { logout(); setShowUserMenu(false); }}>
-                                        <LogOut size={16} /> Sign out
+                                        <LogOut size={16} />
+                                        Sign Out
                                     </button>
                                 </div>
                             )}
@@ -185,25 +188,27 @@ export default function Layout({ children }) {
                 </header>
 
                 {/* Page Content */}
-                <main className="main-content">
-                    <div className="page-enter">
-                        {children}
-                    </div>
+                <main className="main-content page-enter">
+                    {children}
                 </main>
             </div>
 
             {/* Bottom Nav (Mobile) */}
             <nav className="bottom-nav">
-                {MOBILE_NAV_ITEMS.map(item => (
-                    <NavLink
-                        key={item.path}
-                        to={item.path}
-                        className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
-                    >
-                        <item.icon size={20} />
-                        <span>{item.label}</span>
-                    </NavLink>
-                ))}
+                {BOTTOM_NAV.map(item => {
+                    const Icon = item.icon;
+                    const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
+                    return (
+                        <NavLink
+                            key={item.to}
+                            to={item.to}
+                            className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+                        >
+                            <Icon size={20} />
+                            <span>{item.label}</span>
+                        </NavLink>
+                    );
+                })}
             </nav>
         </div>
     );

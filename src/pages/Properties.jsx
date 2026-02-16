@@ -1,23 +1,140 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppProvider';
 import { MALAYSIA_STATES, PROPERTY_TYPES } from '../data/malaysiaData';
 import { LOCAL_COUNCILS } from '../data/localCouncils';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
-import { Plus, Building2, Edit3, Trash2, MapPin, Layers, Car, Search, Users } from 'lucide-react';
+import { Plus, Building2, Edit3, Trash2, MapPin, Layers, Car, Search, Users, Home, BedDouble, Bath, Ruler } from 'lucide-react';
 import './Properties.css';
+
+// --- Field visibility config per property type ---
+// 'show' = visible, 'hide' = hidden, 'optional' = visible but marked optional
+const FIELD_CONFIG = {
+    condo: {
+        strata: { show: true, default: true },
+        unitNumber: { show: true, label: 'Unit Number', placeholder: 'e.g. A-12-3' },
+        blockTower: { show: true, label: 'Block / Tower', placeholder: 'e.g. Tower A' },
+        floor: { show: true },
+        lotNumber: { show: false },
+        landSizeSqft: { show: false },
+        storeys: { show: false },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    landed_terrace: {
+        strata: { show: false, default: false },
+        unitNumber: { show: false },
+        blockTower: { show: false },
+        floor: { show: false },
+        lotNumber: { show: true, label: 'House / Lot No.', placeholder: 'e.g. No. 23' },
+        landSizeSqft: { show: true },
+        storeys: { show: true },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    landed_semi: {
+        strata: { show: false, default: false },
+        unitNumber: { show: false },
+        blockTower: { show: false },
+        floor: { show: false },
+        lotNumber: { show: true, label: 'House / Lot No.', placeholder: 'e.g. No. 8' },
+        landSizeSqft: { show: true },
+        storeys: { show: true },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    landed_bungalow: {
+        strata: { show: false, default: false },
+        unitNumber: { show: false },
+        blockTower: { show: false },
+        floor: { show: false },
+        lotNumber: { show: true, label: 'House / Lot No.', placeholder: 'e.g. No. 1' },
+        landSizeSqft: { show: true },
+        storeys: { show: true },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    landed_townhouse: {
+        strata: { show: true, default: true },
+        unitNumber: { show: true, label: 'Unit Number', placeholder: 'e.g. TH-05' },
+        blockTower: { show: 'optional' },
+        floor: { show: 'optional' },
+        lotNumber: { show: false },
+        landSizeSqft: { show: false },
+        storeys: { show: true },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    shoplot: {
+        strata: { show: 'optional', default: false },
+        unitNumber: { show: true, label: 'Lot / Unit No.', placeholder: 'e.g. G-01' },
+        blockTower: { show: false },
+        floor: { show: true },
+        lotNumber: { show: false },
+        landSizeSqft: { show: true },
+        storeys: { show: true },
+        bedrooms: { show: false },
+        bathrooms: { show: 'optional' },
+        furnished: { show: false },
+    },
+    studio: {
+        strata: { show: true, default: true },
+        unitNumber: { show: true, label: 'Unit Number', placeholder: 'e.g. B-5-2' },
+        blockTower: { show: true, label: 'Block / Tower', placeholder: 'e.g. Block B' },
+        floor: { show: true },
+        lotNumber: { show: false },
+        landSizeSqft: { show: false },
+        storeys: { show: false },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    other: {
+        strata: { show: 'optional', default: false },
+        unitNumber: { show: 'optional', label: 'Unit / Lot Number', placeholder: 'e.g. A-1' },
+        blockTower: { show: 'optional' },
+        floor: { show: 'optional' },
+        lotNumber: { show: 'optional', label: 'Lot Number', placeholder: 'e.g. Lot 123' },
+        landSizeSqft: { show: 'optional' },
+        storeys: { show: 'optional' },
+        bedrooms: { show: 'optional' },
+        bathrooms: { show: 'optional' },
+        furnished: { show: 'optional' },
+    },
+};
+
+function getConfig(type) {
+    return FIELD_CONFIG[type] || FIELD_CONFIG.other;
+}
+
+function isVisible(config, field) {
+    const f = config[field];
+    return f && f.show !== false;
+}
 
 const EMPTY_PROPERTY = {
     nickname: '',
     type: 'condo',
     state: '',
     localCouncil: '',
-    strata: false,
+    strata: true,
     yearBuilt: '',
     unitNumber: '',
+    blockTower: '',
     floor: '',
+    lotNumber: '',
+    landSizeSqft: '',
     builtUpSqft: '',
+    storeys: '',
+    bedrooms: '',
+    bathrooms: '',
     parkingCount: '',
+    furnished: '',
     notes: '',
     coOwners: [],
 };
@@ -36,6 +153,8 @@ export default function Properties() {
         p.type?.toLowerCase().includes(search.toLowerCase())
     );
 
+    const config = useMemo(() => getConfig(form.type), [form.type]);
+
     function openAdd() {
         setForm(EMPTY_PROPERTY);
         setEditingId(null);
@@ -48,12 +167,19 @@ export default function Properties() {
             type: prop.type || 'condo',
             state: prop.state || '',
             localCouncil: prop.localCouncil || '',
-            strata: prop.strata || false,
+            strata: prop.strata ?? false,
             yearBuilt: prop.yearBuilt || '',
             unitNumber: prop.unitNumber || '',
+            blockTower: prop.blockTower || '',
             floor: prop.floor || '',
+            lotNumber: prop.lotNumber || '',
+            landSizeSqft: prop.landSizeSqft || '',
             builtUpSqft: prop.builtUpSqft || '',
+            storeys: prop.storeys || '',
+            bedrooms: prop.bedrooms || '',
+            bathrooms: prop.bathrooms || '',
             parkingCount: prop.parkingCount || '',
+            furnished: prop.furnished || '',
             notes: prop.notes || '',
             coOwners: prop.coOwners || [],
         });
@@ -70,6 +196,10 @@ export default function Properties() {
             yearBuilt: form.yearBuilt ? Number(form.yearBuilt) : null,
             floor: form.floor ? Number(form.floor) : null,
             builtUpSqft: form.builtUpSqft ? Number(form.builtUpSqft) : null,
+            landSizeSqft: form.landSizeSqft ? Number(form.landSizeSqft) : null,
+            storeys: form.storeys ? Number(form.storeys) : null,
+            bedrooms: form.bedrooms ? Number(form.bedrooms) : null,
+            bathrooms: form.bathrooms ? Number(form.bathrooms) : null,
             parkingCount: form.parkingCount ? Number(form.parkingCount) : 0,
         };
 
@@ -94,11 +224,32 @@ export default function Properties() {
             const next = { ...prev, [field]: value };
             // Reset local council when state changes
             if (field === 'state') next.localCouncil = '';
+            // Auto-set strata and clear irrelevant fields when type changes
+            if (field === 'type') {
+                const newConfig = getConfig(value);
+                if (newConfig.strata && newConfig.strata.default !== undefined) {
+                    next.strata = newConfig.strata.default;
+                }
+                // Clear fields that are hidden for the new type
+                if (!newConfig.unitNumber?.show) next.unitNumber = '';
+                if (!newConfig.blockTower?.show) next.blockTower = '';
+                if (!newConfig.floor?.show) next.floor = '';
+                if (!newConfig.lotNumber?.show) next.lotNumber = '';
+                if (!newConfig.landSizeSqft?.show) next.landSizeSqft = '';
+                if (!newConfig.storeys?.show) next.storeys = '';
+                if (!newConfig.bedrooms?.show) next.bedrooms = '';
+                if (!newConfig.bathrooms?.show) next.bathrooms = '';
+                if (!newConfig.furnished?.show) next.furnished = '';
+            }
             return next;
         });
     }
 
     const councils = form.state ? (LOCAL_COUNCILS[form.state] || []) : [];
+
+    // Helper to check if type is "high-rise"
+    const isHighRise = ['condo', 'studio', 'landed_townhouse'].includes(form.type);
+    const isLanded = ['landed_terrace', 'landed_semi', 'landed_bungalow'].includes(form.type);
 
     return (
         <div className="properties-page">
@@ -153,6 +304,9 @@ export default function Properties() {
                                 <div className="property-meta">
                                     {propType && <span className="badge badge-neutral">{propType.label}</span>}
                                     {prop.strata && <span className="badge badge-info">Strata</span>}
+                                    {prop.furnished && prop.furnished !== 'unfurnished' && (
+                                        <span className="badge badge-neutral">{prop.furnished === 'fully' ? 'Furnished' : 'Partial'}</span>
+                                    )}
                                     {activeTenant ? (
                                         <span className="badge badge-success">Occupied</span>
                                     ) : (
@@ -170,7 +324,21 @@ export default function Properties() {
                                     {prop.builtUpSqft && (
                                         <div className="detail-item">
                                             <Layers size={14} />
-                                            <span>{prop.builtUpSqft} sqft{prop.floor ? ` · Floor ${prop.floor}` : ''}</span>
+                                            <span>
+                                                {prop.builtUpSqft} sqft
+                                                {prop.landSizeSqft ? ` (land: ${prop.landSizeSqft} sqft)` : ''}
+                                                {prop.floor ? ` · Floor ${prop.floor}` : ''}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {(prop.bedrooms || prop.bathrooms) && (
+                                        <div className="detail-item">
+                                            <BedDouble size={14} />
+                                            <span>
+                                                {prop.bedrooms ? `${prop.bedrooms} bed` : ''}
+                                                {prop.bedrooms && prop.bathrooms ? ' · ' : ''}
+                                                {prop.bathrooms ? `${prop.bathrooms} bath` : ''}
+                                            </span>
                                         </div>
                                     )}
                                     {prop.parkingCount > 0 && (
@@ -217,6 +385,9 @@ export default function Properties() {
                 size="lg"
             >
                 <form onSubmit={handleSubmit}>
+                    {/* --- Section: Basic Info --- */}
+                    <div className="form-section-header">Basic Information</div>
+
                     <div className="form-group">
                         <label>Property Nickname *</label>
                         <input
@@ -231,21 +402,29 @@ export default function Properties() {
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label>Property Type</label>
+                            <label>Property Type *</label>
                             <select value={form.type} onChange={e => handleChange('type', e.target.value)}>
                                 {PROPERTY_TYPES.map(t => (
                                     <option key={t.value} value={t.value}>{t.label}</option>
                                 ))}
                             </select>
                         </div>
-                        <div className="form-group">
-                            <label>Strata</label>
-                            <select value={form.strata ? 'yes' : 'no'} onChange={e => handleChange('strata', e.target.value === 'yes')}>
-                                <option value="no">Non-Strata</option>
-                                <option value="yes">Strata</option>
-                            </select>
-                        </div>
+                        {isVisible(config, 'strata') && (
+                            <div className="form-group">
+                                <label>
+                                    Strata Title
+                                    {config.strata.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                </label>
+                                <select value={form.strata ? 'yes' : 'no'} onChange={e => handleChange('strata', e.target.value === 'yes')}>
+                                    <option value="no">Non-Strata</option>
+                                    <option value="yes">Strata</option>
+                                </select>
+                            </div>
+                        )}
                     </div>
+
+                    {/* --- Section: Location --- */}
+                    <div className="form-section-header">Location</div>
 
                     <div className="form-row">
                         <div className="form-group">
@@ -258,7 +437,7 @@ export default function Properties() {
                             </select>
                         </div>
                         <div className="form-group">
-                            <label>Local Council</label>
+                            <label>Local Council <span className="optional-tag">Optional</span></label>
                             <select value={form.localCouncil} onChange={e => handleChange('localCouncil', e.target.value)} disabled={!form.state}>
                                 <option value="">Select council</option>
                                 {councils.map(c => (
@@ -268,30 +447,94 @@ export default function Properties() {
                         </div>
                     </div>
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Unit Number</label>
-                            <input
-                                type="text"
-                                placeholder="e.g. A-12-3"
-                                value={form.unitNumber}
-                                onChange={e => handleChange('unitNumber', e.target.value)}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Floor Level</label>
-                            <input
-                                type="number"
-                                placeholder="e.g. 12"
-                                value={form.floor}
-                                onChange={e => handleChange('floor', e.target.value)}
-                            />
-                        </div>
+                    {/* --- Section: Unit / Address Details (dynamic) --- */}
+                    <div className="form-section-header">
+                        {isHighRise ? 'Unit Details' : isLanded ? 'Address Details' : 'Property Details'}
                     </div>
 
                     <div className="form-row">
+                        {isVisible(config, 'lotNumber') && (
+                            <div className="form-group">
+                                <label>
+                                    {config.lotNumber?.label || 'Lot Number'}
+                                    {config.lotNumber?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={config.lotNumber?.placeholder || 'e.g. Lot 123'}
+                                    value={form.lotNumber}
+                                    onChange={e => handleChange('lotNumber', e.target.value)}
+                                />
+                            </div>
+                        )}
+                        {isVisible(config, 'unitNumber') && (
+                            <div className="form-group">
+                                <label>
+                                    {config.unitNumber?.label || 'Unit Number'}
+                                    {config.unitNumber?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={config.unitNumber?.placeholder || 'e.g. A-12-3'}
+                                    value={form.unitNumber}
+                                    onChange={e => handleChange('unitNumber', e.target.value)}
+                                />
+                            </div>
+                        )}
+                        {isVisible(config, 'blockTower') && (
+                            <div className="form-group">
+                                <label>
+                                    {config.blockTower?.label || 'Block / Tower'}
+                                    {config.blockTower?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={config.blockTower?.placeholder || 'e.g. Tower A'}
+                                    value={form.blockTower}
+                                    onChange={e => handleChange('blockTower', e.target.value)}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="form-row">
+                        {isVisible(config, 'floor') && (
+                            <div className="form-group">
+                                <label>
+                                    Floor Level
+                                    {config.floor?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                </label>
+                                <input
+                                    type="number"
+                                    placeholder="e.g. 12"
+                                    value={form.floor}
+                                    onChange={e => handleChange('floor', e.target.value)}
+                                />
+                            </div>
+                        )}
+                        {isVisible(config, 'storeys') && (
+                            <div className="form-group">
+                                <label>
+                                    Number of Storeys
+                                    {config.storeys?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                </label>
+                                <input
+                                    type="number"
+                                    placeholder="e.g. 2"
+                                    value={form.storeys}
+                                    onChange={e => handleChange('storeys', e.target.value)}
+                                    min="1"
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* --- Section: Size & Rooms --- */}
+                    <div className="form-section-header">Size & Specifications <span className="optional-tag">Optional</span></div>
+
+                    <div className="form-row">
                         <div className="form-group">
-                            <label>Built-up Size (sqft)</label>
+                            <label>Built-up Size (sqft) <span className="optional-tag">Optional</span></label>
                             <input
                                 type="number"
                                 placeholder="e.g. 1200"
@@ -299,29 +542,96 @@ export default function Properties() {
                                 onChange={e => handleChange('builtUpSqft', e.target.value)}
                             />
                         </div>
+                        {isVisible(config, 'landSizeSqft') && (
+                            <div className="form-group">
+                                <label>
+                                    Land Size (sqft)
+                                    {config.landSizeSqft?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                </label>
+                                <input
+                                    type="number"
+                                    placeholder="e.g. 1650"
+                                    value={form.landSizeSqft}
+                                    onChange={e => handleChange('landSizeSqft', e.target.value)}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="form-row">
+                        {isVisible(config, 'bedrooms') && (
+                            <div className="form-group">
+                                <label>
+                                    Bedrooms
+                                    {config.bedrooms?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                </label>
+                                <input
+                                    type="number"
+                                    placeholder="e.g. 3"
+                                    value={form.bedrooms}
+                                    onChange={e => handleChange('bedrooms', e.target.value)}
+                                    min="0"
+                                />
+                            </div>
+                        )}
+                        {isVisible(config, 'bathrooms') && (
+                            <div className="form-group">
+                                <label>
+                                    Bathrooms
+                                    {config.bathrooms?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                </label>
+                                <input
+                                    type="number"
+                                    placeholder="e.g. 2"
+                                    value={form.bathrooms}
+                                    onChange={e => handleChange('bathrooms', e.target.value)}
+                                    min="0"
+                                />
+                            </div>
+                        )}
                         <div className="form-group">
-                            <label>Parking Count</label>
+                            <label>Parking Bays <span className="optional-tag">Optional</span></label>
                             <input
                                 type="number"
                                 placeholder="e.g. 2"
                                 value={form.parkingCount}
                                 onChange={e => handleChange('parkingCount', e.target.value)}
+                                min="0"
                             />
                         </div>
                     </div>
 
-                    <div className="form-group">
-                        <label>Year Built</label>
-                        <input
-                            type="number"
-                            placeholder="e.g. 2015"
-                            value={form.yearBuilt}
-                            onChange={e => handleChange('yearBuilt', e.target.value)}
-                        />
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label>Year Built <span className="optional-tag">Optional</span></label>
+                            <input
+                                type="number"
+                                placeholder="e.g. 2015"
+                                value={form.yearBuilt}
+                                onChange={e => handleChange('yearBuilt', e.target.value)}
+                            />
+                        </div>
+                        {isVisible(config, 'furnished') && (
+                            <div className="form-group">
+                                <label>
+                                    Furnished
+                                    {config.furnished?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                </label>
+                                <select value={form.furnished} onChange={e => handleChange('furnished', e.target.value)}>
+                                    <option value="">Select</option>
+                                    <option value="unfurnished">Unfurnished</option>
+                                    <option value="partial">Partially Furnished</option>
+                                    <option value="fully">Fully Furnished</option>
+                                </select>
+                            </div>
+                        )}
                     </div>
 
+                    {/* --- Section: Notes --- */}
+                    <div className="form-section-header">Additional</div>
+
                     <div className="form-group">
-                        <label>Notes</label>
+                        <label>Notes <span className="optional-tag">Optional</span></label>
                         <textarea
                             placeholder="Any additional notes..."
                             value={form.notes}
@@ -331,9 +641,9 @@ export default function Properties() {
                     </div>
 
                     {/* Co-Owners Section */}
-                    <div style={{ margin: 'var(--space-md) 0', padding: 'var(--space-md)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+                    <div className="co-owners-section">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                            <label style={{ fontWeight: 600, margin: 0 }}><Users size={14} style={{ marginRight: 4 }} /> Co-Owners (Optional)</label>
+                            <label style={{ fontWeight: 600, margin: 0 }}><Users size={14} style={{ marginRight: 4 }} /> Co-Owners <span className="optional-tag">Optional</span></label>
                             <button type="button" className="btn btn-sm btn-ghost" onClick={() => handleChange('coOwners', [...form.coOwners, { id: crypto.randomUUID(), name: '', splitPercent: 0, isPrimary: form.coOwners.length === 0 }])}>
                                 <Plus size={14} /> Add
                             </button>

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useApp } from '../context/AppProvider';
 import { formatCurrency, formatDate, formatRelativeDate, formatMonth } from '../utils/formatters';
 import {
-    Building2, Users, Wallet, AlertTriangle, TrendingUp, TrendingDown,
+    Building2, Users, Wallet, AlertTriangle, TrendingUp,
     Plus, ArrowRight, Receipt, Droplets, Shield, Landmark, Wrench,
     ArrowUpRight, ArrowDownRight, BarChart3, PieChart, Activity
 } from 'lucide-react';
@@ -11,7 +11,7 @@ import './Dashboard.css';
 
 export default function Dashboard() {
     const {
-        properties, filteredData, alerts, rentRecords, agreements,
+        properties, filteredData, alerts, rentRecords,
         taxRecords, utilityRecords, insuranceRecords, managementFees, maintenanceRecords
     } = useApp();
     const { tenants, rentRecords: filteredRent, maintenanceRecords: filteredMaintenance } = filteredData;
@@ -19,8 +19,6 @@ export default function Dashboard() {
     // --- Stats ---
     const activeTenants = tenants.filter(t => t.status === 'active').length;
     const totalProperties = properties.length;
-
-    // Current month
     const currentMonth = new Date().toISOString().slice(0, 7);
 
     // Rent stats
@@ -80,7 +78,6 @@ export default function Dashboard() {
                 .filter(r => r.month === month && r.status === 'paid')
                 .reduce((sum, r) => sum + (Number(r.amountPaid) || 0), 0);
 
-            // Simple heuristic: expenses dated in this month
             const expenseForMonth = [
                 ...taxRecords.filter(r => (r.dueDate || '').startsWith(month)),
                 ...utilityRecords.filter(r => (r.date || '').startsWith(month)),
@@ -92,7 +89,6 @@ export default function Dashboard() {
         });
     }, [rentRecords, taxRecords, utilityRecords, managementFees, maintenanceRecords]);
 
-    // Max value for chart scaling
     const chartMax = Math.max(...monthlyTrend.map(m => Math.max(m.income, m.expense)), 1);
 
     // --- Recent Activity ---
@@ -141,7 +137,6 @@ export default function Dashboard() {
         return items.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
     }, [rentRecords, taxRecords, maintenanceRecords]);
 
-    // Urgent alerts (top 5)
     const urgentAlerts = alerts.slice(0, 5);
 
     return (
@@ -157,7 +152,7 @@ export default function Dashboard() {
                 </Link>
             </div>
 
-            {/* Stats Grid — 2 rows of 3 */}
+            {/* Stats Grid */}
             <div className="stats-grid">
                 <div className="card stat-card">
                     <div className="stat-icon" style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>
@@ -237,10 +232,10 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Two Column Layout */}
+            {/* Charts Row */}
             {totalProperties > 0 && (
                 <div className="dashboard-grid">
-                    {/* Monthly Cash Flow Chart */}
+                    {/* Monthly Cash Flow */}
                     <div className="dashboard-section">
                         <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
                             <h2 className="section-title" style={{ fontSize: 'var(--font-lg)' }}>
@@ -260,16 +255,8 @@ export default function Dashboard() {
                                 {monthlyTrend.map(m => (
                                     <div key={m.month} className="bar-group">
                                         <div className="bars">
-                                            <div
-                                                className="bar bar-income"
-                                                style={{ height: `${Math.max((m.income / chartMax) * 120, 2)}px` }}
-                                                title={`Income: ${formatCurrency(m.income)}`}
-                                            />
-                                            <div
-                                                className="bar bar-expense"
-                                                style={{ height: `${Math.max((m.expense / chartMax) * 120, 2)}px` }}
-                                                title={`Expenses: ${formatCurrency(m.expense)}`}
-                                            />
+                                            <div className="bar bar-income" style={{ height: `${Math.max((m.income / chartMax) * 120, 2)}px` }} title={`Income: ${formatCurrency(m.income)}`} />
+                                            <div className="bar bar-expense" style={{ height: `${Math.max((m.expense / chartMax) * 120, 2)}px` }} title={`Expenses: ${formatCurrency(m.expense)}`} />
                                         </div>
                                         <span className="bar-label">{new Date(m.month + '-01').toLocaleDateString('en', { month: 'short' })}</span>
                                     </div>
@@ -327,10 +314,9 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {/* Recent Activity + Alerts side by side */}
+            {/* Activity + Alerts */}
             {totalProperties > 0 && (
                 <div className="dashboard-grid">
-                    {/* Recent Activity */}
                     <div className="dashboard-section">
                         <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
                             <h2 className="section-title" style={{ fontSize: 'var(--font-lg)' }}>
@@ -353,7 +339,7 @@ export default function Dashboard() {
                                                     <span className="activity-detail">{item.detail}</span>
                                                 </div>
                                                 <div className="activity-right">
-                                                    <span className={`activity-amount ${item.type === 'income' ? 'income' : 'expense'}`}>
+                                                    <span className={`activity-amount ${item.type}`}>
                                                         {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
                                                     </span>
                                                     <span className="activity-date">{formatDate(item.date)}</span>
@@ -371,7 +357,6 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Alerts */}
                     <div className="dashboard-section">
                         <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
                             <h2 className="section-title" style={{ fontSize: 'var(--font-lg)' }}>⏰ Upcoming Alerts</h2>
@@ -411,13 +396,10 @@ export default function Dashboard() {
                             <span className="occupancy-value">{occupancyRate}%</span>
                         </div>
                         <div className="occupancy-bar-track">
-                            <div
-                                className="occupancy-bar-fill"
-                                style={{
-                                    width: `${occupancyRate}%`,
-                                    background: occupancyRate >= 80 ? 'var(--success)' : occupancyRate >= 50 ? 'var(--warning)' : 'var(--danger)',
-                                }}
-                            />
+                            <div className="occupancy-bar-fill" style={{
+                                width: `${occupancyRate}%`,
+                                background: occupancyRate >= 80 ? 'var(--success)' : occupancyRate >= 50 ? 'var(--warning)' : 'var(--danger)',
+                            }} />
                         </div>
                         <div className="occupancy-details">
                             <span>{occupiedCount} of {totalProperties} occupied</span>
