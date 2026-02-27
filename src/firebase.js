@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getMessaging } from 'firebase/messaging';
 
 const firebaseConfig = {
     apiKey: "AIzaSyBvZ4bk1zDQMi6D87vyoyihvCo255ia984",
@@ -15,6 +16,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const messaging = getMessaging(app);
 export const googleProvider = new GoogleAuthProvider();
 
 // Enable offline persistence

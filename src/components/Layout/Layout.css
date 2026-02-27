@@ -69,18 +69,16 @@
     width: 100%;
     padding: 8px 32px 8px 10px;
     font-size: var(--font-sm);
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-strong);
     border-radius: var(--radius-md);
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-strong);
     color: var(--text-primary);
 }
 
-.sidebar-nav {
-    flex: 1;
-    padding: var(--space-sm);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.property-select option {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 8px;
 }
 
 .nav-item {

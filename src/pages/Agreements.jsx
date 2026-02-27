@@ -4,6 +4,7 @@ import { AGREEMENT_TYPES } from '../data/malaysiaData';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import { exportToPDF } from '../utils/export';
 import { differenceInDays, parseISO } from 'date-fns';
 import { Plus, FileText, Edit3, Trash2, Shield, ArrowDown, ArrowUp, ChevronDown, ChevronUp } from 'lucide-react';
 import './Agreements.css';
@@ -120,7 +121,18 @@ export default function Agreements() {
                     <h1 className="section-title">Tenancy Agreements</h1>
                     <p className="section-subtitle">{agreements.length} records</p>
                 </div>
-                <button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Add Agreement</button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => exportToPDF(agreements, 'Tenancy-Agreements', 'Tenancy Agreements Report')}
+                        disabled={agreements.length === 0}
+                    >
+                        <FileText size={16} /> Export PDF
+                    </button>
+                    <button className="btn btn-primary" onClick={openAdd}>
+                        <Plus size={16} /> Add Agreement
+                    </button>
+                </div>
             </div>
 
             {agreements.length > 0 ? (
@@ -253,6 +265,7 @@ export default function Agreements() {
                             </select>
                         </div>
                     </div>
+
                     <div className="modal-footer" style={{ padding: 'var(--space-md) 0 0', borderTop: '1px solid var(--border)' }}>
                         <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
                         <button type="submit" className="btn btn-primary">{editingId ? 'Save' : 'Add Agreement'}</button>

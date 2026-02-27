@@ -1,0 +1,114 @@
+/* Notifications Dropdown */
+.notifications-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
+    width: 320px;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.notifications-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+}
+
+.notifications-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.notifications-permission-banner {
+    padding: 1rem;
+    background-color: color-mix(in srgb, var(--primary-color) 10%, transparent);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.notifications-permission-banner p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.notifications-list {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    gap: 1rem;
+}
+
+.notification-item:hover {
+    background-color: var(--bg-hover);
+}
+
+.notification-item.unread {
+    background-color: color-mix(in srgb, var(--primary-color) 5%, transparent);
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-content h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.notification-content p {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.notification-time {
+    font-size: 0.75rem;
+    color: var(--text-tertiary, #888);
+}
+
+.notification-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.notifications-empty {
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.notifications-empty p {
+    margin: 0;
+    font-size: 0.9rem;
+}

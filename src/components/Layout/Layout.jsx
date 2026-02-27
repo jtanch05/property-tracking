@@ -4,9 +4,12 @@ import { useApp } from '../../context/AppProvider';
 import { useAuth } from '../../context/AuthProvider';
 import {
     LayoutDashboard, Building2, Users, FileText, Wallet, Wrench, Clock, Settings,
-    Bell, ChevronLeft, Menu, Home, BarChart3, Receipt, HardHat, LogOut
+    Bell, ChevronLeft, Menu, Home, BarChart3, Receipt, HardHat, LogOut, Check
 } from 'lucide-react';
+import { useNotifications } from '../../hooks/useNotifications';
+import ClientAutomation from '../common/ClientAutomation';
 import './Layout.css';
+import './Notifications.css';
 
 const NAV_SECTIONS = [
     {
@@ -66,18 +69,37 @@ export default function Layout({ children }) {
     const location = useLocation();
     const [collapsed, setCollapsed] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
     const userMenuRef = useRef(null);
+    const notifMenuRef = useRef(null);
 
-    // Close user menu on click outside
+    // Initialize notifications hook
+    const {
+        permissionStatus, requestPermission,
+        notifications, unreadCount, markAsRead, markAllAsRead
+    } = useNotifications();
+
+    // Close menus on click outside
     useEffect(() => {
         function handleClickOutside(e) {
             if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
                 setShowUserMenu(false);
             }
+            if (notifMenuRef.current && !notifMenuRef.current.contains(e.target)) {
+                setShowNotifications(false);
+            }
         }
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Prompt for notification permission on first load if default
+    useEffect(() => {
+        if (permissionStatus === 'default' && user) {
+            // Optional: you could make this a deliberate button click instead of auto-prompting
+            // requestPermission(); 
+        }
+    }, [permissionStatus, user]);
 
     function handlePropertySwitch(e) {
         setSettings(prev => ({ ...prev, selectedPropertyId: e.target.value || null }));
@@ -85,6 +107,9 @@ export default function Layout({ children }) {
 
     return (
         <div className={`layout ${collapsed ? 'sidebar-collapsed' : ''}`}>
+            {/* Silent Background Automation for Free Tier */}
+            <ClientAutomation />
+
             {/* Sidebar */}
             <aside className="sidebar">
                 <div className="sidebar-header">
@@ -153,12 +178,66 @@ export default function Layout({ children }) {
                         )}
                     </div>
                     <div className="topbar-right">
-                        <Link to="/timeline" className="alert-bell" title="Alerts">
-                            <Bell size={18} />
-                            {alerts.length > 0 && (
-                                <span className="alert-count">{alerts.length > 9 ? '9+' : alerts.length}</span>
+
+                        {/* Notifications Menu */}
+                        <div className="user-menu-wrapper" ref={notifMenuRef}>
+                            <button
+                                className="alert-bell"
+                                title="Notifications"
+                                onClick={() => setShowNotifications(!showNotifications)}
+                            >
+                                <Bell size={18} />
+                                {unreadCount > 0 && (
+                                    <span className="alert-count">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                                )}
+                            </button>
+
+                            {showNotifications && (
+                                <div className="notifications-dropdown">
+                                    <div className="notifications-header">
+                                        <span className="notifications-title">Notifications</span>
+                                        {unreadCount > 0 && (
+                                            <button className="btn-ghost btn-sm" onClick={markAllAsRead}>
+                                                <Check size={14} /> Mark all read
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {permissionStatus === 'default' && (
+                                        <div className="notifications-permission-banner">
+                                            <p>Enable push notifications for rent reminders</p>
+                                            <button className="btn btn-primary btn-sm" onClick={requestPermission}>Enable</button>
+                                        </div>
+                                    )}
+
+                                    <div className="notifications-list">
+                                        {notifications.length > 0 ? (
+                                            notifications.map(n => (
+                                                <div
+                                                    key={n.id}
+                                                    className={`notification-item ${!n.read ? 'unread' : ''}`}
+                                                    onClick={() => markAsRead(n.id)}
+                                                >
+                                                    <div className="notification-content">
+                                                        <h4>{n.title}</h4>
+                                                        <p>{n.body}</p>
+                                                        <span className="notification-time">
+                                                            {new Date(n.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </span>
+                                                    </div>
+                                                    {!n.read && <div className="notification-dot" />}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="notifications-empty">
+                                                <Bell size={24} style={{ opacity: 0.5, marginBottom: 8 }} />
+                                                <p>No new notifications</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             )}
-                        </Link>
+                        </div>
 
                         {/* User avatar & menu */}
                         <div className="user-menu-wrapper" ref={userMenuRef}>
