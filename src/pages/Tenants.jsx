@@ -16,7 +16,7 @@ const EMPTY_TENANT = {
     exitReason: '',
 };
 
-export default function Tenants() {
+export default function Tenants({ embeddedPropertyId = null }) {
     const { tenants, addTenant, updateTenant, deleteTenant, properties } = useApp();
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -26,6 +26,7 @@ export default function Tenants() {
     const [filter, setFilter] = useState('all');
 
     const filtered = tenants
+        .filter(t => embeddedPropertyId ? t.propertyId === embeddedPropertyId : true)
         .filter(t => filter === 'all' || t.status === filter)
         .filter(t =>
             t.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -34,7 +35,7 @@ export default function Tenants() {
         );
 
     function openAdd() {
-        setForm({ ...EMPTY_TENANT, propertyId: properties[0]?.id || '' });
+        setForm({ ...EMPTY_TENANT, propertyId: embeddedPropertyId || properties[0]?.id || '' });
         setEditingId(null);
         setShowForm(true);
     }
@@ -66,18 +67,29 @@ export default function Tenants() {
     }
 
     return (
-        <div className="tenants-page">
-            <div className="section-header">
-                <div>
-                    <h1 className="section-title">Tenants</h1>
-                    <p className="section-subtitle">{tenants.filter(t => t.status === 'active').length} active tenants</p>
+        <div className={embeddedPropertyId ? "tenants-embedded" : "tenants-page"}>
+            {!embeddedPropertyId && (
+                <div className="section-header">
+                    <div>
+                        <h1 className="section-title">Tenants</h1>
+                        <p className="section-subtitle">{tenants.filter(t => t.status === 'active').length} active tenants</p>
+                    </div>
+                    <button className="btn btn-primary" onClick={openAdd}>
+                        <Plus size={16} /> Add Tenant
+                    </button>
                 </div>
-                <button className="btn btn-primary" onClick={openAdd}>
-                    <Plus size={16} /> Add Tenant
-                </button>
-            </div>
+            )}
 
-            {tenants.length > 0 && (
+            {embeddedPropertyId && (
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold">Associated Tenants</h3>
+                    <button className="btn btn-primary btn-sm" onClick={openAdd}>
+                        <Plus size={14} /> New Tenant
+                    </button>
+                </div>
+            )}
+
+            {filtered.length > 0 || search || filter !== 'all' ? (
                 <>
                     <div className="filter-bar">
                         <div className="search-bar" style={{ flex: 1, marginBottom: 0 }}>
@@ -131,9 +143,7 @@ export default function Tenants() {
                         )}
                     </div>
                 </>
-            )}
-
-            {tenants.length === 0 && (
+            ) : (
                 <div className="empty-state">
                     <Users size={56} />
                     <h3>No tenants yet</h3>
@@ -146,7 +156,12 @@ export default function Tenants() {
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Property *</label>
-                        <select value={form.propertyId} onChange={e => setForm(prev => ({ ...prev, propertyId: e.target.value }))} required>
+                        <select
+                            value={form.propertyId}
+                            onChange={e => setForm(prev => ({ ...prev, propertyId: e.target.value }))}
+                            required
+                            disabled={!!embeddedPropertyId} // Lock property if embedded
+                        >
                             <option value="">Select property</option>
                             {properties.map(p => <option key={p.id} value={p.id}>{p.nickname}</option>)}
                         </select>

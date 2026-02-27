@@ -23,7 +23,7 @@ const DEPOSIT_TYPES = [
     { value: 'other', label: 'Other' },
 ];
 
-export default function Agreements() {
+export default function Agreements({ embeddedPropertyId = null }) {
     const { agreements, addAgreement, updateAgreement, deleteAgreement, properties, tenants, deposits, addDeposit, updateDeposit, deleteDeposit } = useApp();
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -38,7 +38,7 @@ export default function Agreements() {
     const [editingDepositId, setEditingDepositId] = useState(null);
 
     function openAdd() {
-        setForm({ ...EMPTY_AGREEMENT, propertyId: properties[0]?.id || '' });
+        setForm({ ...EMPTY_AGREEMENT, propertyId: embeddedPropertyId || properties[0]?.id || '' });
         setEditingId(null);
         setShowForm(true);
     }
@@ -114,30 +114,43 @@ export default function Agreements() {
 
     const propTenants = form.propertyId ? tenants.filter(t => t.propertyId === form.propertyId) : [];
 
-    return (
-        <div className="agreements-page">
-            <div className="section-header">
-                <div>
-                    <h1 className="section-title">Tenancy Agreements</h1>
-                    <p className="section-subtitle">{agreements.length} records</p>
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                        className="btn btn-secondary"
-                        onClick={() => exportToPDF(agreements, 'Tenancy-Agreements', 'Tenancy Agreements Report')}
-                        disabled={agreements.length === 0}
-                    >
-                        <FileText size={16} /> Export PDF
-                    </button>
-                    <button className="btn btn-primary" onClick={openAdd}>
-                        <Plus size={16} /> Add Agreement
-                    </button>
-                </div>
-            </div>
+    const filteredAgreements = agreements.filter(a => embeddedPropertyId ? a.propertyId === embeddedPropertyId : true);
 
-            {agreements.length > 0 ? (
+    return (
+        <div className={embeddedPropertyId ? "agreements-embedded" : "agreements-page"}>
+            {!embeddedPropertyId && (
+                <div className="section-header">
+                    <div>
+                        <h1 className="section-title">Tenancy Agreements</h1>
+                        <p className="section-subtitle">{agreements.length} records</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => exportToPDF(agreements, 'Tenancy-Agreements', 'Tenancy Agreements Report')}
+                            disabled={agreements.length === 0}
+                        >
+                            <FileText size={16} /> Export PDF
+                        </button>
+                        <button className="btn btn-primary" onClick={openAdd}>
+                            <Plus size={16} /> Add Agreement
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {embeddedPropertyId && (
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold">Lease Agreements</h3>
+                    <button className="btn btn-primary btn-sm" onClick={openAdd}>
+                        <Plus size={14} /> New Agreement
+                    </button>
+                </div>
+            )}
+
+            {filteredAgreements.length > 0 ? (
                 <div className="agreement-list">
-                    {agreements.map(a => {
+                    {filteredAgreements.map(a => {
                         const prop = properties.find(p => p.id === a.propertyId);
                         const tenant = tenants.find(t => t.id === a.tenantId);
                         const expiry = getExpiryInfo(a.endDate);
@@ -227,7 +240,12 @@ export default function Agreements() {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Property *</label>
-                            <select value={form.propertyId} onChange={e => setForm(prev => ({ ...prev, propertyId: e.target.value, tenantId: '' }))} required>
+                            <select
+                                value={form.propertyId}
+                                onChange={e => setForm(prev => ({ ...prev, propertyId: e.target.value, tenantId: '' }))}
+                                required
+                                disabled={!!embeddedPropertyId} // Lock if embedded
+                            >
                                 <option value="">Select</option>
                                 {properties.map(p => <option key={p.id} value={p.id}>{p.nickname}</option>)}
                             </select>
