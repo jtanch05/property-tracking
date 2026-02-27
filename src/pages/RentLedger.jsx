@@ -3,6 +3,7 @@ import { useApp } from '../context/AppProvider';
 import { PAYMENT_METHODS } from '../data/malaysiaData';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
+import ToggleGroup from '../components/common/ToggleGroup';
 import { formatCurrency, formatMonth, formatDate, getStatusColor } from '../utils/formatters';
 import { differenceInDays, parseISO } from 'date-fns';
 import { Plus, Wallet, Edit3, Trash2, CheckCircle, Clock, AlertCircle, MessageCircle, Minus } from 'lucide-react';
@@ -337,9 +338,14 @@ export default function RentLedger() {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Status</label>
-                            <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))}>
-                                <option value="unpaid">Unpaid</option><option value="paid">Paid</option>
-                            </select>
+                            <ToggleGroup
+                                options={[
+                                    { value: 'unpaid', label: 'Unpaid' },
+                                    { value: 'paid', label: 'Paid' },
+                                ]}
+                                value={form.status}
+                                onChange={val => setForm(p => ({ ...p, status: val }))}
+                            />
                         </div>
                         <div className="form-group"><label>Payment Date</label><input type="date" value={form.paymentDate} onChange={e => setForm(p => ({ ...p, paymentDate: e.target.value }))} /></div>
                     </div>

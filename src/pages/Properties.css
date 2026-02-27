@@ -44,9 +44,9 @@
 }
 
 .property-card:hover {
-    border-color: var(--accent-border);
+    border-color: var(--border-strong);
     box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
 }
 
 /* Top row: icon, name/badges, actions */
@@ -63,8 +63,8 @@
     width: 40px;
     height: 40px;
     border-radius: var(--radius-md);
-    background: var(--accent-bg);
-    color: var(--accent);
+    background: var(--bg-hover);
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -139,7 +139,7 @@
     padding: var(--space-sm) var(--space-lg);
     margin-top: auto;
     border-top: 1px solid var(--border);
-    background: var(--bg-tertiary);
+    background: var(--bg-hover);
 }
 
 .property-tenant {
@@ -173,13 +173,13 @@
     gap: 4px;
     font-size: var(--font-sm);
     font-weight: 600;
-    color: var(--accent);
-    transition: gap var(--transition-fast);
+    color: var(--text-secondary);
+    transition: gap var(--transition-fast), color var(--transition-fast);
 }
 
 .property-card:hover .property-card-cta {
     gap: 7px;
-    color: var(--accent-light);
+    color: var(--text-primary);
 }
 
 /* ======= Form section headers ======= */

@@ -3,6 +3,7 @@ import { useApp } from '../context/AppProvider';
 import { AGREEMENT_TYPES } from '../data/malaysiaData';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
+import ToggleGroup from '../components/common/ToggleGroup';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { exportToPDF } from '../utils/export';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -278,9 +279,14 @@ export default function Agreements({ embeddedPropertyId = null }) {
                         <div className="form-group"><label>Monthly Rent (RM)</label><input type="number" placeholder="1500" value={form.rentAmount} onChange={e => setForm(prev => ({ ...prev, rentAmount: e.target.value }))} /></div>
                         <div className="form-group">
                             <label>Renewal Option</label>
-                            <select value={form.renewalOption ? 'yes' : 'no'} onChange={e => setForm(prev => ({ ...prev, renewalOption: e.target.value === 'yes' }))}>
-                                <option value="no">No</option><option value="yes">Yes</option>
-                            </select>
+                            <ToggleGroup
+                                options={[
+                                    { value: 'no', label: 'No' },
+                                    { value: 'yes', label: 'Yes' },
+                                ]}
+                                value={form.renewalOption ? 'yes' : 'no'}
+                                onChange={val => setForm(prev => ({ ...prev, renewalOption: val === 'yes' }))}
+                            />
                         </div>
                     </div>
 

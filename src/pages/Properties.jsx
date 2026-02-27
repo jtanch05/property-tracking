@@ -5,6 +5,7 @@ import { LOCAL_COUNCILS } from '../data/localCouncils';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import SlidePanel from '../components/common/SlidePanel';
+import ToggleGroup from '../components/common/ToggleGroup';
 import Tenants from './Tenants';
 import Agreements from './Agreements';
 import { Plus, Building2, Edit3, Trash2, MapPin, Layers, Car, Search, Users, Home, BedDouble, Bath, Ruler, ArrowRight, UserCheck, FileText } from 'lucide-react';
@@ -440,10 +441,14 @@ export default function Properties() {
                                     Strata Title
                                     {config.strata.show === 'optional' && <span className="optional-tag">Optional</span>}
                                 </label>
-                                <select value={form.strata ? 'yes' : 'no'} onChange={e => handleChange('strata', e.target.value === 'yes')}>
-                                    <option value="no">Non-Strata</option>
-                                    <option value="yes">Strata</option>
-                                </select>
+                                <ToggleGroup
+                                    options={[
+                                        { value: 'no', label: 'Non-Strata' },
+                                        { value: 'yes', label: 'Strata' },
+                                    ]}
+                                    value={form.strata ? 'yes' : 'no'}
+                                    onChange={val => handleChange('strata', val === 'yes')}
+                                />
                             </div>
                         )}
                     </div>

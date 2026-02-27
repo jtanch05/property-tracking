@@ -154,29 +154,6 @@ export default function Dashboard() {
 
             {/* Stats Grid */}
             <div className="stats-grid">
-                <div className="card stat-card">
-                    <div className="stat-icon" style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}>
-                        <Building2 size={20} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-label">Properties</span>
-                        <span className="stat-value">{totalProperties}</span>
-                        <span className="stat-detail">
-                            <span className="badge badge-success">{occupiedCount} occupied</span>
-                            {vacantCount > 0 && <span className="badge badge-danger">{vacantCount} vacant</span>}
-                        </span>
-                    </div>
-                </div>
-
-                <div className="card stat-card">
-                    <div className="stat-icon" style={{ background: 'var(--info-bg)', color: 'var(--info)' }}>
-                        <Users size={20} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-label">Active Tenants</span>
-                        <span className="stat-value">{activeTenants}</span>
-                    </div>
-                </div>
 
                 <div className="card stat-card">
                     <div className="stat-icon" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>

@@ -122,21 +122,6 @@ export default function Layout({ children }) {
                     </button>
                 </div>
 
-                {/* Property Switcher */}
-                {!collapsed && properties.length > 0 && (
-                    <div className="sidebar-switcher">
-                        <select
-                            className="property-select"
-                            value={settings.selectedPropertyId || ''}
-                            onChange={handlePropertySwitch}
-                        >
-                            <option value="">All Properties</option>
-                            {properties.map(p => (
-                                <option key={p.id} value={p.id}>{p.nickname}</option>
-                            ))}
-                        </select>
-                    </div>
-                )}
 
                 {/* Nav */}
                 <nav className="sidebar-nav">
