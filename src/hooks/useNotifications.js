@@ -15,7 +15,8 @@ export function useNotifications() {
 
     // VAPID Key used for generating the FCM token
     // In a real app, you should securely store from your Firebase Console => Cloud Messaging => Web configuration
-    const VAPID_KEY = "g_1sbizczq9JF6qjPiKn6WyXbw8Sib2a6SBLVC4BXxI";
+    const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+
 
     useEffect(() => {
         if (!user || permissionStatus !== 'granted') return;
