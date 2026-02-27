@@ -4,6 +4,7 @@ import { PAYMENT_METHODS } from '../data/malaysiaData';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import ToggleGroup from '../components/common/ToggleGroup';
+import CustomSelect from '../components/common/CustomSelect';
 import { formatCurrency, formatMonth, formatDate, getStatusColor } from '../utils/formatters';
 import { differenceInDays, parseISO } from 'date-fns';
 import { Plus, Wallet, Edit3, Trash2, CheckCircle, Clock, AlertCircle, MessageCircle, Minus } from 'lucide-react';
@@ -150,10 +151,13 @@ export default function RentLedger() {
 
             {rentRecords.length > 0 && (
                 <div className="filter-bar">
-                    <select className="filter-select" value={filterProp} onChange={e => setFilterProp(e.target.value)}>
-                        <option value="">All Properties</option>
-                        {properties.map(p => <option key={p.id} value={p.id}>{p.nickname}</option>)}
-                    </select>
+                    <CustomSelect
+                        variant="filter"
+                        value={filterProp}
+                        onChange={setFilterProp}
+                        options={[{ value: '', label: 'All Properties' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]}
+                        placeholder="All Properties"
+                    />
                     <div className="filter-tabs">
                         {['all', 'paid', 'unpaid'].map(f => (
                             <button key={f} className={`btn btn-sm ${filterStatus === f ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setFilterStatus(f)}>
@@ -180,7 +184,7 @@ export default function RentLedger() {
 
                         return (
                             <div key={r.id} className={`card rent-card ${r.status}`}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div className="rent-row">
                                     <div className="rent-left">
                                         <div className={`rent-status-icon ${r.status}`}>
                                             {r.status === 'paid' ? <CheckCircle size={18} /> : overdue > 0 ? <AlertCircle size={18} /> : <Clock size={18} />}
@@ -191,32 +195,32 @@ export default function RentLedger() {
                                             {overdue > 0 && r.status !== 'paid' && <span className="rent-overdue">{overdue} days overdue</span>}
                                         </div>
                                     </div>
-                                    <div className="rent-right">
-                                        <div className="rent-amounts">
-                                            {deductionTotal > 0 ? (
-                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                                    <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)', textDecoration: 'line-through' }}>{formatCurrency(r.amountDue)}</span>
-                                                    <span className="rent-amount">{formatCurrency(netAmount)}</span>
-                                                </div>
-                                            ) : (
-                                                <span className="rent-amount">{formatCurrency(r.amountDue)}</span>
-                                            )}
-                                            {r.status === 'paid' && <span className="rent-paid-date">Paid {formatDate(r.paymentDate)}</span>}
-                                        </div>
-                                        <div className="rent-actions">
-                                            {r.status !== 'paid' && (
-                                                <>
-                                                    <button className="btn btn-sm btn-primary" onClick={() => quickPay(r)}>Mark Paid</button>
-                                                    {tenant?.phone && (
-                                                        <button className="btn-icon" title="Send WhatsApp reminder" onClick={() => sendRentReminder(tenant, r, prop)}>
-                                                            <MessageCircle size={16} />
-                                                        </button>
-                                                    )}
-                                                </>
-                                            )}
-                                            <button className="btn-icon" onClick={() => openEdit(r)}><Edit3 size={16} /></button>
-                                            <button className="btn-icon" onClick={() => setDeleteId(r.id)}><Trash2 size={16} /></button>
-                                        </div>
+
+                                    <div className="rent-amounts">
+                                        {deductionTotal > 0 ? (
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                                <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)', textDecoration: 'line-through' }}>{formatCurrency(r.amountDue)}</span>
+                                                <span className="rent-amount">{formatCurrency(netAmount)}</span>
+                                            </div>
+                                        ) : (
+                                            <span className="rent-amount">{formatCurrency(r.amountDue)}</span>
+                                        )}
+                                        {r.status === 'paid' && <span className="rent-paid-date">Paid {formatDate(r.paymentDate)}</span>}
+                                    </div>
+
+                                    <div className="rent-actions">
+                                        {r.status !== 'paid' && (
+                                            <>
+                                                <button className="btn btn-sm btn-primary" onClick={() => quickPay(r)}>Mark Paid</button>
+                                                {tenant?.phone && (
+                                                    <button className="btn-icon" title="Send WhatsApp reminder" onClick={() => sendRentReminder(tenant, r, prop)}>
+                                                        <MessageCircle size={16} />
+                                                    </button>
+                                                )}
+                                            </>
+                                        )}
+                                        <button className="btn-icon" onClick={() => openEdit(r)}><Edit3 size={16} /></button>
+                                        <button className="btn-icon" onClick={() => setDeleteId(r.id)}><Trash2 size={16} /></button>
                                     </div>
                                 </div>
 
@@ -281,17 +285,21 @@ export default function RentLedger() {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Property *</label>
-                            <select value={form.propertyId} onChange={e => setForm(p => ({ ...p, propertyId: e.target.value, tenantId: '' }))} required>
-                                <option value="">Select</option>
-                                {properties.map(p => <option key={p.id} value={p.id}>{p.nickname}</option>)}
-                            </select>
+                            <CustomSelect
+                                value={form.propertyId}
+                                onChange={val => setForm(p => ({ ...p, propertyId: val, tenantId: '' }))}
+                                options={[{ value: '', label: 'Select' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]}
+                                placeholder="Select"
+                            />
                         </div>
                         <div className="form-group">
                             <label>Tenant</label>
-                            <select value={form.tenantId} onChange={e => setForm(p => ({ ...p, tenantId: e.target.value }))}>
-                                <option value="">Select</option>
-                                {propTenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                            </select>
+                            <CustomSelect
+                                value={form.tenantId}
+                                onChange={val => setForm(p => ({ ...p, tenantId: val }))}
+                                options={[{ value: '', label: 'Select' }, ...propTenants.map(t => ({ value: t.id, label: t.name }))]}
+                                placeholder="Select"
+                            />
                         </div>
                     </div>
                     <div className="form-row">
@@ -318,12 +326,12 @@ export default function RentLedger() {
                             </div>
                         )}
                         {availableDeductions.length > 0 ? (
-                            <select onChange={e => { const m = availableDeductions.find(x => x.id === e.target.value); if (m) addDeduction(m); e.target.value = ''; }} defaultValue="">
-                                <option value="" disabled>+ Link maintenance repair...</option>
-                                {availableDeductions.map(m => (
-                                    <option key={m.id} value={m.id}>{m.description || m.issueType} — {formatCurrency(m.cost)}</option>
-                                ))}
-                            </select>
+                            <CustomSelect
+                                onChange={val => { const m = availableDeductions.find(x => x.id === val); if (m) addDeduction(m); }}
+                                value=""
+                                options={[{ value: '', label: '+ Link maintenance repair...' }, ...availableDeductions.map(m => ({ value: m.id, label: `${m.description || m.issueType} — ${formatCurrency(m.cost)}` }))]}
+                                placeholder="+ Link maintenance repair..."
+                            />
                         ) : form.propertyId ? (
                             <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)' }}>No maintenance records available for deduction</span>
                         ) : null}
@@ -352,9 +360,11 @@ export default function RentLedger() {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Payment Method</label>
-                            <select value={form.paymentMethod} onChange={e => setForm(p => ({ ...p, paymentMethod: e.target.value }))}>
-                                {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                            </select>
+                            <CustomSelect
+                                value={form.paymentMethod}
+                                onChange={val => setForm(p => ({ ...p, paymentMethod: val }))}
+                                options={PAYMENT_METHODS}
+                            />
                         </div>
                         <div className="form-group"><label>Amount Paid (RM)</label><input type="number" value={form.amountPaid} onChange={e => setForm(p => ({ ...p, amountPaid: e.target.value }))} placeholder={formDeductionTotal > 0 ? String(formNetAmount) : '1500'} /></div>
                     </div>

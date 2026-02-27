@@ -3,6 +3,7 @@ import { useApp } from '../context/AppProvider';
 import { VENDOR_SERVICE_TYPES } from '../data/malaysiaData';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
+import CustomSelect from '../components/common/CustomSelect';
 import { formatDate } from '../utils/formatters';
 import { Plus, Contact, Edit3, Trash2, Phone, Star, Search } from 'lucide-react';
 
@@ -58,7 +59,7 @@ export default function Vendors() {
             <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={editingId ? 'Edit Vendor' : 'Add Vendor'}>
                 <form onSubmit={handleSubmit}>
                     <div className="form-group"><label>Name *</label><input type="text" placeholder="Vendor name" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required autoFocus /></div>
-                    <div className="form-row"><div className="form-group"><label>Service Type</label><select value={form.serviceType} onChange={e => setForm(p => ({ ...p, serviceType: e.target.value }))}>{VENDOR_SERVICE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select></div><div className="form-group"><label>Phone</label><input type="tel" placeholder="+60191234567" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} /></div></div>
+                    <div className="form-row"><div className="form-group"><label>Service Type</label><CustomSelect value={form.serviceType} onChange={val => setForm(p => ({ ...p, serviceType: val }))} options={VENDOR_SERVICE_TYPES} /></div><div className="form-group"><label>Phone</label><input type="tel" placeholder="+60191234567" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} /></div></div>
                     <div className="form-row"><div className="form-group"><label>Rating (1-5)</label><input type="number" min={0} max={5} value={form.rating} onChange={e => setForm(p => ({ ...p, rating: e.target.value }))} /></div><div className="form-group"><label>Last Used</label><input type="date" value={form.lastUsedDate} onChange={e => setForm(p => ({ ...p, lastUsedDate: e.target.value }))} /></div></div>
                     <div className="form-group"><label>Notes</label><textarea placeholder="Any notes..." value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} rows={2} /></div>
                     <div className="modal-footer" style={{ padding: 'var(--space-md) 0 0', borderTop: '1px solid var(--border)' }}><button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button><button type="submit" className="btn btn-primary">{editingId ? 'Save' : 'Add'}</button></div>

@@ -6,6 +6,7 @@ import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import SlidePanel from '../components/common/SlidePanel';
 import ToggleGroup from '../components/common/ToggleGroup';
+import CustomSelect from '../components/common/CustomSelect';
 import Tenants from './Tenants';
 import Agreements from './Agreements';
 import { Plus, Building2, Edit3, Trash2, MapPin, Layers, Car, Search, Users, Home, BedDouble, Bath, Ruler, ArrowRight, UserCheck, FileText } from 'lucide-react';
@@ -429,11 +430,11 @@ export default function Properties() {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Property Type *</label>
-                            <select value={form.type} onChange={e => handleChange('type', e.target.value)}>
-                                {PROPERTY_TYPES.map(t => (
-                                    <option key={t.value} value={t.value}>{t.label}</option>
-                                ))}
-                            </select>
+                            <CustomSelect
+                                value={form.type}
+                                onChange={val => handleChange('type', val)}
+                                options={PROPERTY_TYPES}
+                            />
                         </div>
                         {isVisible(config, 'strata') && (
                             <div className="form-group">
@@ -459,21 +460,22 @@ export default function Properties() {
                     <div className="form-row">
                         <div className="form-group">
                             <label>State</label>
-                            <select value={form.state} onChange={e => handleChange('state', e.target.value)}>
-                                <option value="">Select state</option>
-                                {MALAYSIA_STATES.map(s => (
-                                    <option key={s.code} value={s.name}>{s.name}</option>
-                                ))}
-                            </select>
+                            <CustomSelect
+                                value={form.state}
+                                onChange={val => handleChange('state', val)}
+                                options={[{ value: '', label: 'Select state' }, ...MALAYSIA_STATES.map(s => ({ value: s.name, label: s.name }))]}
+                                placeholder="Select state"
+                            />
                         </div>
                         <div className="form-group">
                             <label>Local Council <span className="optional-tag">Optional</span></label>
-                            <select value={form.localCouncil} onChange={e => handleChange('localCouncil', e.target.value)} disabled={!form.state}>
-                                <option value="">Select council</option>
-                                {councils.map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
+                            <CustomSelect
+                                value={form.localCouncil}
+                                onChange={val => handleChange('localCouncil', val)}
+                                options={[{ value: '', label: 'Select council' }, ...councils.map(c => ({ value: c, label: c }))]}
+                                placeholder="Select council"
+                                disabled={!form.state}
+                            />
                         </div>
                     </div>
 
@@ -647,12 +649,17 @@ export default function Properties() {
                                     Furnished
                                     {config.furnished?.show === 'optional' && <span className="optional-tag">Optional</span>}
                                 </label>
-                                <select value={form.furnished} onChange={e => handleChange('furnished', e.target.value)}>
-                                    <option value="">Select</option>
-                                    <option value="unfurnished">Unfurnished</option>
-                                    <option value="partial">Partially Furnished</option>
-                                    <option value="fully">Fully Furnished</option>
-                                </select>
+                                <CustomSelect
+                                    value={form.furnished}
+                                    onChange={val => handleChange('furnished', val)}
+                                    options={[
+                                        { value: '', label: 'Select' },
+                                        { value: 'unfurnished', label: 'Unfurnished' },
+                                        { value: 'partial', label: 'Partially Furnished' },
+                                        { value: 'fully', label: 'Fully Furnished' },
+                                    ]}
+                                    placeholder="Select"
+                                />
                             </div>
                         )}
                     </div>
@@ -840,6 +847,6 @@ export default function Properties() {
                 title="Delete Property"
                 message="Are you sure you want to delete this property? All associated records (tenants, rent, taxes, etc.) will remain but won't be linked."
             />
-        </div>
+        </div >
     );
 }

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useApp } from '../context/AppProvider';
 import { formatCurrency } from '../utils/formatters';
+import CustomSelect from '../components/common/CustomSelect';
 import { TrendingUp, TrendingDown, Building2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { parseISO, format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, isWithinInterval } from 'date-fns';
 
@@ -109,105 +110,151 @@ export default function CashFlow() {
     const maxBar = Math.max(...monthlyData.map(d => Math.max(d.income, d.expenses)), 1);
 
     return (
-        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-            <div className="section-header">
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+
+            {/* Header + Filters row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-lg)', flexWrap: 'wrap', gap: 12 }}>
                 <div>
                     <h1 className="section-title">Cash Flow</h1>
-                    <p className="section-subtitle">Income vs Expenses</p>
+                    <p className="section-subtitle">Income & expenses over time</p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <CustomSelect
+                        variant="filter"
+                        value={filterProp}
+                        onChange={setFilterProp}
+                        options={[{ value: '', label: 'All Properties' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]}
+                        placeholder="All Properties"
+                    />
+                    <div className="filter-tabs">
+                        {[{ v: 'month', l: 'Month' }, { v: 'quarter', l: 'Quarter' }, { v: 'year', l: 'Year' }].map(r => (
+                            <button key={r.v} className={`btn btn-sm ${range === r.v ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setRange(r.v)}>{r.l}</button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="filter-bar" style={{ marginBottom: 'var(--space-lg)', gap: 12 }}>
-                <select className="filter-select" value={filterProp} onChange={e => setFilterProp(e.target.value)} style={{ maxWidth: 200 }}>
-                    <option value="">All Properties</option>
-                    {properties.map(p => <option key={p.id} value={p.id}>{p.nickname}</option>)}
-                </select>
-                <div className="filter-tabs">
-                    {[{ v: 'month', l: 'This Month' }, { v: 'quarter', l: 'Quarter' }, { v: 'year', l: 'Year' }].map(r => (
-                        <button key={r.v} className={`btn btn-sm ${range === r.v ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setRange(r.v)}>{r.l}</button>
-                    ))}
+            {/* KPI Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
+                {/* Income */}
+                <div className="card" style={{ padding: '20px 24px' }}>
+                    <span style={{ fontSize: 'var(--font-xs)', fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Total Income</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 8 }}>
+                        <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--success)', lineHeight: 1 }}>{formatCurrency(totalIncome)}</span>
+                    </div>
+                    <div style={{ marginTop: 10, height: 3, background: 'var(--bg-hover)', borderRadius: 99 }}>
+                        <div style={{ height: '100%', width: totalIncome > 0 ? '100%' : '0%', background: 'var(--success)', borderRadius: 99, opacity: 0.7 }} />
+                    </div>
                 </div>
-            </div>
 
-            {/* Summary Cards */}
-            <div className="stats-grid" style={{ marginBottom: 'var(--space-xl)' }}>
-                <div className="card stat-card">
-                    <div className="stat-icon" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>
-                        <ArrowUpRight size={20} />
+                {/* Expenses */}
+                <div className="card" style={{ padding: '20px 24px' }}>
+                    <span style={{ fontSize: 'var(--font-xs)', fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Total Expenses</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 8 }}>
+                        <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--danger)', lineHeight: 1 }}>{formatCurrency(totalExpenses)}</span>
                     </div>
-                    <div className="stat-info">
-                        <span className="stat-label">Total Income</span>
-                        <span className="stat-value">{formatCurrency(totalIncome)}</span>
-                    </div>
-                </div>
-                <div className="card stat-card">
-                    <div className="stat-icon" style={{ background: 'var(--danger-bg)', color: 'var(--danger)' }}>
-                        <ArrowDownRight size={20} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-label">Total Expenses</span>
-                        <span className="stat-value">{formatCurrency(totalExpenses)}</span>
+                    <div style={{ marginTop: 10, height: 3, background: 'var(--bg-hover)', borderRadius: 99 }}>
+                        <div style={{ height: '100%', width: totalIncome > 0 ? `${Math.min((totalExpenses / totalIncome) * 100, 100)}%` : '0%', background: 'var(--danger)', borderRadius: 99, opacity: 0.7 }} />
                     </div>
                 </div>
-                <div className="card stat-card">
-                    <div className="stat-icon" style={{ background: netProfit >= 0 ? 'var(--success-bg)' : 'var(--danger-bg)', color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                        {netProfit >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-label">Net Profit</span>
-                        <span className="stat-value" style={{ color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+
+                {/* Net */}
+                <div className="card" style={{ padding: '20px 24px' }}>
+                    <span style={{ fontSize: 'var(--font-xs)', fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Net Profit</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 8 }}>
+                        <span style={{ fontSize: 28, fontWeight: 700, color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)', lineHeight: 1 }}>
                             {netProfit >= 0 ? '+' : ''}{formatCurrency(netProfit)}
                         </span>
                     </div>
+                    <div style={{ marginTop: 10, height: 3, background: 'var(--bg-hover)', borderRadius: 99 }}>
+                        <div style={{ height: '100%', width: totalIncome > 0 ? `${Math.max(Math.min((Math.abs(netProfit) / totalIncome) * 100, 100), 0)}%` : '0%', background: netProfit >= 0 ? 'var(--success)' : 'var(--danger)', borderRadius: 99, opacity: 0.7 }} />
+                    </div>
                 </div>
             </div>
 
-            {/* Bar Chart */}
-            <div className="card" style={{ padding: 'var(--space-lg)' }}>
-                <h3 style={{ marginBottom: 'var(--space-md)', fontSize: 'var(--font-md)' }}>Monthly Breakdown</h3>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', height: 180 }}>
-                    {monthlyData.map((d, i) => (
-                        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                            <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 140, width: '100%' }}>
-                                <div style={{ flex: 1, background: 'var(--success)', borderRadius: '4px 4px 0 0', height: `${Math.max((d.income / maxBar) * 140, 2)}px`, opacity: 0.8, transition: 'height 0.3s ease' }} title={`Income: ${formatCurrency(d.income)}`} />
-                                <div style={{ flex: 1, background: 'var(--danger)', borderRadius: '4px 4px 0 0', height: `${Math.max((d.expenses / maxBar) * 140, 2)}px`, opacity: 0.8, transition: 'height 0.3s ease' }} title={`Expenses: ${formatCurrency(d.expenses)}`} />
-                            </div>
-                            <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)' }}>{d.month}</span>
-                        </div>
-                    ))}
-                </div>
-                <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 'var(--space-md)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--success)', opacity: 0.8 }} /><span style={{ fontSize: 'var(--font-sm)', color: 'var(--text-secondary)' }}>Income</span></div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--danger)', opacity: 0.8 }} /><span style={{ fontSize: 'var(--font-sm)', color: 'var(--text-secondary)' }}>Expenses</span></div>
-                </div>
-            </div>
+            {/* Chart + Breakdown side by side */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-md)', alignItems: 'start' }}>
 
-            {/* Expense Breakdown */}
-            <div className="card" style={{ padding: 'var(--space-lg)', marginTop: 'var(--space-md)' }}>
-                <h3 style={{ marginBottom: 'var(--space-md)', fontSize: 'var(--font-md)' }}>Expense Breakdown</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {[
-                        { label: 'Maintenance & Repairs', amount: maintenanceCosts, color: 'var(--warning)' },
-                        { label: 'Taxes (Cukai)', amount: taxCosts, color: 'var(--danger)' },
-                        { label: 'Insurance', amount: insuranceCosts, color: 'var(--info)' },
-                        { label: 'Management Fees', amount: mgmtCosts, color: 'var(--accent)' },
-                    ].filter(e => e.amount > 0).map((exp, i) => (
-                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <div style={{ width: 10, height: 10, borderRadius: '50%', background: exp.color }} />
-                                <span>{exp.label}</span>
+                {/* Bar Chart */}
+                <div className="card" style={{ padding: 'var(--space-lg)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-lg)' }}>
+                        <h3 style={{ fontSize: 'var(--font-md)', fontWeight: 600 }}>Monthly Breakdown</h3>
+                        <div style={{ display: 'flex', gap: 16 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <div style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--success)', opacity: 0.8 }} />
+                                <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)' }}>Income</span>
                             </div>
-                            <span style={{ fontWeight: 600 }}>{formatCurrency(exp.amount)}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <div style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--danger)', opacity: 0.8 }} />
+                                <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)' }}>Expenses</span>
+                            </div>
                         </div>
-                    ))}
-                    {totalExpenses === 0 && (
-                        <p style={{ color: 'var(--text-tertiary)', textAlign: 'center' }}>No expenses recorded in this period</p>
-                    )}
-                    {totalExpenses > 0 && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTop: '1px solid var(--border)', fontWeight: 700 }}>
-                            <span>Total Expenses</span>
-                            <span>{formatCurrency(totalExpenses)}</span>
+                    </div>
+
+                    {/* Chart area */}
+                    <div style={{ position: 'relative' }}>
+                        {/* Horizontal grid lines */}
+                        {[100, 75, 50, 25].map(pct => (
+                            <div key={pct} style={{ position: 'absolute', top: `${(100 - pct) / 100 * 160}px`, left: 0, right: 0, borderTop: '1px dashed var(--border)', opacity: 0.4 }} />
+                        ))}
+
+                        <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 160, position: 'relative', zIndex: 1 }}>
+                            {monthlyData.map((d, i) => (
+                                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, height: '100%', justifyContent: 'flex-end' }}>
+                                    <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', width: '100%' }}>
+                                        <div
+                                            style={{ flex: 1, background: 'var(--success)', borderRadius: '3px 3px 0 0', height: `${Math.max((d.income / maxBar) * 160, d.income > 0 ? 3 : 0)}px`, opacity: 0.75, transition: 'height 0.4s ease', cursor: 'default' }}
+                                            title={`${d.month} Income: ${formatCurrency(d.income)}`}
+                                        />
+                                        <div
+                                            style={{ flex: 1, background: 'var(--danger)', borderRadius: '3px 3px 0 0', height: `${Math.max((d.expenses / maxBar) * 160, d.expenses > 0 ? 3 : 0)}px`, opacity: 0.75, transition: 'height 0.4s ease', cursor: 'default' }}
+                                            title={`${d.month} Expenses: ${formatCurrency(d.expenses)}`}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Month labels */}
+                        <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+                            {monthlyData.map((d, i) => (
+                                <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                                    <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{d.month}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Expense Breakdown */}
+                <div className="card" style={{ padding: 'var(--space-lg)' }}>
+                    <h3 style={{ fontSize: 'var(--font-md)', fontWeight: 600, marginBottom: 'var(--space-md)' }}>Expenses</h3>
+
+                    {totalExpenses === 0 ? (
+                        <p style={{ color: 'var(--text-tertiary)', fontSize: 'var(--font-sm)', textAlign: 'center', padding: '24px 0' }}>No expenses in this period</p>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            {[
+                                { label: 'Maintenance', amount: maintenanceCosts },
+                                { label: 'Taxes', amount: taxCosts },
+                                { label: 'Insurance', amount: insuranceCosts },
+                                { label: 'Management', amount: mgmtCosts },
+                            ].filter(e => e.amount > 0).map((exp, i) => (
+                                <div key={i}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                                        <span style={{ fontSize: 'var(--font-sm)', color: 'var(--text-secondary)' }}>{exp.label}</span>
+                                        <span style={{ fontSize: 'var(--font-sm)', fontWeight: 600 }}>{formatCurrency(exp.amount)}</span>
+                                    </div>
+                                    <div style={{ height: 4, background: 'var(--bg-hover)', borderRadius: 99 }}>
+                                        <div style={{ height: '100%', width: `${(exp.amount / totalExpenses) * 100}%`, background: 'var(--danger)', borderRadius: 99, opacity: 0.65 }} />
+                                    </div>
+                                </div>
+                            ))}
+
+                            <div style={{ paddingTop: 12, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontWeight: 600, fontSize: 'var(--font-sm)' }}>Total</span>
+                                <span style={{ fontWeight: 700, color: 'var(--danger)' }}>{formatCurrency(totalExpenses)}</span>
+                            </div>
                         </div>
                     )}
                 </div>

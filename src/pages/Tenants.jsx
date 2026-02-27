@@ -3,6 +3,7 @@ import { useApp } from '../context/AppProvider';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import ToggleGroup from '../components/common/ToggleGroup';
+import CustomSelect from '../components/common/CustomSelect';
 import { formatDate } from '../utils/formatters';
 import { Plus, Users, Edit3, Trash2, Phone, Mail, Search, UserCheck, UserX } from 'lucide-react';
 import './Tenants.css';
@@ -100,7 +101,7 @@ export default function Tenants({ embeddedPropertyId = null }) {
                         </div>
                         <div className="filter-tabs">
                             {['all', 'active', 'vacated'].map(f => (
-                                <button key={f} className={`btn btn - sm ${filter === f ? 'btn-primary' : 'btn-ghost'} `} onClick={() => setFilter(f)}>
+                                <button key={f} className={`btn btn-sm ${filter === f ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setFilter(f)}>
                                     {f === 'all' ? 'All' : f === 'active' ? 'Active' : 'Vacated'}
                                 </button>
                             ))}
@@ -113,7 +114,7 @@ export default function Tenants({ embeddedPropertyId = null }) {
                             return (
                                 <div key={tenant.id} className="card tenant-card">
                                     <div className="tenant-card-left">
-                                        <div className={`tenant - avatar ${tenant.status === 'active' ? 'active' : 'vacated'} `}>
+                                        <div className={`tenant-avatar ${tenant.status === 'active' ? 'active' : 'vacated'}`}>
                                             {tenant.status === 'active' ? <UserCheck size={18} /> : <UserX size={18} />}
                                         </div>
                                         <div className="tenant-info">
@@ -126,7 +127,7 @@ export default function Tenants({ embeddedPropertyId = null }) {
                                         </div>
                                     </div>
                                     <div className="tenant-card-right">
-                                        <span className={`badge badge - ${tenant.status === 'active' ? 'success' : 'neutral'} `}>
+                                        <span className={`badge badge-${tenant.status === 'active' ? 'success' : 'neutral'}`}>
                                             {tenant.status}
                                         </span>
                                         <div className="property-actions" style={{ opacity: 1 }}>
@@ -158,15 +159,13 @@ export default function Tenants({ embeddedPropertyId = null }) {
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Property *</label>
-                        <select
+                        <CustomSelect
                             value={form.propertyId}
-                            onChange={e => setForm(prev => ({ ...prev, propertyId: e.target.value }))}
-                            required
-                            disabled={!!embeddedPropertyId} // Lock property if embedded
-                        >
-                            <option value="">Select property</option>
-                            {properties.map(p => <option key={p.id} value={p.id}>{p.nickname}</option>)}
-                        </select>
+                            onChange={val => setForm(prev => ({ ...prev, propertyId: val }))}
+                            options={[{ value: '', label: 'Select property' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]}
+                            placeholder="Select property"
+                            disabled={!!embeddedPropertyId}
+                        />
                     </div>
                     <div className="form-group">
                         <label>Name (as per agreement) *</label>

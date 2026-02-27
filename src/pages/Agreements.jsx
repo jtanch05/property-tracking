@@ -4,6 +4,7 @@ import { AGREEMENT_TYPES } from '../data/malaysiaData';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import ToggleGroup from '../components/common/ToggleGroup';
+import CustomSelect from '../components/common/CustomSelect';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { exportToPDF } from '../utils/export';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -241,30 +242,32 @@ export default function Agreements({ embeddedPropertyId = null }) {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Property *</label>
-                            <select
+                            <CustomSelect
                                 value={form.propertyId}
-                                onChange={e => setForm(prev => ({ ...prev, propertyId: e.target.value, tenantId: '' }))}
-                                required
-                                disabled={!!embeddedPropertyId} // Lock if embedded
-                            >
-                                <option value="">Select</option>
-                                {properties.map(p => <option key={p.id} value={p.id}>{p.nickname}</option>)}
-                            </select>
+                                onChange={val => setForm(prev => ({ ...prev, propertyId: val, tenantId: '' }))}
+                                options={[{ value: '', label: 'Select' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]}
+                                placeholder="Select"
+                                disabled={!!embeddedPropertyId}
+                            />
                         </div>
                         <div className="form-group">
                             <label>Tenant</label>
-                            <select value={form.tenantId} onChange={e => setForm(prev => ({ ...prev, tenantId: e.target.value }))}>
-                                <option value="">Select</option>
-                                {propTenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                            </select>
+                            <CustomSelect
+                                value={form.tenantId}
+                                onChange={val => setForm(prev => ({ ...prev, tenantId: val }))}
+                                options={[{ value: '', label: 'Select' }, ...propTenants.map(t => ({ value: t.id, label: t.name }))]}
+                                placeholder="Select"
+                            />
                         </div>
                     </div>
                     <div className="form-row">
                         <div className="form-group">
                             <label>Agreement Type</label>
-                            <select value={form.type} onChange={e => setForm(prev => ({ ...prev, type: e.target.value }))}>
-                                {AGREEMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                            </select>
+                            <CustomSelect
+                                value={form.type}
+                                onChange={val => setForm(prev => ({ ...prev, type: val }))}
+                                options={AGREEMENT_TYPES}
+                            />
                         </div>
                         <div className="form-group">
                             <label>Notice Period (months)</label>
@@ -302,9 +305,11 @@ export default function Agreements({ embeddedPropertyId = null }) {
                 <form onSubmit={handleDepositSubmit}>
                     <div className="form-group">
                         <label>Deposit Type</label>
-                        <select value={depositForm.type} onChange={e => setDepositForm(p => ({ ...p, type: e.target.value }))}>
-                            {DEPOSIT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                        </select>
+                        <CustomSelect
+                            value={depositForm.type}
+                            onChange={val => setDepositForm(p => ({ ...p, type: val }))}
+                            options={DEPOSIT_TYPES}
+                        />
                     </div>
                     <div className="form-group">
                         <label>Amount (RM)</label>
@@ -312,12 +317,16 @@ export default function Agreements({ embeddedPropertyId = null }) {
                     </div>
                     <div className="form-group">
                         <label>Status</label>
-                        <select value={depositForm.status} onChange={e => setDepositForm(p => ({ ...p, status: e.target.value }))}>
-                            <option value="held">Held</option>
-                            <option value="partially_refunded">Partially Refunded</option>
-                            <option value="refunded">Refunded</option>
-                            <option value="forfeited">Forfeited</option>
-                        </select>
+                        <CustomSelect
+                            value={depositForm.status}
+                            onChange={val => setDepositForm(p => ({ ...p, status: val }))}
+                            options={[
+                                { value: 'held', label: 'Held' },
+                                { value: 'partially_refunded', label: 'Partially Refunded' },
+                                { value: 'refunded', label: 'Refunded' },
+                                { value: 'forfeited', label: 'Forfeited' },
+                            ]}
+                        />
                     </div>
                     <div className="form-group">
                         <label>Notes</label>

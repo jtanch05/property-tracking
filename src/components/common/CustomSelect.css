@@ -1,0 +1,135 @@
+.cs-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* ── Trigger Button ── */
+.cs-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-family);
+    font-size: var(--font-base);
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-strong);
+    padding: 10px 12px 10px 14px;
+    cursor: pointer;
+    text-align: left;
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.cs-trigger:hover:not(.cs-disabled) {
+    border-color: var(--text-tertiary);
+}
+
+.cs-trigger:focus-visible {
+    border-color: var(--border-strong);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+}
+
+.cs-trigger.cs-open {
+    border-color: var(--text-tertiary);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+}
+
+/* form variant: rounded-md */
+.cs-form .cs-trigger {
+    border-radius: var(--radius-md);
+}
+
+/* filter variant: pill */
+.cs-filter .cs-trigger {
+    border-radius: var(--radius-full);
+    font-size: var(--font-sm);
+    padding: 8px 12px 8px 14px;
+}
+
+.cs-placeholder {
+    color: var(--text-tertiary);
+}
+
+.cs-value {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cs-chevron {
+    flex-shrink: 0;
+    color: var(--text-tertiary);
+    transition: transform var(--transition-fast);
+}
+
+.cs-chevron-up {
+    transform: rotate(180deg);
+}
+
+.cs-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* ── Dropdown Panel ── */
+.cs-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 100%;
+    z-index: 9999;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+    padding: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+    animation: cs-fade 0.12s ease;
+}
+
+@keyframes cs-fade {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ── Options ── */
+.cs-option {
+    padding: 9px 12px;
+    border-radius: var(--radius-md);
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    white-space: nowrap;
+}
+
+.cs-option:hover {
+    background: var(--bg-hover);
+}
+
+.cs-option.cs-selected {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Scrollbar inside panel */
+.cs-panel::-webkit-scrollbar {
+    width: 4px;
+}
+
+.cs-panel::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: var(--radius-full);
+}

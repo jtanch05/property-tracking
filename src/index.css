@@ -464,8 +464,9 @@ label {
 /* ======= Filter ======= */
 .filter-select {
     max-width: 220px;
-    padding: 8px 32px 8px 10px;
+    padding: 8px 32px 8px 12px;
     font-size: var(--font-sm);
+    border-radius: var(--radius-full);
 }
 
 /* ======= Animations ======= */
@@ -589,6 +590,27 @@ label {
 
 .search-box input {
     min-width: 200px;
+}
+
+/* ======= Search Bar (icon inside input) ======= */
+.search-bar {
+    position: relative;
+    margin-bottom: var(--space-lg);
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.search-input {
+    padding-left: 42px;
+    width: 100%;
 }
 
 /* ======= Filter Tab ======= */
