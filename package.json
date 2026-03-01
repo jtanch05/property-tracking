@@ -9,12 +9,16 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "overrides": {
+    "@theme-toggles/react": {
+      "peer": false
+    }
+  },
   "dependencies": {
     "@radix-ui/react-tabs": "^1.1.13",
     "@react-three/fiber": "^10.0.0-alpha.2",
     "@tabler/icons-react": "^3.36.1",
     "@tailwindcss/postcss": "^4.1.18",
-    "@theme-toggles/react": "^4.1.0",
     "@tsparticles/engine": "^3.9.1",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.9.1",
