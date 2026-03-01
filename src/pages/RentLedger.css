@@ -18,6 +18,9 @@
     align-items: center;
     gap: var(--space-md);
     width: 100%;
+    min-width: 0;
+    /* allow flex children to shrink */
+    flex-wrap: wrap;
 }
 
 .rent-left {
@@ -77,8 +80,8 @@
 
 .rent-amounts {
     text-align: right;
-    min-width: 130px;
-    flex-shrink: 0;
+    min-width: 100px;
+    flex-shrink: 1;
 }
 
 .rent-amount {
@@ -112,13 +115,32 @@
 
 @media (max-width: 600px) {
     .rent-card {
-        flex-direction: column;
-        align-items: flex-start;
+        padding: var(--space-sm) var(--space-md);
+    }
+
+    .rent-row {
+        flex-wrap: wrap;
         gap: var(--space-sm);
     }
 
+    .rent-left {
+        flex: 1;
+        min-width: 0;
+    }
+
     .rent-right {
-        align-self: stretch;
+        width: 100%;
         justify-content: space-between;
+        align-items: center;
+    }
+
+    .rent-amounts {
+        min-width: auto;
+        text-align: left;
+    }
+
+    .rent-actions {
+        min-width: auto;
+        margin-left: 0;
     }
 }

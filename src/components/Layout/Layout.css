@@ -195,6 +195,9 @@
     flex-direction: column;
     min-height: 100vh;
     transition: margin-left var(--transition-slow);
+    overflow-x: hidden;
+    /* prevent horizontal bleed that causes zoom-out on mobile */
+    min-width: 0;
 }
 
 .sidebar-collapsed .main-wrapper {
@@ -221,6 +224,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    min-width: 0;
+    overflow: hidden;
 }
 
 .topbar-property {
@@ -230,10 +235,14 @@
     font-size: var(--font-base);
     font-weight: 500;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .topbar-property svg {
     color: var(--text-tertiary);
+    flex-shrink: 0;
 }
 
 .topbar-title {
@@ -246,6 +255,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-md);
+    flex-shrink: 0;
 }
 
 .alert-bell {
@@ -292,6 +302,9 @@
     width: 100%;
     margin: 0 auto;
     /* Center the content */
+    min-width: 0;
+    /* prevent flex child from overflowing */
+    box-sizing: border-box;
 }
 
 /* --- Bottom Nav (Mobile) --- */
@@ -312,6 +325,26 @@
     .main-content {
         padding: var(--space-md);
         padding-bottom: calc(var(--bottom-nav-height) + var(--space-lg));
+        overflow-x: hidden;
+        /* belt and suspenders */
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Make wide tables horizontally scrollable instead of pushing the viewport */
+    .table-scroll-wrapper,
+    .expenses-table-wrap,
+    .rent-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+
+    /* Prevent flex rows from stretching beyond screen */
+    .section-header,
+    .filter-bar {
+        flex-wrap: wrap;
+        gap: var(--space-sm);
     }
 
     .topbar {

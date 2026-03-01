@@ -328,8 +328,8 @@ export default function Expenses({ embeddedPropertyId = null }) {
             </div>
 
             {/* Expenses List */}
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div className="table-container">
+            <div className="card" style={{ padding: 0, overflow: 'hidden', borderRadius: 'var(--radius-lg)' }}>
+                <div className="table-container" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                     <table className="data-table">
                         <thead>
                             <tr>
