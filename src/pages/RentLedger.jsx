@@ -7,8 +7,9 @@ import ToggleGroup from '../components/common/ToggleGroup';
 import CustomSelect from '../components/common/CustomSelect';
 import { formatCurrency, formatMonth, formatDate, getStatusColor } from '../utils/formatters';
 import { differenceInDays, parseISO } from 'date-fns';
-import { Plus, Wallet, Edit3, Trash2, CheckCircle, Clock, AlertCircle, MessageCircle, Minus } from 'lucide-react';
+import { Plus, Wallet, Edit3, Trash2, CheckCircle, Clock, AlertCircle, MessageCircle, Minus, FileText } from 'lucide-react';
 import { sendRentReminder } from '../utils/whatsapp';
+import { exportToPDF } from '../utils/export';
 import './RentLedger.css';
 
 const EMPTY_RENT = {
@@ -137,6 +138,30 @@ export default function RentLedger({ embeddedPropertyId = null }) {
     const formDeductionTotal = form.deductions.reduce((s, d) => s + (d.amount || 0), 0);
     const formNetAmount = (Number(form.amountDue) || 0) - formDeductionTotal;
 
+    const handleExportPDF = () => {
+        const exportData = filtered.map(r => {
+            const prop = properties.find(p => p.id === r.propertyId);
+            const tenant = tenants.find(t => t.id === r.tenantId);
+            const deductions = r.deductions || [];
+            const deductionTotal = deductions.reduce((s, d) => s + (d.amount || 0), 0);
+            const netAmount = (r.amountDue || 0) - deductionTotal;
+
+            return {
+                month: formatMonth(r.month),
+                property: prop?.nickname || 'Unknown Property',
+                tenant: tenant?.name || 'Unknown Tenant',
+                status: (r.status || 'UNPAID').toUpperCase(),
+                amountDue: formatCurrency(r.amountDue),
+                deductions: deductionTotal > 0 ? formatCurrency(deductionTotal) : '—',
+                netAmount: formatCurrency(netAmount),
+                paymentDate: r.status === 'paid' ? formatDate(r.paymentDate) : '—',
+                method: PAYMENT_METHODS.find(m => m.value === r.paymentMethod)?.label || r.paymentMethod
+            };
+        });
+
+        exportToPDF(exportData, 'rent-ledger-report', 'Rent Ledger Statement');
+    };
+
     return (
         <div className={embeddedPropertyId ? "rent-page-embedded" : "rent-page"}>
             {!embeddedPropertyId && (
@@ -148,16 +173,26 @@ export default function RentLedger({ embeddedPropertyId = null }) {
                             {totalDeductions > 0 && <span style={{ color: 'var(--warning)' }}> (−{formatCurrency(totalDeductions)} deductions)</span>}
                         </p>
                     </div>
-                    <button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Add Record</button>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                        <button className="btn btn-outline" onClick={handleExportPDF}>
+                            <FileText size={16} /> Export PDF
+                        </button>
+                        <button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Add Record</button>
+                    </div>
                 </div>
             )}
 
             {embeddedPropertyId && (
                 <div className="flex justify-between items-center mb-6" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
                     <h3 className="text-lg font-semibold" style={{ fontSize: '1.125rem', fontWeight: 600 }}>Rent Ledger</h3>
-                    <button className="btn btn-primary btn-sm" onClick={openAdd}>
-                        <Plus size={14} /> Add Record
-                    </button>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                        <button className="btn btn-outline btn-sm" onClick={handleExportPDF}>
+                            <FileText size={14} /> Export
+                        </button>
+                        <button className="btn btn-primary btn-sm" onClick={openAdd}>
+                            <Plus size={14} /> Add Record
+                        </button>
+                    </div>
                 </div>
             )}
 

@@ -1,12 +1,12 @@
 import React, { useRef } from 'react';
 import { useApp } from '../context/AppProvider';
-import { downloadBackup, importData } from '../utils/export';
+import { downloadBackup, importData, exportFullStatement } from '../utils/export';
 import { clearAllStorage, getStorageSize } from '../utils/storage';
-import { Settings as SettingsIcon, Download, Upload, Trash2, Moon, Sun, Shield } from 'lucide-react';
+import { Settings as SettingsIcon, Download, Upload, Trash2, Moon, Sun, Shield, FileText } from 'lucide-react';
 import './Settings.css';
 
 export default function Settings() {
-    const { settings, setSettings } = useApp();
+    const { settings, setSettings, properties, tenants, agreements, rentRecords, taxRecords, utilityRecords, insuranceRecords, maintenanceRecords, managementFees, deposits } = useApp();
     const fileInputRef = useRef(null);
 
     function toggleTheme() {
@@ -47,6 +47,10 @@ export default function Settings() {
                 window.location.reload();
             }
         }
+    }
+
+    function handleFullStatementPDF() {
+        exportFullStatement({ properties, tenants, agreements, rentRecords, taxRecords, utilityRecords, insuranceRecords, maintenanceRecords, managementFees, deposits });
     }
 
     const sizeKB = (getStorageSize() / 1024).toFixed(1);
@@ -125,7 +129,20 @@ export default function Settings() {
                                 <span className="settings-desc">Permanently delete all stored data</span>
                             </div>
                         </div>
-                        <button className="btn btn-danger btn-sm" onClick={handleClearAll}>Clear All</button>
+                        <button className="btn btn-secondary btn-sm" onClick={handleClearAll}>Clear All</button>
+                    </div>
+
+                    <div className="settings-divider" />
+
+                    <div className="settings-item">
+                        <div className="settings-item-info">
+                            <FileText size={20} style={{ color: 'var(--accent)' }} />
+                            <div>
+                                <span className="settings-label">Export Full Statement</span>
+                                <span className="settings-desc">Download a detailed PDF covering all properties, finances, expenses &amp; operations</span>
+                            </div>
+                        </div>
+                        <button className="btn btn-primary btn-sm" onClick={handleFullStatementPDF}>Export PDF</button>
                     </div>
                 </div>
             </div>

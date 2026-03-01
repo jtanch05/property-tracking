@@ -6,7 +6,8 @@ import ConfirmDialog from '../components/common/ConfirmDialog';
 import ToggleGroup from '../components/common/ToggleGroup';
 import CustomSelect from '../components/common/CustomSelect';
 import { formatCurrency, formatDate } from '../utils/formatters';
-import { Plus, Wrench, Edit3, Trash2, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Wrench, Edit3, Trash2, CheckCircle, Clock, FileText } from 'lucide-react';
+import { exportToPDF } from '../utils/export';
 
 const EMPTY = { propertyId: '', issueType: 'plumbing', description: '', reportedDate: '', vendorId: '', cost: '', status: 'open', resolvedDate: null, isScheduled: false, scheduledType: '', nextDueDate: '' };
 
@@ -27,18 +28,55 @@ export default function Maintenance({ embeddedPropertyId = null }) {
     function openEdit(m) { setForm({ propertyId: m.propertyId || '', issueType: m.issueType || 'plumbing', description: m.description || '', reportedDate: m.reportedDate || '', vendorId: m.vendorId || '', cost: m.cost || '', status: m.status || 'open', resolvedDate: m.resolvedDate || '', isScheduled: m.isScheduled || false, scheduledType: m.scheduledType || '', nextDueDate: m.nextDueDate || '' }); setEditingId(m.id); setShowForm(true); }
     function handleSubmit(e) { e.preventDefault(); const d = { ...form, cost: Number(form.cost) || 0 }; if (editingId) updateMaintenanceRecord(editingId, d); else addMaintenanceRecord(d); setShowForm(false); }
 
+    const handleExportPDF = () => {
+        const exportData = filtered.map(m => {
+            const prop = properties.find(p => p.id === m.propertyId);
+            const vendor = vendors.find(v => v.id === m.vendorId);
+            const mType = MAINTENANCE_TYPES.find(t => t.value === m.issueType);
+            return {
+                property: prop?.nickname || 'Unknown',
+                issueType: mType?.label || m.issueType,
+                description: m.description || '—',
+                reportedDate: formatDate(m.reportedDate),
+                status: m.status.toUpperCase(),
+                cost: formatCurrency(m.cost),
+                vendor: vendor?.name || '—',
+                resolvedDate: m.status === 'closed' ? formatDate(m.resolvedDate) : '—'
+            };
+        });
+        exportToPDF(exportData, 'maintenance-report', 'Property Maintenance Report');
+    };
+
     return (
         <div style={embeddedPropertyId ? {} : { maxWidth: 1400, margin: '0 auto' }}>
             {!embeddedPropertyId && (
-                <div className="section-header"><div><h1 className="section-title">Maintenance</h1><p className="section-subtitle">{maintenanceRecords.filter(m => m.status === 'open').length} open issues</p></div><button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Log Issue</button></div>
+                <div className="section-header">
+                    <div>
+                        <h1 className="section-title">Maintenance</h1>
+                        <p className="section-subtitle">{maintenanceRecords.filter(m => m.status === 'open').length} open issues</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                        <button className="btn btn-outline" onClick={handleExportPDF}>
+                            <FileText size={16} /> Export PDF
+                        </button>
+                        <button className="btn btn-primary" onClick={openAdd}>
+                            <Plus size={16} /> Log Issue
+                        </button>
+                    </div>
+                </div>
             )}
 
             {embeddedPropertyId && (
                 <div className="flex justify-between items-center mb-6" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
                     <h3 className="text-lg font-semibold" style={{ fontSize: '1.125rem', fontWeight: 600 }}>Property Maintenance</h3>
-                    <button className="btn btn-primary btn-sm" onClick={openAdd}>
-                        <Plus size={14} /> Log Issue
-                    </button>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                        <button className="btn btn-outline btn-sm" onClick={handleExportPDF}>
+                            <FileText size={14} /> Export
+                        </button>
+                        <button className="btn btn-primary btn-sm" onClick={openAdd}>
+                            <Plus size={14} /> Log Issue
+                        </button>
+                    </div>
                 </div>
             )}
 

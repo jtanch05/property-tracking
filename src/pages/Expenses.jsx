@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppProvider';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { parseISO, isAfter, isBefore, addDays } from 'date-fns';
-import { Receipt, Droplets, Shield, Landmark, Wrench, Plus, Filter, Search, CheckCircle, AlertTriangle, Edit3, Trash2 } from 'lucide-react';
+import { Receipt, Droplets, Shield, Landmark, Wrench, Plus, Filter, Search, CheckCircle, AlertTriangle, Edit3, Trash2, FileText } from 'lucide-react';
+import { exportToPDF } from '../utils/export';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import ToggleGroup from '../components/common/ToggleGroup';
@@ -218,6 +219,32 @@ export default function Expenses({ embeddedPropertyId = null }) {
         }
     };
 
+    const handleExportPDF = () => {
+        const exportData = filteredExpenses.map(item => {
+            const prop = properties.find(p => p.id === item.propertyId);
+            return {
+                category: CATEGORIES[item.type]?.label || item.type,
+                description: item.description,
+                property: prop ? prop.nickname : 'Unknown',
+                date: formatDate(item.date),
+                status: (item.status || 'Pending').toUpperCase(),
+                amount: formatCurrency(item.amount)
+            };
+        });
+
+        // Add total row
+        exportData.push({
+            category: 'TOTAL',
+            description: '',
+            property: '',
+            date: '',
+            status: '',
+            amount: formatCurrency(totalAmount)
+        });
+
+        exportToPDF(exportData, 'expenses-report', 'Property Expenses Report');
+    };
+
     return (
         <div style={embeddedPropertyId ? {} : { maxWidth: 1400, margin: '0 auto' }}>
             {!embeddedPropertyId && (
@@ -236,6 +263,9 @@ export default function Expenses({ embeddedPropertyId = null }) {
                                 onChange={e => setSearchTerm(e.target.value)}
                             />
                         </div>
+                        <button className="btn btn-outline" onClick={handleExportPDF}>
+                            <FileText size={16} /> Export PDF
+                        </button>
                         <button className="btn btn-primary" onClick={openAdd}>
                             <Plus size={16} /> Log Expense
                         </button>
@@ -256,6 +286,9 @@ export default function Expenses({ embeddedPropertyId = null }) {
                                 onChange={e => setSearchTerm(e.target.value)}
                             />
                         </div>
+                        <button className="btn btn-outline btn-sm" onClick={handleExportPDF}>
+                            <FileText size={14} /> Export
+                        </button>
                         <button className="btn btn-primary btn-sm" onClick={openAdd}>
                             <Plus size={14} /> Log Expense
                         </button>

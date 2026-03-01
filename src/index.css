@@ -310,6 +310,18 @@ label {
     color: var(--text-primary);
 }
 
+.btn-outline {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1.5px solid var(--border-strong);
+}
+
+.btn-outline:hover {
+    background: var(--bg-hover);
+    border-color: var(--text-secondary);
+    transform: translateY(-1px);
+}
+
 .btn-sm {
     padding: 6px 12px;
     font-size: var(--font-sm);
