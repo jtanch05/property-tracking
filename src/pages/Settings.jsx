@@ -1,9 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useApp } from '../context/AppProvider';
 import { useAuth } from '../context/AuthProvider';
 import { downloadBackup, importData, exportFullStatement } from '../utils/export';
 import { clearAllStorage, getStorageSize } from '../utils/storage';
-import { Settings as SettingsIcon, Download, Upload, Trash2, Moon, Sun, Shield, FileText, Bell, Copy, Check } from 'lucide-react';
+import { Settings as SettingsIcon, Download, Upload, Trash2, Moon, Sun, Shield, FileText, Bell, Copy, Check, Calendar, Link, Unlink } from 'lucide-react';
 import './Settings.css';
 
 export default function Settings() {
@@ -13,6 +13,24 @@ export default function Settings() {
     const [alertEmail, setAlertEmail] = useState(settings.alertEmail || '');
     const [emailSaved, setEmailSaved] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [calendarStatus, setCalendarStatus] = useState(null); // null | 'success' | 'denied' | 'error'
+    const [calendarConnected, setCalendarConnected] = useState(settings.googleCalendarConnected || false);
+
+    // Check if we're returning from Google OAuth (URL will have ?calendar=success or ?calendar=error)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const cal = params.get('calendar');
+        if (cal) {
+            setCalendarStatus(cal);
+            if (cal === 'success') {
+                setCalendarConnected(true);
+                setSettings(prev => ({ ...prev, googleCalendarConnected: true }));
+            }
+            // Clean the URL so it doesn't show on refresh
+            window.history.replaceState({}, '', window.location.pathname);
+            setTimeout(() => setCalendarStatus(null), 5000);
+        }
+    }, []);
 
     function toggleTheme() {
         const next = settings.theme === 'dark' ? 'light' : 'dark';
@@ -70,6 +88,21 @@ export default function Settings() {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
+    }
+
+    function handleConnectGoogleCalendar() {
+        if (!user?.uid) return;
+        // Redirect to our API which redirects to Google OAuth
+        // After user approves, Google sends them back to /api/auth/google-callback
+        // which saves the token and redirects back here with ?calendar=success
+        window.location.href = `/api/auth/google?uid=${user.uid}`;
+    }
+
+    function handleDisconnectGoogleCalendar() {
+        setCalendarConnected(false);
+        setSettings(prev => ({ ...prev, googleCalendarConnected: false }));
+        // Note: this only disconnects locally. The token in Firestore stays until
+        // the user re-connects or explicitly revokes access in their Google account.
     }
 
     const sizeKB = (getStorageSize() / 1024).toFixed(1);
@@ -210,6 +243,67 @@ export default function Settings() {
                             <button className="btn btn-outline btn-sm" onClick={handleCopyUID}>
                                 {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Google Calendar */}
+            <div className="settings-section">
+                <h2 className="settings-section-title">Google Calendar</h2>
+                <div className="card settings-card">
+
+                    {/* Status banner after OAuth redirect */}
+                    {calendarStatus === 'success' && (
+                        <div style={{ background: 'var(--success-bg, #f0fdf4)', border: '1px solid var(--success, #16a34a)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', marginBottom: 16, color: 'var(--success, #16a34a)', fontSize: 'var(--font-sm)', fontWeight: 600 }}>
+                            ✅ Google Calendar connected! Alerts will sync automatically every day.
+                        </div>
+                    )}
+                    {calendarStatus === 'denied' && (
+                        <div style={{ background: '#fef2f2', border: '1px solid #dc2626', borderRadius: 'var(--radius-sm)', padding: '10px 14px', marginBottom: 16, color: '#dc2626', fontSize: 'var(--font-sm)' }}>
+                            ❌ Google Calendar access was denied. You can try again anytime.
+                        </div>
+                    )}
+                    {calendarStatus && calendarStatus !== 'success' && calendarStatus !== 'denied' && (
+                        <div style={{ background: '#fef2f2', border: '1px solid #dc2626', borderRadius: 'var(--radius-sm)', padding: '10px 14px', marginBottom: 16, color: '#dc2626', fontSize: 'var(--font-sm)' }}>
+                            ❌ Something went wrong. Please try again or contact support.
+                        </div>
+                    )}
+
+                    <div className="settings-item">
+                        <div className="settings-item-info">
+                            <Calendar size={20} style={{ color: calendarConnected ? 'var(--success, #16a34a)' : 'var(--accent)' }} />
+                            <div>
+                                <span className="settings-label">
+                                    {calendarConnected ? '✅ Connected to Google Calendar' : 'Connect Google Calendar'}
+                                </span>
+                                <span className="settings-desc">
+                                    {calendarConnected
+                                        ? 'Alerts are automatically synced to your Google Calendar every day. Events appear with reminders.'
+                                        : 'Allow PropTrack to create events directly in your Google Calendar. Alerts appear automatically — no manual import needed.'}
+                                </span>
+                            </div>
+                        </div>
+                        {calendarConnected ? (
+                            <button className="btn btn-secondary btn-sm" onClick={handleDisconnectGoogleCalendar}>
+                                <Unlink size={14} /> Disconnect
+                            </button>
+                        ) : (
+                            <button className="btn btn-primary btn-sm" onClick={handleConnectGoogleCalendar} disabled={!user?.uid}>
+                                <Link size={14} /> Connect
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="settings-divider" />
+
+                    <div className="settings-item">
+                        <div className="settings-item-info">
+                            <Shield size={20} style={{ color: 'var(--text-tertiary)' }} />
+                            <div>
+                                <span className="settings-label">Privacy</span>
+                                <span className="settings-desc">PropTrack only creates/updates alert events. It cannot read, edit or delete your existing Google Calendar events.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
