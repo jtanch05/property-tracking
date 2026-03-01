@@ -13,7 +13,8 @@ export default function Settings() {
     const [alertEmail, setAlertEmail] = useState(settings.alertEmail || '');
     const [emailSaved, setEmailSaved] = useState(false);
     const [copied, setCopied] = useState(false);
-    const [calendarStatus, setCalendarStatus] = useState(null); // null | 'success' | 'denied' | 'error'
+    const [notificationFrequency, setNotificationFrequency] = useState(settings.notificationFrequency || 'weekly');
+    const [calendarStatus, setCalendarStatus] = useState(null);
     const [calendarConnected, setCalendarConnected] = useState(settings.googleCalendarConnected || false);
 
     // Check if we're returning from Google OAuth (URL will have ?calendar=success or ?calendar=error)
@@ -77,7 +78,7 @@ export default function Settings() {
     }
 
     function handleSaveAlertEmail() {
-        setSettings(prev => ({ ...prev, alertEmail }));
+        setSettings(prev => ({ ...prev, alertEmail, notificationFrequency }));
         setEmailSaved(true);
         setTimeout(() => setEmailSaved(false), 2500);
     }
@@ -223,6 +224,41 @@ export default function Settings() {
                             <button className="btn btn-primary btn-sm" onClick={handleSaveAlertEmail}>
                                 {emailSaved ? <><Check size={14} /> Saved!</> : 'Save'}
                             </button>
+                        </div>
+                    </div>
+
+                    <div className="settings-divider" />
+
+                    {/* Notification Frequency */}
+                    <div className="settings-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
+                        <div className="settings-item-info">
+                            <Bell size={20} style={{ color: 'var(--accent)' }} />
+                            <div>
+                                <span className="settings-label">Notification Frequency</span>
+                                <span className="settings-desc">How often you want to receive alert emails</span>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            {[
+                                { value: 'daily', label: '📅 Daily' },
+                                { value: 'weekly', label: '📆 Weekly' },
+                                { value: 'biweekly', label: '📆 Every 2 weeks' },
+                                { value: 'monthly', label: '🗓️ Monthly' },
+                            ].map(opt => (
+                                <button
+                                    key={opt.value}
+                                    className={`btn btn-sm ${notificationFrequency === opt.value ? 'btn-primary' : 'btn-secondary'}`}
+                                    onClick={() => setNotificationFrequency(opt.value)}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                        <div style={{ fontSize: 'var(--font-sm)', color: 'var(--text-tertiary)', marginTop: 2 }}>
+                            {notificationFrequency === 'daily' && 'You\'ll get an email every day if there are alerts.'}
+                            {notificationFrequency === 'weekly' && 'You\'ll get an email once a week (every 7 days).'}
+                            {notificationFrequency === 'biweekly' && 'You\'ll get an email every 2 weeks.'}
+                            {notificationFrequency === 'monthly' && 'You\'ll get an email once a month.'}
                         </div>
                     </div>
 

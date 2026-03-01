@@ -137,6 +137,24 @@ function buildEmail(alerts) {
 </html>`;
 }
 
+// ── Frequency check: should this user be notified today? ────────────────────
+function shouldNotifyToday(settings) {
+    const freq = settings.notificationFrequency || 'weekly';
+    const lastNotified = settings.lastNotifiedAt ? new Date(settings.lastNotifiedAt) : null;
+
+    if (!lastNotified) return true; // Never notified before → always send
+
+    const daysSince = differenceInDays(startOfToday(), lastNotified);
+
+    switch (freq) {
+        case 'daily': return daysSince >= 1;
+        case 'weekly': return daysSince >= 7;
+        case 'biweekly': return daysSince >= 14;
+        case 'monthly': return daysSince >= 30;
+        default: return daysSince >= 7;
+    }
+}
+
 // ── Process a single user ────────────────────────────────────────────────────
 async function processUser(uid, resend) {
     const userRef = db.collection('users').doc(uid);
@@ -159,6 +177,13 @@ async function processUser(uid, resend) {
     const alertEmail = settings.alertEmail;
     if (!alertEmail) return { uid, skipped: true, reason: 'No alert email set' };
 
+    // ── Check if it's time to notify based on their frequency preference ──────
+    if (!shouldNotifyToday(settings)) {
+        const freq = settings.notificationFrequency || 'weekly';
+        const last = settings.lastNotifiedAt ? new Date(settings.lastNotifiedAt).toDateString() : 'never';
+        return { uid, skipped: true, reason: `Frequency: ${freq} (last sent: ${last})` };
+    }
+
     const alerts = computeAlerts({
         properties: toArr(propSnap),
         rentRecords: toArr(rentSnap),
@@ -177,6 +202,12 @@ async function processUser(uid, resend) {
         subject: `🏠 PropTrack — ${alerts.length} alert${alerts.length > 1 ? 's' : ''} need your attention`,
         html: buildEmail(alerts),
     });
+
+    // ── Record when we last notified this user ────────────────────────────────
+    await db.doc(`users/${uid}/settings/default`).set(
+        { lastNotifiedAt: new Date().toISOString() },
+        { merge: true } // don't overwrite other settings
+    );
 
     return { uid, email: alertEmail, alertsSent: alerts.length };
 }
