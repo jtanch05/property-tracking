@@ -13,7 +13,7 @@ const CATEGORIES = {
     maintenance: { label: 'Maintenance', icon: Wrench, color: 'var(--warning)', bg: 'var(--warning-bg)' }
 };
 
-export default function Expenses() {
+export default function Expenses({ embeddedPropertyId = null }) {
     const {
         properties,
         taxRecords,
@@ -96,6 +96,7 @@ export default function Expenses() {
     // Filtering
     const filteredExpenses = useMemo(() => {
         return allExpenses.filter(item => {
+            if (embeddedPropertyId && item.propertyId !== embeddedPropertyId) return false;
             if (filterCategory !== 'all' && item.type !== filterCategory) return false;
 
             if (searchTerm) {
@@ -115,14 +116,31 @@ export default function Expenses() {
     const totalAmount = filteredExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
 
     return (
-        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-            <div className="section-header">
-                <div>
-                    <h1 className="section-title">Expenses</h1>
-                    <p className="section-subtitle">Track taxes, utilities, insurance, fees & repairs</p>
+        <div style={embeddedPropertyId ? {} : { maxWidth: 1400, margin: '0 auto' }}>
+            {!embeddedPropertyId && (
+                <div className="section-header">
+                    <div>
+                        <h1 className="section-title">Expenses</h1>
+                        <p className="section-subtitle">Track taxes, utilities, insurance, fees & repairs</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                        <div className="search-box">
+                            <Search size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search expenses..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
                 </div>
-                <div style={{ display: 'flex', gap: 12 }}>
-                    <div className="search-box">
+            )}
+
+            {embeddedPropertyId && (
+                <div className="flex justify-between items-center mb-6" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+                    <h3 className="text-lg font-semibold" style={{ fontSize: '1.125rem', fontWeight: 600 }}>Property Expenses</h3>
+                    <div className="search-box" style={{ margin: 0 }}>
                         <Search size={18} />
                         <input
                             type="text"
@@ -132,7 +150,7 @@ export default function Expenses() {
                         />
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Filter Tabs */}
             <div className="filter-tabs" style={{ marginBottom: 'var(--space-lg)', overflowX: 'auto' }}>

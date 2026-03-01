@@ -222,12 +222,9 @@
 .property-hub-content {
     display: flex;
     flex-direction: column;
-    height: 100%;
 }
 
 .property-hub-body {
-    flex: 1;
-    overflow-y: auto;
     padding-bottom: var(--space-xl);
 }
 

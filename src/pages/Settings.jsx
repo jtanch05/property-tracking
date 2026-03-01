@@ -72,9 +72,16 @@ export default function Settings() {
                                 <span className="settings-desc">Currently using {settings.theme} mode</span>
                             </div>
                         </div>
-                        <button className="btn btn-secondary btn-sm" onClick={toggleTheme}>
-                            Switch to {settings.theme === 'dark' ? 'Light' : 'Dark'}
-                        </button>
+                        <label className="theme-switch" title={`Switch to ${settings.theme === 'dark' ? 'Light' : 'Dark'}`}>
+                            <input
+                                type="checkbox"
+                                checked={settings.theme === 'dark'}
+                                onChange={toggleTheme}
+                            />
+                            <div className="switch-track">
+                                <div className="switch-thumb" />
+                            </div>
+                        </label>
                     </div>
                 </div>
             </div>

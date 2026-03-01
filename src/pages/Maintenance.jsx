@@ -10,7 +10,7 @@ import { Plus, Wrench, Edit3, Trash2, CheckCircle, Clock } from 'lucide-react';
 
 const EMPTY = { propertyId: '', issueType: 'plumbing', description: '', reportedDate: '', vendorId: '', cost: '', status: 'open', resolvedDate: null, isScheduled: false, scheduledType: '', nextDueDate: '' };
 
-export default function Maintenance() {
+export default function Maintenance({ embeddedPropertyId = null }) {
     const { maintenanceRecords, addMaintenanceRecord, updateMaintenanceRecord, deleteMaintenanceRecord, properties, vendors } = useApp();
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -18,15 +18,29 @@ export default function Maintenance() {
     const [deleteId, setDeleteId] = useState(null);
     const [filter, setFilter] = useState('all');
 
-    const filtered = maintenanceRecords.filter(m => filter === 'all' || m.status === filter).sort((a, b) => (b.reportedDate || '').localeCompare(a.reportedDate || ''));
+    const filtered = maintenanceRecords
+        .filter(m => embeddedPropertyId ? m.propertyId === embeddedPropertyId : true)
+        .filter(m => filter === 'all' || m.status === filter)
+        .sort((a, b) => (b.reportedDate || '').localeCompare(a.reportedDate || ''));
 
-    function openAdd() { setForm({ ...EMPTY, propertyId: properties[0]?.id || '', reportedDate: new Date().toISOString().split('T')[0] }); setEditingId(null); setShowForm(true); }
+    function openAdd() { setForm({ ...EMPTY, propertyId: embeddedPropertyId || properties[0]?.id || '', reportedDate: new Date().toISOString().split('T')[0] }); setEditingId(null); setShowForm(true); }
     function openEdit(m) { setForm({ propertyId: m.propertyId || '', issueType: m.issueType || 'plumbing', description: m.description || '', reportedDate: m.reportedDate || '', vendorId: m.vendorId || '', cost: m.cost || '', status: m.status || 'open', resolvedDate: m.resolvedDate || '', isScheduled: m.isScheduled || false, scheduledType: m.scheduledType || '', nextDueDate: m.nextDueDate || '' }); setEditingId(m.id); setShowForm(true); }
     function handleSubmit(e) { e.preventDefault(); const d = { ...form, cost: Number(form.cost) || 0 }; if (editingId) updateMaintenanceRecord(editingId, d); else addMaintenanceRecord(d); setShowForm(false); }
 
     return (
-        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-            <div className="section-header"><div><h1 className="section-title">Maintenance</h1><p className="section-subtitle">{maintenanceRecords.filter(m => m.status === 'open').length} open issues</p></div><button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Log Issue</button></div>
+        <div style={embeddedPropertyId ? {} : { maxWidth: 1400, margin: '0 auto' }}>
+            {!embeddedPropertyId && (
+                <div className="section-header"><div><h1 className="section-title">Maintenance</h1><p className="section-subtitle">{maintenanceRecords.filter(m => m.status === 'open').length} open issues</p></div><button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Log Issue</button></div>
+            )}
+
+            {embeddedPropertyId && (
+                <div className="flex justify-between items-center mb-6" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+                    <h3 className="text-lg font-semibold" style={{ fontSize: '1.125rem', fontWeight: 600 }}>Property Maintenance</h3>
+                    <button className="btn btn-primary btn-sm" onClick={openAdd}>
+                        <Plus size={14} /> Log Issue
+                    </button>
+                </div>
+            )}
 
             {maintenanceRecords.length > 0 && (
                 <div className="filter-bar" style={{ marginBottom: 'var(--space-lg)' }}>
@@ -71,7 +85,7 @@ export default function Maintenance() {
 
             <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={editingId ? 'Edit Maintenance' : 'Log Maintenance Issue'} size="lg">
                 <form onSubmit={handleSubmit}>
-                    <div className="form-row"><div className="form-group"><label>Property</label><CustomSelect value={form.propertyId} onChange={val => setForm(p => ({ ...p, propertyId: val }))} options={[{ value: '', label: 'Select' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]} placeholder="Select" /></div><div className="form-group"><label>Issue Type</label><CustomSelect value={form.issueType} onChange={val => setForm(p => ({ ...p, issueType: val }))} options={MAINTENANCE_TYPES} /></div></div>
+                    <div className="form-row"><div className="form-group"><label>Property</label><CustomSelect value={form.propertyId} onChange={val => setForm(p => ({ ...p, propertyId: val }))} options={[{ value: '', label: 'Select' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]} placeholder="Select" disabled={!!embeddedPropertyId} /></div><div className="form-group"><label>Issue Type</label><CustomSelect value={form.issueType} onChange={val => setForm(p => ({ ...p, issueType: val }))} options={MAINTENANCE_TYPES} /></div></div>
                     <div className="form-group"><label>Description</label><input type="text" placeholder="Describe the issue" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} /></div>
                     <div className="form-row"><div className="form-group"><label>Reported Date</label><input type="date" value={form.reportedDate} onChange={e => setForm(p => ({ ...p, reportedDate: e.target.value }))} /></div><div className="form-group"><label>Vendor</label><CustomSelect value={form.vendorId} onChange={val => setForm(p => ({ ...p, vendorId: val }))} options={[{ value: '', label: 'Select' }, ...vendors.map(v => ({ value: v.id, label: v.name }))]} placeholder="Select" /></div></div>
                     <div className="form-row"><div className="form-group"><label>Cost (RM)</label><input type="number" placeholder="150" value={form.cost} onChange={e => setForm(p => ({ ...p, cost: e.target.value }))} /></div><div className="form-group"><label>Status</label><ToggleGroup options={[{ value: 'open', label: 'Open' }, { value: 'closed', label: 'Closed' }]} value={form.status} onChange={val => setForm(p => ({ ...p, status: val }))} /></div></div>

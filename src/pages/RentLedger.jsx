@@ -17,7 +17,7 @@ const EMPTY_RENT = {
     deductions: [],
 };
 
-export default function RentLedger() {
+export default function RentLedger({ embeddedPropertyId = null }) {
     const { rentRecords, addRentRecord, updateRentRecord, deleteRentRecord, properties, tenants, maintenanceRecords, payouts, addPayout, updatePayout } = useApp();
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -28,6 +28,7 @@ export default function RentLedger() {
     const [expandedId, setExpandedId] = useState(null);
 
     const filtered = rentRecords
+        .filter(r => embeddedPropertyId ? r.propertyId === embeddedPropertyId : true)
         .filter(r => filterStatus === 'all' || r.status === filterStatus)
         .filter(r => !filterProp || r.propertyId === filterProp)
         .sort((a, b) => b.month.localeCompare(a.month));
@@ -46,7 +47,7 @@ export default function RentLedger() {
 
     function openAdd() {
         const now = new Date();
-        setForm({ ...EMPTY_RENT, propertyId: properties[0]?.id || '', month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}` });
+        setForm({ ...EMPTY_RENT, propertyId: embeddedPropertyId || properties[0]?.id || '', month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}` });
         setEditingId(null);
         setShowForm(true);
     }
@@ -137,27 +138,40 @@ export default function RentLedger() {
     const formNetAmount = (Number(form.amountDue) || 0) - formDeductionTotal;
 
     return (
-        <div className="rent-page">
-            <div className="section-header">
-                <div>
-                    <h1 className="section-title">Rent Ledger</h1>
-                    <p className="section-subtitle">
-                        {formatCurrency(totalPaid)} collected of {formatCurrency(totalDue)}
-                        {totalDeductions > 0 && <span style={{ color: 'var(--warning)' }}> (−{formatCurrency(totalDeductions)} deductions)</span>}
-                    </p>
+        <div className={embeddedPropertyId ? "rent-page-embedded" : "rent-page"}>
+            {!embeddedPropertyId && (
+                <div className="section-header">
+                    <div>
+                        <h1 className="section-title">Rent Ledger</h1>
+                        <p className="section-subtitle">
+                            {formatCurrency(totalPaid)} collected of {formatCurrency(totalDue)}
+                            {totalDeductions > 0 && <span style={{ color: 'var(--warning)' }}> (−{formatCurrency(totalDeductions)} deductions)</span>}
+                        </p>
+                    </div>
+                    <button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Add Record</button>
                 </div>
-                <button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Add Record</button>
-            </div>
+            )}
+
+            {embeddedPropertyId && (
+                <div className="flex justify-between items-center mb-6" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+                    <h3 className="text-lg font-semibold" style={{ fontSize: '1.125rem', fontWeight: 600 }}>Rent Ledger</h3>
+                    <button className="btn btn-primary btn-sm" onClick={openAdd}>
+                        <Plus size={14} /> Add Record
+                    </button>
+                </div>
+            )}
 
             {rentRecords.length > 0 && (
                 <div className="filter-bar">
-                    <CustomSelect
-                        variant="filter"
-                        value={filterProp}
-                        onChange={setFilterProp}
-                        options={[{ value: '', label: 'All Properties' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]}
-                        placeholder="All Properties"
-                    />
+                    {!embeddedPropertyId && (
+                        <CustomSelect
+                            variant="filter"
+                            value={filterProp}
+                            onChange={setFilterProp}
+                            options={[{ value: '', label: 'All Properties' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]}
+                            placeholder="All Properties"
+                        />
+                    )}
                     <div className="filter-tabs">
                         {['all', 'paid', 'unpaid'].map(f => (
                             <button key={f} className={`btn btn-sm ${filterStatus === f ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setFilterStatus(f)}>
@@ -290,6 +304,7 @@ export default function RentLedger() {
                                 onChange={val => setForm(p => ({ ...p, propertyId: val, tenantId: '' }))}
                                 options={[{ value: '', label: 'Select' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]}
                                 placeholder="Select"
+                                disabled={!!embeddedPropertyId}
                             />
                         </div>
                         <div className="form-group">

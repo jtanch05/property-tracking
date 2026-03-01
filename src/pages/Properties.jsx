@@ -9,7 +9,10 @@ import ToggleGroup from '../components/common/ToggleGroup';
 import CustomSelect from '../components/common/CustomSelect';
 import Tenants from './Tenants';
 import Agreements from './Agreements';
-import { Plus, Building2, Edit3, Trash2, MapPin, Layers, Car, Search, Users, Home, BedDouble, Bath, Ruler, ArrowRight, UserCheck, FileText } from 'lucide-react';
+import RentLedger from './RentLedger';
+import Expenses from './Expenses';
+import Maintenance from './Maintenance';
+import { Plus, Building2, Edit3, Trash2, MapPin, Layers, Car, Search, Users, Home, BedDouble, Bath, Ruler, ArrowRight, UserCheck, FileText, Wallet, Wrench } from 'lucide-react';
 import './Properties.css';
 
 // --- Field visibility config per property type ---
@@ -749,13 +752,19 @@ export default function Properties() {
                                 className={`slide-panel-tab ${activeTab === 'tenants' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('tenants')}
                             >
-                                <Users size={16} /> Tenants
+                                <Users size={16} /> Tenants & Docs
                             </button>
                             <button
-                                className={`slide-panel-tab ${activeTab === 'agreements' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('agreements')}
+                                className={`slide-panel-tab ${activeTab === 'financials' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('financials')}
                             >
-                                <FileText size={16} /> Agreements
+                                <Wallet size={16} /> Financials
+                            </button>
+                            <button
+                                className={`slide-panel-tab ${activeTab === 'maintenance' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('maintenance')}
+                            >
+                                <Wrench size={16} /> Maintenance
                             </button>
                         </div>
 
@@ -826,12 +835,22 @@ export default function Properties() {
                             {activeTab === 'tenants' && (
                                 <div className="hub-tenants">
                                     <Tenants embeddedPropertyId={selectedProperty.id} />
+                                    <div style={{ margin: 'var(--space-2xl) 0', borderBottom: '1px solid var(--border)' }}></div>
+                                    <Agreements embeddedPropertyId={selectedProperty.id} />
                                 </div>
                             )}
 
-                            {activeTab === 'agreements' && (
-                                <div className="hub-agreements">
-                                    <Agreements embeddedPropertyId={selectedProperty.id} />
+                            {activeTab === 'financials' && (
+                                <div className="hub-financials">
+                                    <RentLedger embeddedPropertyId={selectedProperty.id} />
+                                    <div style={{ margin: 'var(--space-2xl) 0', borderBottom: '1px solid var(--border)' }}></div>
+                                    <Expenses embeddedPropertyId={selectedProperty.id} />
+                                </div>
+                            )}
+
+                            {activeTab === 'maintenance' && (
+                                <div className="hub-maintenance">
+                                    <Maintenance embeddedPropertyId={selectedProperty.id} />
                                 </div>
                             )}
                         </div>

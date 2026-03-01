@@ -118,7 +118,7 @@ export default function CashFlow() {
                     <h1 className="section-title">Cash Flow</h1>
                     <p className="section-subtitle">Income & expenses over time</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                     <CustomSelect
                         variant="filter"
                         value={filterProp}
