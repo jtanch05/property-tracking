@@ -1,13 +1,18 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useApp } from '../context/AppProvider';
+import { useAuth } from '../context/AuthProvider';
 import { downloadBackup, importData, exportFullStatement } from '../utils/export';
 import { clearAllStorage, getStorageSize } from '../utils/storage';
-import { Settings as SettingsIcon, Download, Upload, Trash2, Moon, Sun, Shield, FileText } from 'lucide-react';
+import { Settings as SettingsIcon, Download, Upload, Trash2, Moon, Sun, Shield, FileText, Bell, Copy, Check } from 'lucide-react';
 import './Settings.css';
 
 export default function Settings() {
     const { settings, setSettings, properties, tenants, agreements, rentRecords, taxRecords, utilityRecords, insuranceRecords, maintenanceRecords, managementFees, deposits } = useApp();
+    const { user } = useAuth();
     const fileInputRef = useRef(null);
+    const [alertEmail, setAlertEmail] = useState(settings.alertEmail || '');
+    const [emailSaved, setEmailSaved] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     function toggleTheme() {
         const next = settings.theme === 'dark' ? 'light' : 'dark';
@@ -51,6 +56,20 @@ export default function Settings() {
 
     function handleFullStatementPDF() {
         exportFullStatement({ properties, tenants, agreements, rentRecords, taxRecords, utilityRecords, insuranceRecords, maintenanceRecords, managementFees, deposits });
+    }
+
+    function handleSaveAlertEmail() {
+        setSettings(prev => ({ ...prev, alertEmail }));
+        setEmailSaved(true);
+        setTimeout(() => setEmailSaved(false), 2500);
+    }
+
+    function handleCopyUID() {
+        if (user?.uid) {
+            navigator.clipboard.writeText(user.uid);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
     }
 
     const sizeKB = (getStorageSize() / 1024).toFixed(1);
@@ -143,6 +162,55 @@ export default function Settings() {
                             </div>
                         </div>
                         <button className="btn btn-primary btn-sm" onClick={handleFullStatementPDF}>Export PDF</button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Notifications */}
+            <div className="settings-section">
+                <h2 className="settings-section-title">Email Notifications</h2>
+                <div className="card settings-card">
+                    <div className="settings-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
+                        <div className="settings-item-info">
+                            <Bell size={20} style={{ color: 'var(--accent)' }} />
+                            <div>
+                                <span className="settings-label">Alert Email</span>
+                                <span className="settings-desc">Daily digest of overdue rent, expiring agreements, tax due dates &amp; more</span>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                            <input
+                                type="email"
+                                className="form-input"
+                                placeholder="your@email.com"
+                                value={alertEmail}
+                                onChange={e => setAlertEmail(e.target.value)}
+                                style={{ flex: 1 }}
+                            />
+                            <button className="btn btn-primary btn-sm" onClick={handleSaveAlertEmail}>
+                                {emailSaved ? <><Check size={14} /> Saved!</> : 'Save'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="settings-divider" />
+
+                    <div className="settings-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                        <div className="settings-item-info">
+                            <Shield size={20} style={{ color: 'var(--text-tertiary)' }} />
+                            <div>
+                                <span className="settings-label">Your User ID</span>
+                                <span className="settings-desc">Needed when setting up Make.com automation. Copy and paste into the Body content field.</span>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                            <code style={{ flex: 1, background: 'var(--bg-tertiary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 'var(--font-sm)', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {user?.uid || 'Not logged in'}
+                            </code>
+                            <button className="btn btn-outline btn-sm" onClick={handleCopyUID}>
+                                {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
