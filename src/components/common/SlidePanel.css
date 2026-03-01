@@ -114,6 +114,8 @@
     gap: 0;
     border-bottom: 1px solid var(--border);
     margin-bottom: 1.5rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
 }
 
 .slide-panel-tab {
@@ -131,6 +133,7 @@
     cursor: pointer;
     transition: color 0.18s, border-color 0.18s, background 0.18s;
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    white-space: nowrap;
 }
 
 .slide-panel-tab:hover {

@@ -396,6 +396,19 @@ label {
     margin-bottom: var(--space-md);
 }
 
+/* Hide number input spinners globally */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;

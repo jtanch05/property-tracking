@@ -12,7 +12,8 @@ import Agreements from './Agreements';
 import RentLedger from './RentLedger';
 import Expenses from './Expenses';
 import Maintenance from './Maintenance';
-import { Plus, Building2, Edit3, Trash2, MapPin, Layers, Car, Search, Users, Home, BedDouble, Bath, Ruler, ArrowRight, UserCheck, FileText, Wallet, Wrench } from 'lucide-react';
+import ExpenseFormModal from '../components/common/ExpenseFormModal';
+import { Plus, Building2, Edit3, Trash2, MapPin, Layers, Car, Search, Users, Home, BedDouble, Bath, Ruler, ArrowRight, UserCheck, FileText, Wallet, Wrench, Receipt } from 'lucide-react';
 import './Properties.css';
 
 // --- Field visibility config per property type ---
@@ -150,6 +151,7 @@ const EMPTY_PROPERTY = {
 export default function Properties() {
     const { properties, addProperty, updateProperty, deleteProperty, tenants } = useApp();
     const [showForm, setShowForm] = useState(false);
+    const [showExpenseModal, setShowExpenseModal] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(EMPTY_PROPERTY);
     const [deleteId, setDeleteId] = useState(null);
@@ -374,7 +376,7 @@ export default function Properties() {
                                 <div className="property-card-footer">
                                     {activeTenant ? (
                                         <div className="property-tenant">
-                                            <span className="tenant-avatar-sm">👤</span>
+                                            <Users size={14} className="tenant-avatar-sm" />
                                             <span className="tenant-label">Tenant</span>
                                             <span className="tenant-name">{activeTenant.name}</span>
                                         </div>
@@ -755,10 +757,16 @@ export default function Properties() {
                                 <Users size={16} /> Tenants & Docs
                             </button>
                             <button
-                                className={`slide-panel-tab ${activeTab === 'financials' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('financials')}
+                                className={`slide-panel-tab ${activeTab === 'rent' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('rent')}
                             >
-                                <Wallet size={16} /> Financials
+                                <Wallet size={16} /> Rent Ledger
+                            </button>
+                            <button
+                                className={`slide-panel-tab ${activeTab === 'expenses' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('expenses')}
+                            >
+                                <Receipt size={16} /> Expenses
                             </button>
                             <button
                                 className={`slide-panel-tab ${activeTab === 'maintenance' ? 'active' : ''}`}
@@ -840,10 +848,14 @@ export default function Properties() {
                                 </div>
                             )}
 
-                            {activeTab === 'financials' && (
+                            {activeTab === 'rent' && (
                                 <div className="hub-financials">
                                     <RentLedger embeddedPropertyId={selectedProperty.id} />
-                                    <div style={{ margin: 'var(--space-2xl) 0', borderBottom: '1px solid var(--border)' }}></div>
+                                </div>
+                            )}
+
+                            {activeTab === 'expenses' && (
+                                <div className="hub-financials">
                                     <Expenses embeddedPropertyId={selectedProperty.id} />
                                 </div>
                             )}
@@ -857,6 +869,12 @@ export default function Properties() {
                     </div>
                 )}
             </SlidePanel>
+
+            <ExpenseFormModal
+                isOpen={showExpenseModal}
+                onClose={() => setShowExpenseModal(false)}
+                initialPropertyId={selectedProperty?.id || ''}
+            />
 
             {/* Delete Confirmation */}
             <ConfirmDialog
