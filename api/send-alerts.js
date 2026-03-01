@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
 import { Resend } from 'resend';
 import { differenceInDays, parseISO, startOfToday } from 'date-fns';
 
@@ -194,22 +195,25 @@ export default async function handler(req, res) {
 
     try {
         const resend = new Resend(process.env.RESEND_API_KEY);
+        const auth = getAuth();
 
-        // Get ALL users from Firestore
-        const usersSnap = await db.collection('users').get();
+        // ── Get ALL registered users from Firebase Auth ──────────────────────
+        // (Firestore users/{uid} documents may not exist explicitly — only subcollections do)
+        const listResult = await auth.listUsers(1000); // up to 1000 users
+        const uids = listResult.users.map(u => u.uid);
 
-        if (usersSnap.empty) {
-            return res.status(200).json({ success: true, message: 'No users found', processed: 0 });
+        if (uids.length === 0) {
+            return res.status(200).json({ success: true, message: 'No registered users found', processed: 0 });
         }
 
         // Process each user concurrently
         const results = await Promise.allSettled(
-            usersSnap.docs.map(doc => processUser(doc.id, resend))
+            uids.map(uid => processUser(uid, resend))
         );
 
         const summary = results.map((r, i) => {
             if (r.status === 'fulfilled') return r.value;
-            return { uid: usersSnap.docs[i].id, error: r.reason?.message || 'Unknown error' };
+            return { uid: uids[i], error: r.reason?.message || 'Unknown error' };
         });
 
         const sent = summary.filter(r => r.alertsSent > 0).length;
@@ -220,7 +224,7 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
             success: true,
-            totalUsers: usersSnap.size,
+            totalUsers: uids.length,
             emailsSent: sent,
             skipped,
             errors,
