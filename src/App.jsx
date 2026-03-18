@@ -1,12 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthProvider';
 import { AppProvider, useApp } from './context/AppProvider';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
 
-import { Suspense, lazy } from 'react';
-
+const Landing = lazy(() => import('./pages/Landing'));
 // Pages - Lazy Loaded
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Properties = lazy(() => import('./pages/Properties'));
@@ -52,7 +51,16 @@ function AuthGate() {
   const { user, loading: authLoading } = useAuth();
 
   if (authLoading) return <LoadingScreen />;
-  if (!user) return <Login />;
+  if (!user) {
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="*" element={<Landing />} />
+        </Routes>
+      </Suspense>
+    );
+  }
 
   return (
     <AppProvider>

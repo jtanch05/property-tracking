@@ -43,7 +43,7 @@ export default function Dashboard() {
             { key: 'tax', label: 'Taxes', icon: Receipt, color: '#f87171', records: taxRecords, getAmount: r => Number(r.amount) || 0 },
             { key: 'utility', label: 'Utilities', icon: Droplets, color: '#60a5fa', records: utilityRecords, getAmount: r => Number(r.amount) || 0 },
             { key: 'insurance', label: 'Insurance', icon: Shield, color: '#34d399', records: insuranceRecords, getAmount: r => Number(r.premium) || 0 },
-            { key: 'mgmt', label: 'Mgmt Fees', icon: Landmark, color: '#a78bfa', records: managementFees, getAmount: r => Number(r.amount) || 0 },
+            { key: 'mgmt', label: 'Mgmt Fees', icon: Landmark, color: '#666666', records: managementFees, getAmount: r => Number(r.amount) || 0 },
             { key: 'maintenance', label: 'Maintenance', icon: Wrench, color: '#fbbf24', records: maintenanceRecords, getAmount: r => Number(r.cost) || 0 },
         ];
 

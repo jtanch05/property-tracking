@@ -291,7 +291,7 @@ export default function Settings() {
 
                     {/* Status banner after OAuth redirect */}
                     {calendarStatus === 'success' && (
-                        <div style={{ background: 'var(--success-bg, #f0fdf4)', border: '1px solid var(--success, #16a34a)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', marginBottom: 16, color: 'var(--success, #16a34a)', fontSize: 'var(--font-sm)', fontWeight: 600 }}>
+                        <div style={{ background: 'var(--success-bg, #f0fdf4)', border: '1px solid var(--success, #888888)', borderRadius: 'var(--radius-sm)', padding: '10px 14px', marginBottom: 16, color: 'var(--success, #888888)', fontSize: 'var(--font-sm)', fontWeight: 600 }}>
                             ✅ Google Calendar connected! Alerts will sync automatically every day.
                         </div>
                     )}
@@ -308,7 +308,7 @@ export default function Settings() {
 
                     <div className="settings-item">
                         <div className="settings-item-info">
-                            <Calendar size={20} style={{ color: calendarConnected ? 'var(--success, #16a34a)' : 'var(--accent)' }} />
+                            <Calendar size={20} style={{ color: calendarConnected ? 'var(--success, #888888)' : 'var(--accent)' }} />
                             <div>
                                 <span className="settings-label">
                                     {calendarConnected ? '✅ Connected to Google Calendar' : 'Connect Google Calendar'}
