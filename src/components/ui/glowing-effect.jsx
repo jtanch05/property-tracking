@@ -1,4 +1,3 @@
-"use client";;
 import { memo, useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { animate } from "motion/react";
@@ -13,7 +12,7 @@ const GlowingEffect = memo(({
   className,
   movementDuration = 2,
   borderWidth = 1,
-  disabled = true
+  disabled = true,
 }) => {
   const containerRef = useRef(null);
   const lastPosition = useRef({ x: 0, y: 0 });
@@ -105,26 +104,25 @@ const GlowingEffect = memo(({
           glow && "opacity-100",
           variant === "white" && "border-white",
           disabled && "!block"
-        )} />
+        )}
+      />
       <div
         ref={containerRef}
-        style={
-          {
-            "--blur": `${blur}px`,
-            "--spread": spread,
-            "--start": "0",
-            "--active": "0",
-            "--glowingeffect-border-width": `${borderWidth}px`,
-            "--repeating-conic-gradient-times": "5",
-
-            "--gradient":
-              variant === "white"
-                ? `repeating-conic-gradient(
+        style={{
+          "--blur": `${blur}px`,
+          "--spread": spread,
+          "--start": "0",
+          "--active": "0",
+          "--glowingeffect-border-width": `${borderWidth}px`,
+          "--repeating-conic-gradient-times": "5",
+          "--gradient":
+            variant === "white"
+              ? `repeating-conic-gradient(
                 from 236.84deg at 50% 50%,
                 var(--black),
                 var(--black) calc(25% / var(--repeating-conic-gradient-times))
               )`
-                : `radial-gradient(circle, #dd7bbb 10%, #dd7bbb00 20%),
+              : `radial-gradient(circle, #dd7bbb 10%, #dd7bbb00 20%),
               radial-gradient(circle at 40% 40%, #d79f1e 5%, #d79f1e00 15%),
               radial-gradient(circle at 60% 60%, #5a922c 10%, #5a922c00 20%), 
               radial-gradient(circle at 40% 60%, #4c7894 10%, #4c789400 20%),
@@ -135,16 +133,16 @@ const GlowingEffect = memo(({
                 #5a922c calc(50% / var(--repeating-conic-gradient-times)), 
                 #4c7894 calc(75% / var(--repeating-conic-gradient-times)),
                 #dd7bbb calc(100% / var(--repeating-conic-gradient-times))
-              )`
-          }
-        }
+              )`,
+        }}
         className={cn(
           "pointer-events-none absolute inset-0 rounded-[inherit] opacity-100 transition-opacity",
           glow && "opacity-100",
           blur > 0 && "blur-[var(--blur)] ",
           className,
           disabled && "!hidden"
-        )}>
+        )}
+      >
         <div
           className={cn(
             "glow",
@@ -156,7 +154,8 @@ const GlowingEffect = memo(({
             "after:[mask-clip:padding-box,border-box]",
             "after:[mask-composite:intersect]",
             "after:[mask-image:linear-gradient(#0000,#0000),conic-gradient(from_calc((var(--start)-var(--spread))*1deg),#00000000_0deg,#fff,#00000000_calc(var(--spread)*2deg))]"
-          )} />
+          )}
+        />
       </div>
     </>
   );

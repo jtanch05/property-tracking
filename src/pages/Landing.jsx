@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Landing.css';
+import { GlowingEffectDemo } from '@/components/ui/glowing-effect-demo';
 
 // --- SVG Icons (inline, consistent 24x24 viewBox) ---
 const IconBuilding = () => (
@@ -44,13 +45,18 @@ const IconUsers = () => (
     </svg>
 );
 const IconArrow = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
     </svg>
 );
 const IconCheck = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 6 9 17l-5-5" />
+    </svg>
+);
+const IconStar = () => (
+    <svg className="lp-star" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
     </svg>
 );
 const IconGoogle = () => (
@@ -121,6 +127,30 @@ function FeatureCard({ icon, title, description, delay = 0, gradient }) {
             </div>
             <h3 className="lp-feature-title">{title}</h3>
             <p className="lp-feature-desc">{description}</p>
+        </div>
+    );
+}
+
+// Testimonial card
+function TestimonialCard({ initials, name, role, text, delay = 0 }) {
+    const [ref, inView] = useInView(0.1);
+    return (
+        <div
+            ref={ref}
+            className={`lp-testimonial-card ${inView ? 'animate-in' : ''}`}
+            style={{ transitionDelay: `${delay}ms` }}
+        >
+            <div className="lp-testimonial-stars">
+                {[...Array(5)].map((_, i) => <IconStar key={i} />)}
+            </div>
+            <p className="lp-testimonial-text">"{text}"</p>
+            <div className="lp-testimonial-author">
+                <div className="lp-testimonial-avatar">{initials}</div>
+                <div>
+                    <div className="lp-testimonial-name">{name}</div>
+                    <div className="lp-testimonial-role">{role}</div>
+                </div>
+            </div>
         </div>
     );
 }
@@ -212,7 +242,7 @@ export default function Landing() {
 
                     <div className="lp-hero-trust">
                         <div className="lp-trust-avatars">
-                            {['#2C2C2C', '#666666', '#333333', '#444444', '#555555'].map((c, i) => (
+                            {['#2C2C2C', '#3a3a3a', '#484848', '#565656', '#646464'].map((c, i) => (
                                 <div key={i} className="lp-avatar" style={{ background: c, zIndex: 5 - i }} />
                             ))}
                         </div>
@@ -224,22 +254,22 @@ export default function Landing() {
                 <div className="lp-hero-mockup" aria-hidden="true">
                     <div className="lp-mockup-window">
                         <div className="lp-mockup-titlebar">
-                            <span className="lp-mockup-dot" style={{ background: '#444444' }} />
-                            <span className="lp-mockup-dot" style={{ background: '#555555' }} />
-                            <span className="lp-mockup-dot" style={{ background: '#666666' }} />
+                            <span className="lp-mockup-dot" style={{ background: '#3a3a3a' }} />
+                            <span className="lp-mockup-dot" style={{ background: '#4a4a4a' }} />
+                            <span className="lp-mockup-dot" style={{ background: '#5a5a5a' }} />
                             <span className="lp-mockup-url">proptrack.app/dashboard</span>
                         </div>
                         <div className="lp-mockup-body">
                             {/* Stats row */}
                             <div className="lp-mockup-stats">
                                 {[
-                                    { label: 'Properties', value: '12', color: '#2C2C2C' },
-                                    { label: 'Monthly Revenue', value: '$24.8k', color: '#666666' },
-                                    { label: 'Active Tenants', value: '18', color: '#333333' },
-                                    { label: 'Occupancy', value: '94%', color: '#444444' },
+                                    { label: 'Properties', value: '12' },
+                                    { label: 'Monthly Revenue', value: '$24.8k' },
+                                    { label: 'Active Tenants', value: '18' },
+                                    { label: 'Occupancy', value: '94%' },
                                 ].map((s, i) => (
                                     <div key={i} className="lp-mockup-stat">
-                                        <div className="lp-mockup-stat-val" style={{ color: s.color }}>{s.value}</div>
+                                        <div className="lp-mockup-stat-val">{s.value}</div>
                                         <div className="lp-mockup-stat-lbl">{s.label}</div>
                                     </div>
                                 ))}
@@ -292,55 +322,49 @@ export default function Landing() {
                         </p>
                     </div>
 
-                    <div className="lp-features-grid">
-                        <FeatureCard
-                            icon={<IconBuilding />}
-                            title="Property Portfolio"
-                            description="Manage unlimited properties with detailed profiles, photos, valuation history, and financial performance at a glance."
-                            gradient="linear-gradient(135deg, #2C2C2C22, #66666622)"
+                    {/* Interactive bento grid with glowing mouse-tracking border effect */}
+                    <GlowingEffectDemo />
+                </div>
+            </section>
+
+            {/* ---- TESTIMONIALS ---- */}
+            <section className="lp-section lp-section--alt" id="testimonials">
+                <div className="lp-section-inner">
+                    <div className="lp-section-header">
+                        <span className="lp-section-tag">Testimonials</span>
+                        <h2 className="lp-section-title">Trusted by property managers</h2>
+                        <p className="lp-section-subtitle">
+                            See what investors and landlords say about managing their portfolios with PropTrack.
+                        </p>
+                    </div>
+                    <div className="lp-testimonials-grid">
+                        <TestimonialCard
+                            initials="MR"
+                            name="Michael R."
+                            role="Private Landlord · 8 properties"
+                            text="PropTrack finally gave me a single place to track all my leases, rents, and maintenance. The automated email alerts save me at least a few hours every week."
                             delay={0}
                         />
-                        <FeatureCard
-                            icon={<IconUsers />}
-                            title="Tenant Management"
-                            description="Keep complete tenant records, lease agreements, contact history, and payment status all in one place."
-                            gradient="linear-gradient(135deg, #33333322, #55555522)"
-                            delay={80}
+                        <TestimonialCard
+                            initials="SC"
+                            name="Sarah C."
+                            role="Property Manager · 24 properties"
+                            text="The Google Calendar sync is a game-changer. All my lease renewals and inspection dates just appear in my calendar automatically — no manual entry."
+                            delay={100}
                         />
-                        <FeatureCard
-                            icon={<IconBell />}
-                            title="Smart Alerts"
-                            description="Never miss a lease renewal, rent payment, or maintenance deadline. Customisable alert thresholds with frequency controls."
-                            gradient="linear-gradient(135deg, #44444422, #66666622)"
-                            delay={160}
-                        />
-                        <FeatureCard
-                            icon={<IconTrendUp />}
-                            title="Cash Flow Analytics"
-                            description="Real-time income vs expense tracking, net yield calculations, and exportable financial reports for tax time."
-                            gradient="linear-gradient(135deg, #55555522, #77777722)"
-                            delay={240}
-                        />
-                        <FeatureCard
-                            icon={<IconFileText />}
-                            title="PDF Export"
-                            description="Generate professional reports and statements client-side — no server upload needed. Instant, private, offline-ready."
-                            gradient="linear-gradient(135deg, #2C2C2C22, #33333322)"
-                            delay={320}
-                        />
-                        <FeatureCard
-                            icon={<IconShield />}
-                            title="Secure & Private"
-                            description="Your data stays yours. Firebase authentication with Firestore security rules means only you can see your portfolio."
-                            gradient="linear-gradient(135deg, #88888822, #99999922)"
-                            delay={400}
+                        <TestimonialCard
+                            initials="JT"
+                            name="James T."
+                            role="Real Estate Investor · 15 properties"
+                            text="Clean interface, fast, and the PDF export is exactly what I needed for end-of-year reporting. The dark theme is a bonus — easy on the eyes during late-night reviews."
+                            delay={200}
                         />
                     </div>
                 </div>
             </section>
 
             {/* ---- INTEGRATIONS ---- */}
-            <section className="lp-section lp-section--alt" id="integrations">
+            <section className="lp-section" id="integrations">
                 <div className="lp-section-inner">
                     <div className="lp-section-header">
                         <span className="lp-section-tag">Integrations</span>
@@ -411,7 +435,7 @@ export default function Landing() {
             </section>
 
             {/* ---- HOW IT WORKS ---- */}
-            <section className="lp-section" id="how">
+            <section className="lp-section lp-section--alt" id="how">
                 <div className="lp-section-inner">
                     <div className="lp-section-header">
                         <span className="lp-section-tag">How it works</span>
@@ -436,7 +460,7 @@ export default function Landing() {
             </section>
 
             {/* ---- PRICING ---- */}
-            <section className="lp-section lp-section--alt" id="pricing">
+            <section className="lp-section" id="pricing">
                 <div className="lp-section-inner">
                     <div className="lp-section-header">
                         <span className="lp-section-tag">Pricing</span>
