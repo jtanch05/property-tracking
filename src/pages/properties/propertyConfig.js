@@ -1,0 +1,167 @@
+export const FIELD_CONFIG = {
+    condo: {
+        strata: { show: true, default: true },
+        unitNumber: { show: true, label: 'Unit Number', placeholder: 'e.g. A-12-3' },
+        blockTower: { show: true, label: 'Block / Tower', placeholder: 'e.g. Tower A' },
+        floor: { show: true },
+        lotNumber: { show: false },
+        landSizeSqft: { show: false },
+        storeys: { show: false },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    landed_terrace: {
+        strata: { show: false, default: false },
+        unitNumber: { show: false },
+        blockTower: { show: false },
+        floor: { show: false },
+        lotNumber: { show: true, label: 'House / Lot No.', placeholder: 'e.g. No. 23' },
+        landSizeSqft: { show: true },
+        storeys: { show: true },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    landed_semi: {
+        strata: { show: false, default: false },
+        unitNumber: { show: false },
+        blockTower: { show: false },
+        floor: { show: false },
+        lotNumber: { show: true, label: 'House / Lot No.', placeholder: 'e.g. No. 8' },
+        landSizeSqft: { show: true },
+        storeys: { show: true },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    landed_bungalow: {
+        strata: { show: false, default: false },
+        unitNumber: { show: false },
+        blockTower: { show: false },
+        floor: { show: false },
+        lotNumber: { show: true, label: 'House / Lot No.', placeholder: 'e.g. No. 1' },
+        landSizeSqft: { show: true },
+        storeys: { show: true },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    landed_townhouse: {
+        strata: { show: true, default: true },
+        unitNumber: { show: true, label: 'Unit Number', placeholder: 'e.g. TH-05' },
+        blockTower: { show: 'optional' },
+        floor: { show: 'optional' },
+        lotNumber: { show: false },
+        landSizeSqft: { show: false },
+        storeys: { show: true },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    shoplot: {
+        strata: { show: 'optional', default: false },
+        unitNumber: { show: true, label: 'Lot / Unit No.', placeholder: 'e.g. G-01' },
+        blockTower: { show: false },
+        floor: { show: true },
+        lotNumber: { show: false },
+        landSizeSqft: { show: true },
+        storeys: { show: true },
+        bedrooms: { show: false },
+        bathrooms: { show: 'optional' },
+        furnished: { show: false },
+    },
+    studio: {
+        strata: { show: true, default: true },
+        unitNumber: { show: true, label: 'Unit Number', placeholder: 'e.g. B-5-2' },
+        blockTower: { show: true, label: 'Block / Tower', placeholder: 'e.g. Block B' },
+        floor: { show: true },
+        lotNumber: { show: false },
+        landSizeSqft: { show: false },
+        storeys: { show: false },
+        bedrooms: { show: true },
+        bathrooms: { show: true },
+        furnished: { show: true },
+    },
+    other: {
+        strata: { show: 'optional', default: false },
+        unitNumber: { show: 'optional', label: 'Unit / Lot Number', placeholder: 'e.g. A-1' },
+        blockTower: { show: 'optional' },
+        floor: { show: 'optional' },
+        lotNumber: { show: 'optional', label: 'Lot Number', placeholder: 'e.g. Lot 123' },
+        landSizeSqft: { show: 'optional' },
+        storeys: { show: 'optional' },
+        bedrooms: { show: 'optional' },
+        bathrooms: { show: 'optional' },
+        furnished: { show: 'optional' },
+    },
+};
+
+export const EMPTY_PROPERTY = {
+    nickname: '',
+    type: 'condo',
+    state: '',
+    localCouncil: '',
+    strata: true,
+    yearBuilt: '',
+    unitNumber: '',
+    blockTower: '',
+    floor: '',
+    lotNumber: '',
+    landSizeSqft: '',
+    builtUpSqft: '',
+    storeys: '',
+    bedrooms: '',
+    bathrooms: '',
+    parkingCount: '',
+    furnished: '',
+    notes: '',
+    coOwners: [],
+};
+
+export function getPropertyFieldConfig(type) {
+    return FIELD_CONFIG[type] || FIELD_CONFIG.other;
+}
+
+export function isPropertyFieldVisible(config, field) {
+    const fieldConfig = config[field];
+    return fieldConfig && fieldConfig.show !== false;
+}
+
+export function propertyToForm(prop) {
+    return {
+        nickname: prop.nickname || '',
+        type: prop.type || 'condo',
+        state: prop.state || '',
+        localCouncil: prop.localCouncil || '',
+        strata: prop.strata ?? false,
+        yearBuilt: prop.yearBuilt || '',
+        unitNumber: prop.unitNumber || '',
+        blockTower: prop.blockTower || '',
+        floor: prop.floor || '',
+        lotNumber: prop.lotNumber || '',
+        landSizeSqft: prop.landSizeSqft || '',
+        builtUpSqft: prop.builtUpSqft || '',
+        storeys: prop.storeys || '',
+        bedrooms: prop.bedrooms || '',
+        bathrooms: prop.bathrooms || '',
+        parkingCount: prop.parkingCount || '',
+        furnished: prop.furnished || '',
+        notes: prop.notes || '',
+        coOwners: prop.coOwners || [],
+    };
+}
+
+export function normalizePropertyForm(form) {
+    return {
+        ...form,
+        yearBuilt: form.yearBuilt ? Number(form.yearBuilt) : null,
+        floor: form.floor ? Number(form.floor) : null,
+        builtUpSqft: form.builtUpSqft ? Number(form.builtUpSqft) : null,
+        landSizeSqft: form.landSizeSqft ? Number(form.landSizeSqft) : null,
+        storeys: form.storeys ? Number(form.storeys) : null,
+        bedrooms: form.bedrooms ? Number(form.bedrooms) : null,
+        bathrooms: form.bathrooms ? Number(form.bathrooms) : null,
+        parkingCount: form.parkingCount ? Number(form.parkingCount) : 0,
+    };
+}

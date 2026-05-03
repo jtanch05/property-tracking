@@ -12,6 +12,7 @@
     --glass-bg: rgba(255, 255, 255, 0.72);
     --glass-border: rgba(0, 0, 0, 0.06);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    --glass-blur: blur(16px);
 
     --text-primary: #000000;
     --text-secondary: #333333;
@@ -87,6 +88,7 @@
     --glass-bg: rgba(30, 29, 27, 0.75);
     --glass-border: rgba(255, 255, 255, 0.08);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --glass-blur: blur(16px);
 
     --text-primary: #f0f0f0;
     --text-secondary: #a0a0a0;
@@ -248,6 +250,24 @@ label {
 .card:hover {
     border-color: var(--border-strong);
     box-shadow: var(--shadow-md);
+}
+
+.ui-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.ui-card-title {
+    font-size: var(--font-md);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.ui-card-content {
+    min-width: 0;
 }
 
 /* ======= Buttons ======= */
@@ -415,10 +435,12 @@ label {
 .filter-tabs {
     display: flex;
     align-items: center;
+    gap: var(--space-sm);
+    overflow-x: auto;
+    scrollbar-width: none;
     background: var(--bg-secondary);
     border-radius: var(--radius-md);
     padding: 4px;
-    gap: 4px;
 }
 /* ======= Form ======= */
 .form-group {
@@ -653,16 +675,6 @@ input[type="number"] {
 .search-input {
     padding-left: 42px;
     width: 100%;
-}
-
-/* ======= Filter Tab ======= */
-.filter-tabs {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    overflow-x: auto;
-    padding-bottom: 4px;
-    scrollbar-width: none;
 }
 
 .filter-tabs::-webkit-scrollbar {

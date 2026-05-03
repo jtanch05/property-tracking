@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useApp } from '../context/AppProvider';
 import { formatCurrency, formatDate, formatRelativeDate, formatMonth } from '../utils/formatters';
 import {
-    Building2, Users, Wallet, AlertTriangle, TrendingUp,
+    Building2, Wallet, AlertTriangle, TrendingUp,
     Plus, ArrowRight, Receipt, Droplets, Shield, Landmark, Wrench,
     ArrowUpRight, ArrowDownRight, BarChart3, PieChart, Activity, Bell
 } from 'lucide-react';
@@ -17,7 +17,6 @@ export default function Dashboard() {
     const { tenants, rentRecords: filteredRent, maintenanceRecords: filteredMaintenance } = filteredData;
 
     // --- Stats ---
-    const activeTenants = tenants.filter(t => t.status === 'active').length;
     const totalProperties = properties.length;
     const currentMonth = new Date().toISOString().slice(0, 7);
 

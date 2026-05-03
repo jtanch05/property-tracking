@@ -14,24 +14,23 @@ export default function Settings() {
     const [emailSaved, setEmailSaved] = useState(false);
     const [copied, setCopied] = useState(false);
     const [notificationFrequency, setNotificationFrequency] = useState(settings.notificationFrequency || 'weekly');
-    const [calendarStatus, setCalendarStatus] = useState(null);
-    const [calendarConnected, setCalendarConnected] = useState(settings.googleCalendarConnected || false);
+    const initialCalendarStatus = new URLSearchParams(window.location.search).get('calendar');
+    const [calendarStatus, setCalendarStatus] = useState(initialCalendarStatus);
+    const [calendarConnected, setCalendarConnected] = useState(
+        initialCalendarStatus === 'success' || settings.googleCalendarConnected || false
+    );
 
     // Check if we're returning from Google OAuth (URL will have ?calendar=success or ?calendar=error)
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const cal = params.get('calendar');
-        if (cal) {
-            setCalendarStatus(cal);
-            if (cal === 'success') {
-                setCalendarConnected(true);
+        if (initialCalendarStatus) {
+            if (initialCalendarStatus === 'success') {
                 setSettings(prev => ({ ...prev, googleCalendarConnected: true }));
             }
-            // Clean the URL so it doesn't show on refresh
             window.history.replaceState({}, '', window.location.pathname);
-            setTimeout(() => setCalendarStatus(null), 5000);
+            const timeoutId = setTimeout(() => setCalendarStatus(null), 5000);
+            return () => clearTimeout(timeoutId);
         }
-    }, []);
+    }, [initialCalendarStatus, setSettings]);
 
     function toggleTheme() {
         const next = settings.theme === 'dark' ? 'light' : 'dark';

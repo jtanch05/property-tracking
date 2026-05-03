@@ -1,0 +1,269 @@
+.cashflow-page {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.cashflow-filter-select {
+    width: 280px;
+}
+
+.cashflow-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.cashflow-kpi-card {
+    padding: 20px 24px;
+}
+
+.cashflow-kpi-label {
+    font-size: var(--font-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+}
+
+.cashflow-kpi-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.cashflow-kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.cashflow-kpi-value.income {
+    color: var(--success);
+}
+
+.cashflow-kpi-value.expense,
+.cashflow-kpi-value.negative {
+    color: var(--danger);
+}
+
+.cashflow-kpi-value.positive {
+    color: var(--success);
+}
+
+.cashflow-meter {
+    margin-top: 10px;
+    height: 3px;
+    background: var(--bg-hover);
+    border-radius: var(--radius-full);
+}
+
+.cashflow-meter-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    opacity: 0.7;
+}
+
+.cashflow-meter-fill.income {
+    background: var(--success);
+}
+
+.cashflow-meter-fill.expense,
+.cashflow-meter-fill.negative {
+    background: var(--danger);
+}
+
+.cashflow-meter-fill.positive {
+    background: var(--success);
+}
+
+.cashflow-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: var(--space-md);
+    align-items: start;
+}
+
+.cashflow-card {
+    padding: var(--space-lg);
+}
+
+.cashflow-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-lg);
+}
+
+.cashflow-card-title {
+    font-size: var(--font-md);
+    font-weight: 600;
+}
+
+.cashflow-card > .cashflow-card-title {
+    margin-bottom: var(--space-md);
+}
+
+.cashflow-legend {
+    display: flex;
+    gap: 16px;
+}
+
+.cashflow-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+}
+
+.cashflow-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    opacity: 0.8;
+}
+
+.cashflow-legend-dot.income {
+    background: var(--success);
+}
+
+.cashflow-legend-dot.expense {
+    background: var(--danger);
+}
+
+.cashflow-chart {
+    position: relative;
+}
+
+.cashflow-grid-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed var(--border);
+    opacity: 0.4;
+}
+
+.cashflow-bars {
+    display: flex;
+    gap: 4px;
+    align-items: flex-end;
+    height: 160px;
+    position: relative;
+    z-index: 1;
+}
+
+.cashflow-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+}
+
+.cashflow-bar-pair {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    width: 100%;
+}
+
+.cashflow-bar {
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    opacity: 0.75;
+    transition: height 0.4s ease;
+}
+
+.cashflow-bar.income {
+    background: var(--success);
+}
+
+.cashflow-bar.expense {
+    background: var(--danger);
+}
+
+.cashflow-month-labels {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.cashflow-month-label {
+    flex: 1;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-tertiary);
+}
+
+.cashflow-empty {
+    color: var(--text-tertiary);
+    font-size: var(--font-sm);
+    text-align: center;
+    padding: 24px 0;
+}
+
+.cashflow-expense-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cashflow-expense-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.cashflow-expense-label {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+}
+
+.cashflow-expense-amount {
+    font-size: var(--font-sm);
+    font-weight: 600;
+}
+
+.cashflow-expense-track {
+    height: 4px;
+    background: var(--bg-hover);
+    border-radius: var(--radius-full);
+}
+
+.cashflow-expense-fill {
+    height: 100%;
+    background: var(--danger);
+    border-radius: var(--radius-full);
+    opacity: 0.65;
+}
+
+.cashflow-total-row {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+}
+
+.cashflow-total-row span {
+    font-weight: 600;
+    font-size: var(--font-sm);
+}
+
+.cashflow-total-row strong {
+    font-weight: 700;
+    color: var(--danger);
+}
+
+@media (max-width: 900px) {
+    .cashflow-kpi-grid,
+    .cashflow-content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cashflow-filter-select {
+        width: 100%;
+    }
+}

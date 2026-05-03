@@ -2,15 +2,15 @@ import { useEffect } from 'react';
 import { useAuth } from '../../context/AuthProvider';
 import { useApp } from '../../context/AppProvider';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
-import { addDays, format, differenceInDays } from 'date-fns';
+import { collection, doc, writeBatch, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
+import { addDays, format } from 'date-fns';
 
 export default function ClientAutomation() {
     const { user } = useAuth();
     const { agreements, properties, tenants } = useApp();
 
     useEffect(() => {
-        if (!user || user.uid || !agreements.length) return;
+        if (!user?.uid || !agreements.length) return;
 
         const checkAutomations = async () => {
             try {

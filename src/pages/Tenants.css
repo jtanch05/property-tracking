@@ -3,22 +3,6 @@
     margin: 0 auto;
 }
 
-.filter-bar {
-    display: flex;
-    gap: var(--space-md);
-    align-items: center;
-    margin-bottom: var(--space-lg);
-    flex-wrap: wrap;
-}
-
-.filter-tabs {
-    display: flex;
-    gap: 4px;
-    background: var(--bg-tertiary);
-    padding: 3px;
-    border-radius: var(--radius-md);
-}
-
 .tenant-list {
     display: flex;
     flex-direction: column;

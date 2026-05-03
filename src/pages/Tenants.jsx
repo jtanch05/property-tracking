@@ -4,7 +4,6 @@ import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import ToggleGroup from '../components/common/ToggleGroup';
 import CustomSelect from '../components/common/CustomSelect';
-import { formatDate } from '../utils/formatters';
 import { Plus, Users, Edit3, Trash2, Phone, Mail, Search, UserCheck, UserX } from 'lucide-react';
 import './Tenants.css';
 

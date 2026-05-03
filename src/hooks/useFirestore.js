@@ -96,12 +96,13 @@ export function useFirestore(collectionName) {
  */
 export function useFirestoreDoc(docPath, initialValue) {
     const { user } = useAuth();
+    const initialValueRef = useRef(initialValue);
     const [data, setData] = useState(initialValue);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!user) {
-            setData(initialValue);
+            setData(initialValueRef.current);
             setLoading(false);
             return;
         }
@@ -111,7 +112,7 @@ export function useFirestoreDoc(docPath, initialValue) {
             if (snapshot.exists()) {
                 setData(snapshot.data());
             } else {
-                setData(initialValue);
+                setData(initialValueRef.current);
             }
             setLoading(false);
         }, (error) => {

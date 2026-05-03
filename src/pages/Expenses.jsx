@@ -184,7 +184,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
             }
             return true;
         });
-    }, [allExpenses, filterCategory, searchTerm, properties]);
+    }, [allExpenses, embeddedPropertyId, filterCategory, searchTerm, properties]);
 
     const totalAmount = filteredExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
 

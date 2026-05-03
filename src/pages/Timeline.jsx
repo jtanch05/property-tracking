@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppProvider';
-import { formatDate, formatRelativeDate, formatCurrency } from '../utils/formatters';
-import { Clock, FileText, Wallet, Receipt, Shield, Wrench, AlertCircle, Bell, Calendar, MessageCircle, Download, Landmark } from 'lucide-react';
+import { formatRelativeDate } from '../utils/formatters';
+import { FileText, Wallet, Receipt, Shield, Wrench, AlertCircle, Bell, Calendar, MessageCircle, Landmark } from 'lucide-react';
 import { generateSingleICS, generateBulkICS, downloadICS } from '../utils/calendar';
 import { sendSelfReminder } from '../utils/whatsapp';
 import './Timeline.css';

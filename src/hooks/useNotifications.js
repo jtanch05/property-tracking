@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { messaging, db } from '../firebase';
 import { getToken, onMessage } from 'firebase/messaging';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useAuth } from '../context/AuthProvider';
 
 export function useNotifications() {
@@ -9,7 +9,6 @@ export function useNotifications() {
     const [permissionStatus, setPermissionStatus] = useState(
         typeof Notification !== 'undefined' ? Notification.permission : 'default'
     );
-    const [fcmToken, setFcmToken] = useState(null);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
@@ -64,7 +63,6 @@ export function useNotifications() {
                 const token = await getToken(messaging, { vapidKey: VAPID_KEY });
 
                 if (token) {
-                    setFcmToken(token);
                     await saveTokenToFirestore(user.uid, token);
                     return true;
                 } else {

@@ -5,7 +5,7 @@ import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import ToggleGroup from '../components/common/ToggleGroup';
 import CustomSelect from '../components/common/CustomSelect';
-import { formatCurrency, formatMonth, formatDate, getStatusColor } from '../utils/formatters';
+import { formatCurrency, formatMonth, formatDate } from '../utils/formatters';
 import { differenceInDays, parseISO } from 'date-fns';
 import { Plus, Wallet, Edit3, Trash2, CheckCircle, Clock, AlertCircle, MessageCircle, Minus, FileText } from 'lucide-react';
 import { sendRentReminder } from '../utils/whatsapp';

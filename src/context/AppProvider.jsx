@@ -38,8 +38,8 @@ export function AppProvider({ children }) {
     const payoutsStore = useFirestore('payouts');
     const depositsStore = useFirestore('deposits');
 
-    // Map for easy lookup
-    const stores = {
+    // Map for migration, loading aggregation, and CRUD exposure.
+    const stores = useMemo(() => ({
         properties: propertiesStore,
         tenants: tenantsStore,
         agreements: agreementsStore,
@@ -52,7 +52,20 @@ export function AppProvider({ children }) {
         managementFees: managementFeesStore,
         payouts: payoutsStore,
         deposits: depositsStore,
-    };
+    }), [
+        propertiesStore,
+        tenantsStore,
+        agreementsStore,
+        rentRecordsStore,
+        taxRecordsStore,
+        utilityRecordsStore,
+        insuranceRecordsStore,
+        maintenanceRecordsStore,
+        vendorsStore,
+        managementFeesStore,
+        payoutsStore,
+        depositsStore,
+    ]);
 
     // --- Settings (single document) ---
     const [settings, setSettings, settingsLoading] = useFirestoreDoc('settings/default', {
@@ -113,7 +126,7 @@ export function AppProvider({ children }) {
         }
 
         migrate();
-    }, [user, migrated, migrating]);
+    }, [user, migrated, migrating, stores, setSettings]);
 
     // --- Loading state ---
     const dataLoading = Object.values(stores).some(s => s.loading) || settingsLoading;
@@ -171,10 +184,8 @@ export function AppProvider({ children }) {
 
     // --- Setter wrappers that match the old useLocalStorage interface ---
     // These allow pages to call setProperties(prev => [...prev, newItem]) etc.
-    const createSetter = useCallback((store) => {
-        return (updater) => {
-            // If it's a function (like prev => [...prev, item]), we can't easily replicate this
-            // The CRUD helpers below are the primary way to modify data
+    const createLegacySetter = useCallback(() => {
+        return () => {
             console.warn('Direct setter called — use CRUD helpers (addItem/updateItem/deleteItem) instead.');
         };
     }, []);
@@ -195,18 +206,18 @@ export function AppProvider({ children }) {
         deposits,
 
         // Setters (kept for backward compatibility — pages may use them)
-        setProperties: createSetter(propertiesStore),
-        setTenants: createSetter(tenantsStore),
-        setAgreements: createSetter(agreementsStore),
-        setRentRecords: createSetter(rentRecordsStore),
-        setTaxRecords: createSetter(taxRecordsStore),
-        setUtilityRecords: createSetter(utilityRecordsStore),
-        setInsuranceRecords: createSetter(insuranceRecordsStore),
-        setMaintenanceRecords: createSetter(maintenanceRecordsStore),
-        setVendors: createSetter(vendorsStore),
-        setManagementFees: createSetter(managementFeesStore),
-        setPayouts: createSetter(payoutsStore),
-        setDeposits: createSetter(depositsStore),
+        setProperties: createLegacySetter(),
+        setTenants: createLegacySetter(),
+        setAgreements: createLegacySetter(),
+        setRentRecords: createLegacySetter(),
+        setTaxRecords: createLegacySetter(),
+        setUtilityRecords: createLegacySetter(),
+        setInsuranceRecords: createLegacySetter(),
+        setMaintenanceRecords: createLegacySetter(),
+        setVendors: createLegacySetter(),
+        setManagementFees: createLegacySetter(),
+        setPayouts: createLegacySetter(),
+        setDeposits: createLegacySetter(),
 
         // Settings
         settings, setSettings,

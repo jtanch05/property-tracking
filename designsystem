@@ -8,9 +8,10 @@ Read these files before making UI changes:
 
 - `designsystem` - this guide
 - `src/index.css` - global tokens, base components, tables, buttons, forms, badges
+- `src/components/ui/*` - shadcn-style local UI primitives that wrap the token-based CSS system
 - `src/components/Layout/Layout.css` - sidebar, topbar, main content, mobile bottom nav
 - `src/pages/Landing.css` - public landing page visual language
-- `src/components/common/*.css` - reusable modal, slide panel, custom select, toggle styles
+- `src/components/common/*.css` - reusable modal, custom select, toggle styles
 
 Do not use deleted or old references such as `design-system/property-tracking/MASTER.md` or `.agent/PROPERTY_SYSTEM.md`.
 
@@ -211,6 +212,35 @@ Expenses and Maintenance relationship:
 
 ## Components
 
+### UI Primitive Layer
+
+The app now has a small shadcn-style primitive layer in `src/components/ui`. This is the preferred import path for new reusable UI:
+
+```js
+import { Button, Card, Dialog, Select, SegmentedControl } from '../components/ui';
+```
+
+Use these primitives to get consistent markup, accessibility, and naming while preserving the current visual system. These components intentionally wrap existing CSS classes and design tokens instead of importing external shadcn components.
+
+Available primitives:
+
+- `Button` - wraps `.btn` variants and sizes
+- `Card`, `CardHeader`, `CardTitle`, `CardContent` - wraps `.card` plus `ui-card-*` layout classes
+- `Badge` - wraps `.badge` semantic variants
+- `Input`, `Textarea` - native form wrappers for consistency
+- `Dialog` - modal primitive using the existing modal CSS and mobile bottom-sheet behavior
+- `Select` - re-export of the existing custom select
+- `SegmentedControl` - re-export of the existing toggle group
+
+Rules for future work:
+
+- Prefer `src/components/ui` imports for new screens and refactors.
+- Do not reinstall or copy upstream shadcn/ui components unless the project intentionally migrates to full Tailwind component styling.
+- Do not replace token-based CSS with large inline Tailwind utility strings.
+- If a primitive is missing, add a thin wrapper that maps to the existing token CSS classes first.
+- Keep common legacy components available only as compatibility internals when a UI primitive already exists.
+- Page-specific layout still belongs in the page CSS file; primitives should not know product-specific layout.
+
 ### Buttons
 
 Use existing classes:
@@ -305,16 +335,6 @@ Use the existing modal pattern:
 
 On mobile, modals behave like bottom sheets. Keep this behavior.
 
-### Slide Panels
-
-Use slide panels for detail editing. Preserve:
-
-- right-side desktop panel
-- full-height panel
-- dark overlay
-- rounded left corners
-- scrollable content
-
 ### Selects and Toggles
 
 - Custom selects use `cs-*` classes.
@@ -349,7 +369,7 @@ Responsive behavior:
 
 Tailwind CSS v4 is installed but the app primarily uses hand-authored CSS with design tokens. Tailwind utilities may appear in some components. Prefer design tokens and existing component classes over ad-hoc Tailwind utilities.
 
-Framer Motion is available for animations. The `src/components/ui/` directory contains Aceternity-style effect components (glowing effects, sparkles, etc.) used on the landing page.
+Framer Motion is available for animations. Do not add decorative effect components unless they are actively used by a page and follow the app design direction.
 
 ## Icons
 
@@ -402,7 +422,6 @@ Before creating new UI, look for existing patterns:
 - Property cards and detail tabs: `src/pages/Properties.css`
 - Data tables: global `.data-table`
 - Modal forms: `src/components/common/Modal.css`
-- Slide panels: `src/components/common/SlidePanel.css`
 - Toggles: `src/components/common/ToggleGroup.css`
 - Selects: `src/components/common/CustomSelect.css`
 

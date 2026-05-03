@@ -1,5 +1,5 @@
 // JSON export/import for data backup
-import { getStorageItem, setStorageItem, clearAllStorage } from './storage';
+import { getStorageItem, setStorageItem } from './storage';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -132,7 +132,6 @@ function addSectionTitle(doc, title, color = [41, 128, 185]) {
 export function exportFullStatement({
     properties = [],
     tenants = [],
-    agreements = [],
     rentRecords = [],
     taxRecords = [],
     utilityRecords = [],
