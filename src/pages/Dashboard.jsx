@@ -4,7 +4,7 @@ import { formatCurrency, formatDate, formatRelativeDate, formatMonth } from '../
 import {
     Building2, Users, Wallet, AlertTriangle, TrendingUp,
     Plus, ArrowRight, Receipt, Droplets, Shield, Landmark, Wrench,
-    ArrowUpRight, ArrowDownRight, BarChart3, PieChart, Activity
+    ArrowUpRight, ArrowDownRight, BarChart3, PieChart, Activity, Bell
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './Dashboard.css';
@@ -159,7 +159,7 @@ export default function Dashboard() {
                     <div className="stat-icon" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>
                         <ArrowUpRight size={20} />
                     </div>
-                    <div className="stat-info">
+                    <div className="stat-info" style={{ flex: 1 }}>
                         <span className="stat-label">Total Income</span>
                         <span className="stat-value">{formatCurrency(totalRentIncome)}</span>
                         {totalOutstanding > 0 && (
@@ -174,13 +174,13 @@ export default function Dashboard() {
                     <div className="stat-icon" style={{ background: 'var(--danger-bg)', color: 'var(--danger)' }}>
                         <ArrowDownRight size={20} />
                     </div>
-                    <div className="stat-info">
+                    <div className="stat-info" style={{ flex: 1 }}>
                         <span className="stat-label">Total Expenses</span>
                         <span className="stat-value">{formatCurrency(expenseData.grandTotal)}</span>
-                        <span className="stat-detail">
-                            <Link to="/expenses" className="badge badge-neutral" style={{ cursor: 'pointer', textDecoration: 'none' }}>View breakdown →</Link>
-                        </span>
                     </div>
+                    <Link to="/expenses" style={{ color: 'var(--text-tertiary)', padding: '4px' }} title="View Breakdown">
+                        <ArrowRight size={18} />
+                    </Link>
                 </div>
 
                 <div className="card stat-card">
@@ -202,9 +202,11 @@ export default function Dashboard() {
                     <div className="stat-info">
                         <span className="stat-label">Open Issues</span>
                         <span className="stat-value">{openMaintenance}</span>
-                        <span className="stat-detail">
-                            <span className="badge badge-info">{alerts.length} alerts</span>
-                        </span>
+                        {alerts.length > 0 && (
+                            <span className="stat-detail">
+                                <span className="badge badge-info">{alerts.length} alerts</span>
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
@@ -215,8 +217,8 @@ export default function Dashboard() {
                     {/* Monthly Cash Flow */}
                     <div className="dashboard-section">
                         <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
-                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)' }}>
-                                <BarChart3 size={18} style={{ marginRight: 6 }} />
+                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)', display: 'flex', alignItems: 'center' }}>
+                                <BarChart3 size={18} style={{ marginRight: 8 }} />
                                 Monthly Cash Flow
                             </h2>
                             <Link to="/cashflow" className="btn btn-ghost btn-sm">
@@ -245,8 +247,8 @@ export default function Dashboard() {
                     {/* Expense Breakdown */}
                     <div className="dashboard-section">
                         <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
-                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)' }}>
-                                <PieChart size={18} style={{ marginRight: 6 }} />
+                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)', display: 'flex', alignItems: 'center' }}>
+                                <PieChart size={18} style={{ marginRight: 8 }} />
                                 Expense Breakdown
                             </h2>
                             <Link to="/expenses" className="btn btn-ghost btn-sm">
@@ -296,12 +298,12 @@ export default function Dashboard() {
                 <div className="dashboard-grid">
                     <div className="dashboard-section">
                         <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
-                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)' }}>
-                                <Activity size={18} style={{ marginRight: 6 }} />
+                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)', display: 'flex', alignItems: 'center' }}>
+                                <Activity size={18} style={{ marginRight: 8 }} />
                                 Recent Activity
                             </h2>
                         </div>
-                        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                        <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}>
                             {recentActivity.length > 0 ? (
                                 <div className="activity-list">
                                     {recentActivity.map(item => {
@@ -326,8 +328,8 @@ export default function Dashboard() {
                                     })}
                                 </div>
                             ) : (
-                                <div style={{ textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--text-tertiary)' }}>
-                                    <Activity size={32} style={{ marginBottom: 8, opacity: 0.5 }} />
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--text-tertiary)', height: '100%' }}>
+                                    <Activity size={32} style={{ marginBottom: 12, opacity: 0.5 }} />
                                     <p>No activity yet</p>
                                 </div>
                             )}
@@ -336,7 +338,9 @@ export default function Dashboard() {
 
                     <div className="dashboard-section">
                         <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
-                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)' }}>⏰ Upcoming Alerts</h2>
+                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)', display: 'flex', alignItems: 'center' }}>
+                                <Bell size={18} style={{ marginRight: 8 }} /> Upcoming Alerts
+                            </h2>
                             <Link to="/timeline" className="btn btn-ghost btn-sm">
                                 View All <ArrowRight size={14} />
                             </Link>
@@ -355,8 +359,8 @@ export default function Dashboard() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--text-tertiary)' }}>
-                                <AlertTriangle size={32} style={{ marginBottom: 8, opacity: 0.5 }} />
+                            <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--text-tertiary)', flex: 1 }}>
+                                <Bell size={32} style={{ marginBottom: 12, opacity: 0.5 }} />
                                 <p>No alerts — all clear!</p>
                             </div>
                         )}

@@ -1,16 +1,114 @@
-# React + Vite
+# PropTrack MY
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+PropTrack MY is a React + Vite property portfolio management app for tracking properties, tenants, agreements, rent, expenses, maintenance, vendors, cash flow, alerts, and exports.
 
-Currently, two official plugins are available:
+## Current Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19
+- Vite 7
+- Firebase Auth
+- Firestore
+- Firebase Cloud Messaging
+- Google Calendar API
+- Resend email alerts
+- jsPDF exports
+- Lucide React icons
+- Tailwind CSS utilities where needed
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Google sign-in
+- Per-user Firestore data storage
+- Local storage migration into Firestore
+- Property, tenant, agreement, rent, expense, maintenance, vendor, payout, and deposit tracking
+- Dashboard summaries and alert timeline
+- PDF exports and full statement export
+- JSON backup/import
+- WhatsApp reminder helpers
+- Configurable alert frequency
+- Resend email alert digests
+- Google Calendar OAuth and alert event sync
+- Dark and light themes
 
-## Expanding the ESLint configuration
+## Design Direction
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The current design is a dark-first operational SaaS interface:
+
+- Font: Inter
+- Dark background: `#141414`
+- Surface: `#1c1c1c`
+- Primary text: `#f0f0f0`
+- Secondary text: `#a0a0a0`
+- Accent: monochrome silver/white
+- Status colors are semantic: success, warning, danger
+
+The current design source of truth is:
+
+- `designsystem`
+- `src/index.css`
+- `src/pages/Landing.css`
+
+Do not use the old teal/Cinzel/Josefin design direction.
+
+## Setup
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create `.env` from `.env.example` and fill in Firebase client values.
+
+Run the app:
+
+```bash
+npm run dev
+```
+
+Build for production:
+
+```bash
+npm run build
+```
+
+## Environment Variables
+
+Client-side Firebase:
+
+```text
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_MEASUREMENT_ID=
+VITE_FIREBASE_VAPID_KEY=
+```
+
+Server/API integrations:
+
+```text
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
+RESEND_API_KEY=
+ALERT_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=
+```
+
+## Useful Commands
+
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run preview
+```
+
+## Notes
+
+The Firebase Messaging service worker lives in `public/firebase-messaging-sw.js`. Because it is served as a public service worker file, it cannot use Vite `import.meta.env` directly. Keep its Firebase public config synchronized with the active Firebase project.

@@ -199,13 +199,15 @@ export default function RentLedger({ embeddedPropertyId = null }) {
             {rentRecords.length > 0 && (
                 <div className="filter-bar">
                     {!embeddedPropertyId && (
-                        <CustomSelect
-                            variant="filter"
-                            value={filterProp}
-                            onChange={setFilterProp}
-                            options={[{ value: '', label: 'All Properties' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]}
-                            placeholder="All Properties"
-                        />
+                        <div style={{ width: '280px' }}>
+                            <CustomSelect
+                                variant="filter"
+                                value={filterProp}
+                                onChange={setFilterProp}
+                                options={[{ value: '', label: 'All Properties' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]}
+                                placeholder="All Properties"
+                            />
+                        </div>
                     )}
                     <div className="filter-tabs">
                         {['all', 'paid', 'unpaid'].map(f => (

@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthProvider';
 import { AppProvider, useApp } from './context/AppProvider';
 import Layout from './components/Layout/Layout';
@@ -91,6 +91,7 @@ function AppContent() {
           <Route path="/cashflow" element={<CashFlow />} />
           <Route path="/timeline" element={<Timeline />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="*" element={
             <div className="empty-state" style={{ minHeight: '60vh' }}>
               <h3>Page Not Found</h3>

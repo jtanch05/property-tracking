@@ -1,0 +1,436 @@
+# PropTrack Design System for Future AI Agents
+
+This is the first file future AI agents should read before changing UI. The design system follows Gleap-inspired principles with a monochrome accent.
+
+## Source of Truth
+
+Read these files before making UI changes:
+
+- `designsystem` - this guide
+- `src/index.css` - global tokens, base components, tables, buttons, forms, badges
+- `src/components/Layout/Layout.css` - sidebar, topbar, main content, mobile bottom nav
+- `src/pages/Landing.css` - public landing page visual language
+- `src/components/common/*.css` - reusable modal, slide panel, custom select, toggle styles
+
+Do not use deleted or old references such as `design-system/property-tracking/MASTER.md` or `.agent/PROPERTY_SYSTEM.md`.
+
+## Product Identity
+
+PropTrack MY is an operational property portfolio management app. The UI should feel:
+
+- Spacious and calm
+- Dense where data demands it
+- Fast and practical
+- Premium but restrained
+- Built for repeated dashboard work
+
+Prefer scannable workflows, clear data hierarchy, and compact controls over decorative marketing composition.
+
+## Visual Direction
+
+The active visual direction is Gleap-inspired:
+
+- Both light and dark themes available
+- Warm tones (cream canvas in light, warm dark in dark theme)
+- Inter typography for body, Playfair Display for editorial headlines
+- Single monochrome accent (`var(--text-primary)`) for primary actions and interactivity
+- Soft rounded containers (10px controls, 24px cards, 42px large elements)
+- Subtle shadows, no heavy glassmorphism in light theme
+- Semantic status colors only where they communicate state
+
+Avoid: colorful SaaS gradients, teal real-estate branding, luxury editorial typography in body text, sharp corners.
+
+## Core Tokens
+
+Use CSS variables from `src/index.css`. Do not hardcode new colors when an existing token works.
+
+### Dark Theme (`:root` default)
+
+| Role | Token | Value |
+|------|-------|-------|
+| App background | `--bg-primary` | `#161514` |
+| Main surface | `--bg-secondary` | `#1e1d1b` |
+| Raised surface | `--bg-tertiary` | `#262523` |
+| Elevated surface | `--bg-elevated` | `#2e2d2b` |
+| Hover surface | `--bg-hover` | `#353432` |
+| Primary text | `--text-primary` | `#f0f0f0` |
+| Secondary text | `--text-secondary` | `#a0a0a0` |
+| Tertiary text | `--text-tertiary` | `#6b6b6b` |
+| Muted text | `--text-muted` | `#4a4a4a` |
+| Accent | `--accent` | `#f0f0f0` |
+| Accent text | `--accent-text` | `#141414` |
+| Accent hover | `--accent-hover` | `#d4d4d4` |
+| Border | `--border` | `rgba(255, 255, 255, 0.07)` |
+| Strong border | `--border-strong` | `rgba(255, 255, 255, 0.14)` |
+
+### Light Theme (`[data-theme="light"]`)
+
+| Role | Token | Value |
+|------|-------|-------|
+| App background | `--bg-primary` | `#f5f2f0` (Cloud Canvas) |
+| Main surface | `--bg-secondary` | `#ffffff` (Porcelain) |
+| Raised surface | `--bg-tertiary` | `#ede9e5` |
+| Elevated surface | `--bg-elevated` | `#ffffff` |
+| Hover surface | `--bg-hover` | `#e8e4e0` |
+| Primary text | `--text-primary` | `#000000` (Ink) |
+| Secondary text | `--text-secondary` | `#333333` (Graphite) |
+| Tertiary text | `--text-tertiary` | `#7b7b7b` |
+| Muted text | `--text-muted` | `#bcbcbc` |
+| Accent | `--accent` | `#1a1a1a` |
+| Accent text | `--accent-text` | `#ffffff` |
+| Accent hover | `--accent-hover` | `#333333` |
+| Border | `--border` | `#e8e4e0` |
+| Strong border | `--border-strong` | `#d6d6d6` (Platinum) |
+
+### Status Tokens
+
+| State | Token | Usage |
+|-------|-------|-------|
+| Success | `--success` | paid, connected, complete, positive values |
+| Warning | `--warning` | due soon, attention, medium alert |
+| Danger | `--danger` | overdue, delete, critical alert |
+| Info | `--info` | neutral informational state |
+
+Use status colors sparingly. Most UI should remain monochrome with an inverse accent for primary actions.
+
+### Spacing
+
+| Token | Value |
+|-------|-------|
+| `--space-xs` | `4px` |
+| `--space-sm` | `8px` |
+| `--space-md` | `16px` |
+| `--space-lg` | `24px` |
+| `--space-xl` | `32px` |
+| `--space-2xl` | `48px` |
+| `--space-3xl` | `64px` |
+
+### Radius (Gleap system)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--radius-sm` | `10px` | buttons, badges, small controls |
+| `--radius-md` | `10px` | inputs, nav items |
+| `--radius-lg` | `24px` | cards and panels |
+| `--radius-xl` | `42px` | modals and large sheets |
+| `--radius-full` | `9999px` | pills, progress tracks |
+
+### Shadows
+
+Light theme uses Gleap-style subtle shadows:
+
+- `--shadow-sm`: very subtle elevation
+- `--shadow-md`: `rgba(0, 0, 0, 0.04) 0px 8px 16px 0px` — card elevation
+- `--shadow-lg`: slightly stronger for modals
+- `--shadow-xl`: strong elevation for overlays
+
+## Typography
+
+Two font families:
+
+```css
+font-family: var(--font-family);   /* Inter — body, UI, forms */
+font-family: var(--font-display);  /* Playfair Display — editorial headlines */
+```
+
+Available sizes:
+
+- `--font-xs`: `0.75rem`
+- `--font-sm`: `0.8125rem`
+- `--font-base`: `0.875rem`
+- `--font-md`: `1rem`
+- `--font-lg`: `1.125rem`
+- `--font-xl`: `1.25rem`
+- `--font-2xl`: `1.5rem`
+- `--font-3xl`: `1.875rem`
+
+Rules:
+
+- Use Inter (var(--font-family)) for all app UI: dashboards, tables, forms, nav, settings.
+- Use Playfair Display (var(--font-display)) only for landing page hero/section titles and marketing headings.
+- Do not use Playfair Display inside authenticated app screens.
+- Use compact type in dashboards, tables, forms, nav, and settings.
+- Use `--font-xl` or smaller for most app page headings.
+
+## App Shell
+
+Desktop:
+
+- Fixed left sidebar starts collapsed at `64px`
+- Expanded sidebar width is `220px`
+- Sidebar must be user-collapsible
+- Main content uses the page's own layout; split workspace pages should fill available height
+
+Mobile:
+
+- Hide sidebar at `max-width: 768px`
+- Show fixed bottom nav with app-level entries only
+- Add bottom padding to main content so content is not hidden behind bottom nav
+- Tables and wide rows must scroll inside wrappers, never push viewport width
+
+## Product Flow
+
+The authenticated app is property-first. Do not expose every data module as a top-level navigation item.
+
+Top-level navigation:
+
+- Dashboard
+- Properties
+- Timeline
+- Settings
+
+Hidden/internal routes that may still exist:
+
+- Tenants
+- Agreements
+- Rent Ledger
+- Cash Flow
+- Expenses
+- Maintenance
+- Vendors
+
+These hidden routes should not be brought back into the primary sidebar or mobile bottom nav unless the user explicitly changes the product direction.
+
+Property workspace tabs:
+
+- Overview
+- Tenants
+- Agreements
+- Ledger
+- Expenses
+- Maintenance
+
+Use the property workspace as the main place to manage property-specific records. Standalone pages can remain available for legacy/direct access, but they should not compete with Properties as the primary user flow.
+
+Expenses and Maintenance relationship:
+
+- Expenses is for financial expense records: taxes, utilities, insurance, and management fees.
+- Maintenance is for repair/work-order management.
+- Cash Flow and dashboard summaries may include maintenance cost in financial calculations.
+- Do not show maintenance items inside the editable Expenses table; it creates a dead-end because maintenance has different fields and lifecycle.
+
+## Components
+
+### Buttons
+
+Use existing classes:
+
+- `.btn`
+- `.btn-primary` — **inverse monochrome fill** (`--text-primary` bg, `--bg-primary` text)
+- `.btn-secondary`
+- `.btn-danger`
+- `.btn-ghost`
+- `.btn-outline`
+- `.btn-sm`
+- `.btn-icon`
+
+Primary buttons use the monochrome accent:
+
+```css
+background: var(--text-primary);
+color: var(--bg-primary);
+```
+
+Do not introduce bright colors for primary actions. The monochrome inverse accent is the singular style for primary interactive elements.
+
+### Cards
+
+Use `.card` for standard panels:
+
+```css
+background: var(--bg-secondary);
+border: 1px solid var(--border);
+border-radius: var(--radius-lg);   /* 24px */
+padding: var(--space-lg);
+```
+
+Cards may use a subtle border or shadow change on hover. Avoid large scale transforms.
+
+### Glass Surfaces
+
+Use `.glass-card` or matching tokens for topbar/bottom nav:
+
+```css
+background: var(--glass-bg);
+backdrop-filter: var(--glass-blur);
+border: 1px solid var(--glass-border);
+box-shadow: var(--glass-shadow);
+```
+
+Glass should be subtle. In light theme, prefer clean white surfaces with subtle shadows over glassmorphism.
+
+### Forms
+
+Inputs, selects, and textareas are globally styled. Preserve:
+
+- `background: var(--bg-tertiary)`
+- `border: 1px solid var(--border-strong)`
+- `border-radius: var(--radius-md)` (10px)
+- visible focus ring
+
+Use `.form-row` for two-column desktop forms that collapse to one column below 600px.
+
+### Tables
+
+Use `.data-table` and `.table-container` patterns.
+
+Rules:
+
+- Header cells are compact uppercase labels.
+- Rows have subtle hover background.
+- Avoid excessive padding on dense data views.
+- Wrap wide tables in horizontal scroll containers on mobile.
+
+### Badges
+
+Use:
+
+- `.badge-success`
+- `.badge-warning`
+- `.badge-danger`
+- `.badge-info`
+- `.badge-neutral`
+
+Badges are small uppercase pills. Use semantic status only.
+
+### Modals
+
+Use the existing modal pattern:
+
+- `.modal-overlay`
+- `.modal-container`
+- `.modal-sm`
+- `.modal-md`
+- `.modal-lg`
+
+On mobile, modals behave like bottom sheets. Keep this behavior.
+
+### Slide Panels
+
+Use slide panels for detail editing. Preserve:
+
+- right-side desktop panel
+- full-height panel
+- dark overlay
+- rounded left corners
+- scrollable content
+
+### Selects and Toggles
+
+- Custom selects use `cs-*` classes.
+- Toggle groups use `.toggle-group`, `.toggle-btn`, `.toggle-btn-active`.
+- Active toggle uses **monochrome inverse styling** (`--text-primary` bg, `--bg-primary` text).
+
+## Landing Page
+
+The landing page has its own `lp-*` namespace in `src/pages/Landing.css`.
+
+Landing direction:
+
+- Warm light canvas (`#f5f2f0`)
+- White cards with subtle shadows
+- Dark monochrome accent for CTAs and highlights
+- Playfair Display for hero/section headings
+- Inter for body text
+- Soft ambient blobs with subtle neutral tint
+- Product UI mockup in hero
+- Stats strip, feature grid, testimonials, integrations, pricing, CTA, footer
+
+Landing is always light-themed regardless of app theme setting.
+
+Responsive behavior:
+
+- Hero stacks below 1024px
+- Nav turns into mobile menu below 768px
+- Multi-column grids collapse to one column below 768px
+- Respect `prefers-reduced-motion`
+
+## Tech Stack Note
+
+Tailwind CSS v4 is installed but the app primarily uses hand-authored CSS with design tokens. Tailwind utilities may appear in some components. Prefer design tokens and existing component classes over ad-hoc Tailwind utilities.
+
+Framer Motion is available for animations. The `src/components/ui/` directory contains Aceternity-style effect components (glowing effects, sparkles, etc.) used on the landing page.
+
+## Icons
+
+Preferred icon library is `lucide-react`.
+
+Rules:
+
+- Do not use emoji as React UI icons.
+- Icon-only buttons must have `title`, `aria-label`, or visible accessible text.
+- Use familiar icons for actions.
+
+## Motion
+
+Use existing transition tokens:
+
+- `--transition-fast`: `0.15s ease`
+- `--transition-base`: `0.2s ease`
+- `--transition-slow`: `0.3s ease`
+
+Motion should clarify interaction, not decorate. Acceptable:
+
+- fade in page content
+- hover border/background changes
+- slight `translateY(-1px)` on buttons
+- slide panels and mobile sheets
+
+Avoid heavy animations in data dashboards.
+
+## Responsiveness
+
+Required breakpoints:
+
+- `768px`: mobile shell switch
+- `600px`: form rows collapse
+- `480px`: landing page compact spacing
+- `400px`: very narrow dashboard stats become one column
+
+Always verify:
+
+- No horizontal body scroll
+- Text does not overflow buttons or cards
+- Tables scroll inside wrappers
+- Fixed topbar, sidebar, and bottom nav do not cover content
+
+## Files and Patterns to Reuse
+
+Before creating new UI, look for existing patterns:
+
+- Dashboard cards and stats: `src/pages/Dashboard.css`
+- Property cards and detail tabs: `src/pages/Properties.css`
+- Data tables: global `.data-table`
+- Modal forms: `src/components/common/Modal.css`
+- Slide panels: `src/components/common/SlidePanel.css`
+- Toggles: `src/components/common/ToggleGroup.css`
+- Selects: `src/components/common/CustomSelect.css`
+
+Prefer extending these patterns over creating new visual systems.
+
+## Forbidden Old Direction
+
+Do not bring back:
+
+- Teal palette
+- Cinzel / Josefin Sans fonts
+- Real-estate luxury brochure styling
+- Beige/tan property brochure palettes
+- Purple-blue gradient SaaS palettes
+- Cool slate light theme (old: `#f8fafc`, `#f1f5f9`)
+
+## Development Checklist for AI Agents
+
+Before editing UI:
+
+- [ ] Read `designsystem`
+- [ ] Read the relevant existing component/page CSS
+- [ ] Reuse global tokens from `src/index.css`
+- [ ] Use monochrome inverse styling for primary actions
+- [ ] Keep authenticated app screens compact and operational
+- [ ] Keep landing page warm light with Playfair Display headlines
+- [ ] Use semantic status colors only for real state
+- [ ] Preserve dark and light theme support
+- [ ] Preserve mobile shell behavior
+- [ ] Avoid horizontal overflow
+- [ ] Run `npm run build` after meaningful UI changes

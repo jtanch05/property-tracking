@@ -110,15 +110,19 @@ export default function CashFlow() {
     const maxBar = Math.max(...monthlyData.map(d => Math.max(d.income, d.expenses)), 1);
 
     return (
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
 
-            {/* Header + Filters row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-lg)', flexWrap: 'wrap', gap: 12 }}>
+            {/* Header */}
+            <div className="section-header">
                 <div>
                     <h1 className="section-title">Cash Flow</h1>
                     <p className="section-subtitle">Income & expenses over time</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            </div>
+
+            {/* Filters */}
+            <div className="filter-bar">
+                <div style={{ width: '280px' }}>
                     <CustomSelect
                         variant="filter"
                         value={filterProp}
@@ -126,11 +130,11 @@ export default function CashFlow() {
                         options={[{ value: '', label: 'All Properties' }, ...properties.map(p => ({ value: p.id, label: p.nickname }))]}
                         placeholder="All Properties"
                     />
-                    <div className="filter-tabs">
-                        {[{ v: 'month', l: 'Month' }, { v: 'quarter', l: 'Quarter' }, { v: 'year', l: 'Year' }].map(r => (
-                            <button key={r.v} className={`btn btn-sm ${range === r.v ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setRange(r.v)}>{r.l}</button>
-                        ))}
-                    </div>
+                </div>
+                <div className="filter-tabs">
+                    {[{ v: 'month', l: 'Month' }, { v: 'quarter', l: 'Quarter' }, { v: 'year', l: 'Year' }].map(r => (
+                        <button key={r.v} className={`btn btn-sm ${range === r.v ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setRange(r.v)}>{r.l}</button>
+                    ))}
                 </div>
             </div>
 

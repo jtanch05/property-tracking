@@ -4,7 +4,6 @@ import { MALAYSIA_STATES, PROPERTY_TYPES } from '../data/malaysiaData';
 import { LOCAL_COUNCILS } from '../data/localCouncils';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
-import SlidePanel from '../components/common/SlidePanel';
 import ToggleGroup from '../components/common/ToggleGroup';
 import CustomSelect from '../components/common/CustomSelect';
 import Tenants from './Tenants';
@@ -12,8 +11,7 @@ import Agreements from './Agreements';
 import RentLedger from './RentLedger';
 import Expenses from './Expenses';
 import Maintenance from './Maintenance';
-import ExpenseFormModal from '../components/common/ExpenseFormModal';
-import { Plus, Building2, Edit3, Trash2, MapPin, Layers, Car, Search, Users, Home, BedDouble, Bath, Ruler, ArrowRight, UserCheck, FileText, Wallet, Wrench, Receipt } from 'lucide-react';
+import { Plus, Building2, Edit3, Trash2, MapPin, Layers, Car, Search, Users, Home, BedDouble, Bath, Ruler, ArrowRight, UserCheck, FileText, Wallet, Wrench, Receipt, ArrowLeft } from 'lucide-react';
 import './Properties.css';
 
 // --- Field visibility config per property type ---
@@ -151,15 +149,13 @@ const EMPTY_PROPERTY = {
 export default function Properties() {
     const { properties, addProperty, updateProperty, deleteProperty, tenants } = useApp();
     const [showForm, setShowForm] = useState(false);
-    const [showExpenseModal, setShowExpenseModal] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(EMPTY_PROPERTY);
     const [deleteId, setDeleteId] = useState(null);
     const [search, setSearch] = useState('');
 
-    // SlidePanel state for Hub View
     const [selectedProperty, setSelectedProperty] = useState(null);
-    const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'tenants', 'agreements'
+    const [activeTab, setActiveTab] = useState('overview');
 
     const filteredProperties = properties.filter(p =>
         p.nickname.toLowerCase().includes(search.toLowerCase()) ||
@@ -272,142 +268,215 @@ export default function Properties() {
     const isLanded = ['landed_terrace', 'landed_semi', 'landed_bungalow'].includes(form.type);
 
     return (
-        <div className="properties-page">
-            <div className="section-header">
-                <div>
-                    <h1 className="section-title">Properties</h1>
-                    <p className="section-subtitle">{properties.length} properties registered</p>
-                </div>
-                <button className="btn btn-primary" onClick={openAdd}>
-                    <Plus size={16} />
-                    Add Property
-                </button>
-            </div>
-
-            {/* Search */}
-            {properties.length > 0 && (
-                <div className="search-bar">
-                    <Search size={18} className="search-icon" />
-                    <input
-                        type="text"
-                        placeholder="Search properties..."
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        className="search-input"
-                    />
-                </div>
-            )}
-
-            {/* Property List */}
-            {filteredProperties.length > 0 ? (
-                <div className="property-grid">
-                    {filteredProperties.map(prop => {
-                        const activeTenant = tenants.find(t => t.propertyId === prop.id && t.status === 'active');
-                        const propType = PROPERTY_TYPES.find(t => t.value === prop.type);
-                        return (
-                            <div key={prop.id} className="card property-card" onClick={() => openPropertyHub(prop)}>
-                                {/* Top row: icon + meta + actions */}
-                                <div className="property-card-top">
-                                    <div className="property-card-icon-wrap">
-                                        <Building2 size={18} />
-                                    </div>
-                                    <div className="property-card-main">
-                                        <h3 className="property-name">{prop.nickname}</h3>
-                                        <div className="property-meta">
-                                            {propType && <span className="badge badge-neutral">{propType.label}</span>}
-                                            {prop.strata && <span className="badge badge-info">Strata</span>}
-                                            {prop.furnished && prop.furnished !== 'unfurnished' && (
-                                                <span className="badge badge-neutral">{prop.furnished === 'fully' ? 'Furnished' : 'Partial'}</span>
-                                            )}
-                                            {activeTenant ? (
-                                                <span className="badge badge-success">Occupied</span>
-                                            ) : (
-                                                <span className="badge badge-danger">Vacant</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="property-card-actions" onClick={e => e.stopPropagation()}>
-                                        <button className="btn-icon" onClick={() => openEdit(prop)} title="Edit">
-                                            <Edit3 size={15} />
-                                        </button>
-                                        <button className="btn-icon btn-icon-danger" onClick={() => setDeleteId(prop.id)} title="Delete">
-                                            <Trash2 size={15} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Details row */}
-                                <div className="property-details">
-                                    {prop.state && (
-                                        <div className="detail-item">
-                                            <MapPin size={13} />
-                                            <span>{prop.state}{prop.localCouncil ? ` · ${prop.localCouncil}` : ''}</span>
-                                        </div>
-                                    )}
-                                    {prop.builtUpSqft && (
-                                        <div className="detail-item">
-                                            <Layers size={13} />
-                                            <span>
-                                                {prop.builtUpSqft} sqft
-                                                {prop.landSizeSqft ? ` · land: ${prop.landSizeSqft} sqft` : ''}
-                                                {prop.floor ? ` · Floor ${prop.floor}` : ''}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {(prop.bedrooms || prop.bathrooms) && (
-                                        <div className="detail-item">
-                                            <BedDouble size={13} />
-                                            <span>
-                                                {prop.bedrooms ? `${prop.bedrooms} bed` : ''}
-                                                {prop.bedrooms && prop.bathrooms ? ' · ' : ''}
-                                                {prop.bathrooms ? `${prop.bathrooms} bath` : ''}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {prop.parkingCount > 0 && (
-                                        <div className="detail-item">
-                                            <Car size={13} />
-                                            <span>{prop.parkingCount} parking bay{prop.parkingCount > 1 ? 's' : ''}</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Footer: tenant + action */}
-                                <div className="property-card-footer">
-                                    {activeTenant ? (
-                                        <div className="property-tenant">
-                                            <Users size={14} className="tenant-avatar-sm" />
-                                            <span className="tenant-label">Tenant</span>
-                                            <span className="tenant-name">{activeTenant.name}</span>
-                                        </div>
-                                    ) : (
-                                        <span />
-                                    )}
-                                    <span className="property-card-cta">
-                                        View Dashboard <ArrowRight size={13} />
-                                    </span>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            ) : properties.length === 0 ? (
-                <div className="empty-state">
-                    <Building2 size={56} />
-                    <h3>No properties yet</h3>
-                    <p>Add your first property to get started with tracking rent, taxes, and maintenance.</p>
-                    <button className="btn btn-primary" onClick={openAdd}>
-                        <Plus size={16} />
-                        Add Property
+        <div className="split-layout">
+            {/* Column 2: List Pane */}
+            <div className="list-pane">
+                <div className="list-pane-header">
+                    <div>
+                        <h1 className="list-pane-title">Properties</h1>
+                        <span className="list-pane-subtitle">{properties.length} properties</span>
+                    </div>
+                    <button className="btn-icon" onClick={openAdd} title="Add Property">
+                        <Plus size={18} />
                     </button>
                 </div>
-            ) : (
-                <div className="empty-state">
-                    <Search size={48} />
-                    <h3>No results</h3>
-                    <p>No properties match "{search}"</p>
+
+                {properties.length > 0 && (
+                    <div className="list-pane-search">
+                        <Search size={16} className="search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Search properties..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                    </div>
+                )}
+
+                <div className="list-pane-items">
+                    {filteredProperties.length > 0 ? (
+                        filteredProperties.map(prop => {
+                            const activeTenant = tenants.find(t => t.propertyId === prop.id && t.status === 'active');
+                            const isSelected = selectedProperty?.id === prop.id;
+                            return (
+                                <div 
+                                    key={prop.id} 
+                                    className={`list-item ${isSelected ? 'active' : ''}`}
+                                    onClick={() => openPropertyHub(prop)}
+                                >
+                                    <div className="list-item-icon">
+                                        <Building2 size={16} />
+                                    </div>
+                                    <div className="list-item-main">
+                                        <h3 className="list-item-title">{prop.nickname}</h3>
+                                        <div className="list-item-meta">
+                                            {prop.state && <span>{prop.state}</span>}
+                                            {activeTenant && <span className="status-dot success" title="Occupied"></span>}
+                                        </div>
+                                    </div>
+                                    <div className="list-item-actions">
+                                        <button className="btn-icon" onClick={(e) => { e.stopPropagation(); openEdit(prop); }} title="Edit">
+                                            <Edit3 size={14} />
+                                        </button>
+                                        <button className="btn-icon btn-icon-danger" onClick={(e) => { e.stopPropagation(); setDeleteId(prop.id); }} title="Delete">
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <div className="list-pane-empty">
+                            <p>No properties found.</p>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
+
+            {/* Column 3: Detail Pane */}
+            <div className={`detail-pane ${selectedProperty ? 'open' : ''}`}>
+                {selectedProperty ? (
+                    <div className="detail-pane-inner">
+                        {/* Detail Header & Tabs */}
+                        <div className="detail-header">
+                            <div className="detail-header-top">
+                                <button
+                                    type="button"
+                                    className="detail-back-btn"
+                                    onClick={() => setSelectedProperty(null)}
+                                    title="Back to properties"
+                                >
+                                    <ArrowLeft size={18} />
+                                </button>
+                                <div className="detail-header-title">
+                                    <h2>{selectedProperty.nickname}</h2>
+                                </div>
+                            </div>
+                            <div className="detail-tabs">
+                                <button className={`detail-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
+                                    <Home size={14} /> Overview
+                                </button>
+                                <button className={`detail-tab ${activeTab === 'tenants' ? 'active' : ''}`} onClick={() => setActiveTab('tenants')}>
+                                    <Users size={14} /> Tenants
+                                </button>
+                                <button className={`detail-tab ${activeTab === 'agreements' ? 'active' : ''}`} onClick={() => setActiveTab('agreements')}>
+                                    <FileText size={14} /> Agreements
+                                </button>
+                                <button className={`detail-tab ${activeTab === 'rent' ? 'active' : ''}`} onClick={() => setActiveTab('rent')}>
+                                    <Wallet size={14} /> Ledger
+                                </button>
+                                <button className={`detail-tab ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')}>
+                                    <Receipt size={14} /> Expenses
+                                </button>
+                                <button className={`detail-tab ${activeTab === 'maintenance' ? 'active' : ''}`} onClick={() => setActiveTab('maintenance')}>
+                                    <Wrench size={14} /> Maintenance
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Detail Content */}
+                        <div className="detail-body">
+                            {activeTab === 'overview' && (
+                                <div className="hub-overview">
+                                    <div className="hub-overview-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                                        <h3>Property Information</h3>
+                                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(selectedProperty)}>
+                                            <Edit3 size={14} /> Edit
+                                        </button>
+                                    </div>
+                                    <div className="hub-stats-grid">
+                                        <div className="hub-stat-card">
+                                            <div className="hub-stat-label">Type</div>
+                                            <div className="hub-stat-value">
+                                                {PROPERTY_TYPES.find(t => t.value === selectedProperty.type)?.label || selectedProperty.type}
+                                            </div>
+                                        </div>
+                                        {selectedProperty.state && (
+                                            <div className="hub-stat-card">
+                                                <div className="hub-stat-label">Location</div>
+                                                <div className="hub-stat-value">
+                                                    {selectedProperty.state}
+                                                    {selectedProperty.localCouncil && <span className="hub-stat-sub">{selectedProperty.localCouncil}</span>}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {selectedProperty.builtUpSqft && (
+                                            <div className="hub-stat-card">
+                                                <div className="hub-stat-label">Built-up Size</div>
+                                                <div className="hub-stat-value">{Number(selectedProperty.builtUpSqft).toLocaleString()} <span className="hub-stat-unit">sqft</span></div>
+                                            </div>
+                                        )}
+                                        {(selectedProperty.bedrooms || selectedProperty.bathrooms) && (
+                                            <div className="hub-stat-card">
+                                                <div className="hub-stat-label">Rooms</div>
+                                                <div className="hub-stat-value">
+                                                    {selectedProperty.bedrooms ? `${selectedProperty.bedrooms} bed` : ''}
+                                                    {selectedProperty.bedrooms && selectedProperty.bathrooms ? ' · ' : ''}
+                                                    {selectedProperty.bathrooms ? `${selectedProperty.bathrooms} bath` : ''}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {selectedProperty.parkingCount > 0 && (
+                                            <div className="hub-stat-card">
+                                                <div className="hub-stat-label">Parking</div>
+                                                <div className="hub-stat-value">{selectedProperty.parkingCount} <span className="hub-stat-unit">bay{selectedProperty.parkingCount > 1 ? 's' : ''}</span></div>
+                                            </div>
+                                        )}
+                                        {selectedProperty.yearBuilt && (
+                                            <div className="hub-stat-card">
+                                                <div className="hub-stat-label">Year Built</div>
+                                                <div className="hub-stat-value">{selectedProperty.yearBuilt}</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {selectedProperty.notes && (
+                                        <div className="hub-notes">
+                                            <div className="hub-stat-label" style={{ marginBottom: 8 }}>Notes</div>
+                                            <p className="hub-notes-text">{selectedProperty.notes}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'tenants' && (
+                                <div className="hub-tenants">
+                                    <Tenants embeddedPropertyId={selectedProperty.id} />
+                                </div>
+                            )}
+
+                            {activeTab === 'agreements' && (
+                                <div className="hub-agreements">
+                                    <Agreements embeddedPropertyId={selectedProperty.id} />
+                                </div>
+                            )}
+
+                            {activeTab === 'rent' && (
+                                <div className="hub-financials">
+                                    <RentLedger embeddedPropertyId={selectedProperty.id} />
+                                </div>
+                            )}
+
+                            {activeTab === 'expenses' && (
+                                <div className="hub-financials">
+                                    <Expenses embeddedPropertyId={selectedProperty.id} />
+                                </div>
+                            )}
+
+                            {activeTab === 'maintenance' && (
+                                <div className="hub-maintenance">
+                                    <Maintenance embeddedPropertyId={selectedProperty.id} />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="detail-pane-empty">
+                        <Building2 size={48} className="empty-icon" />
+                        <h3>No property selected</h3>
+                        <p>Select a property from the list to view its details.</p>
+                    </div>
+                )}
+            </div>
 
             {/* Add/Edit Modal */}
             <Modal
@@ -733,149 +802,6 @@ export default function Properties() {
                 </form>
             </Modal>
 
-            {/* Property Hub Drawer */}
-            <SlidePanel
-                isOpen={!!selectedProperty}
-                onClose={() => setSelectedProperty(null)}
-                title={selectedProperty?.nickname || 'Property Details'}
-                width="800px"
-            >
-                {selectedProperty && (
-                    <div className="property-hub-content">
-                        {/* Internal Tabs */}
-                        <div className="slide-panel-tabs">
-                            <button
-                                className={`slide-panel-tab ${activeTab === 'overview' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('overview')}
-                            >
-                                <Home size={16} /> Overview
-                            </button>
-                            <button
-                                className={`slide-panel-tab ${activeTab === 'tenants' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('tenants')}
-                            >
-                                <Users size={16} /> Tenants & Docs
-                            </button>
-                            <button
-                                className={`slide-panel-tab ${activeTab === 'rent' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('rent')}
-                            >
-                                <Wallet size={16} /> Rent Ledger
-                            </button>
-                            <button
-                                className={`slide-panel-tab ${activeTab === 'expenses' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('expenses')}
-                            >
-                                <Receipt size={16} /> Expenses
-                            </button>
-                            <button
-                                className={`slide-panel-tab ${activeTab === 'maintenance' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('maintenance')}
-                            >
-                                <Wrench size={16} /> Maintenance
-                            </button>
-                        </div>
-
-                        {/* Tab Content */}
-                        <div className="property-hub-body">
-                            {activeTab === 'overview' && (
-                                <div className="hub-overview">
-                                    <div className="hub-overview-header">
-                                        <h3>Property Information</h3>
-                                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(selectedProperty)}>
-                                            <Edit3 size={14} /> Edit Property
-                                        </button>
-                                    </div>
-                                    <div className="hub-stats-grid">
-                                        <div className="hub-stat-card">
-                                            <div className="hub-stat-label">Type</div>
-                                            <div className="hub-stat-value">
-                                                {PROPERTY_TYPES.find(t => t.value === selectedProperty.type)?.label || selectedProperty.type}
-                                            </div>
-                                        </div>
-                                        {selectedProperty.state && (
-                                            <div className="hub-stat-card">
-                                                <div className="hub-stat-label">Location</div>
-                                                <div className="hub-stat-value">
-                                                    {selectedProperty.state}
-                                                    {selectedProperty.localCouncil && <span className="hub-stat-sub">{selectedProperty.localCouncil}</span>}
-                                                </div>
-                                            </div>
-                                        )}
-                                        {selectedProperty.builtUpSqft && (
-                                            <div className="hub-stat-card">
-                                                <div className="hub-stat-label">Built-up Size</div>
-                                                <div className="hub-stat-value">{Number(selectedProperty.builtUpSqft).toLocaleString()} <span className="hub-stat-unit">sqft</span></div>
-                                            </div>
-                                        )}
-                                        {(selectedProperty.bedrooms || selectedProperty.bathrooms) && (
-                                            <div className="hub-stat-card">
-                                                <div className="hub-stat-label">Rooms</div>
-                                                <div className="hub-stat-value">
-                                                    {selectedProperty.bedrooms ? `${selectedProperty.bedrooms} bed` : ''}
-                                                    {selectedProperty.bedrooms && selectedProperty.bathrooms ? ' · ' : ''}
-                                                    {selectedProperty.bathrooms ? `${selectedProperty.bathrooms} bath` : ''}
-                                                </div>
-                                            </div>
-                                        )}
-                                        {selectedProperty.parkingCount > 0 && (
-                                            <div className="hub-stat-card">
-                                                <div className="hub-stat-label">Parking</div>
-                                                <div className="hub-stat-value">{selectedProperty.parkingCount} <span className="hub-stat-unit">bay{selectedProperty.parkingCount > 1 ? 's' : ''}</span></div>
-                                            </div>
-                                        )}
-                                        {selectedProperty.yearBuilt && (
-                                            <div className="hub-stat-card">
-                                                <div className="hub-stat-label">Year Built</div>
-                                                <div className="hub-stat-value">{selectedProperty.yearBuilt}</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    {selectedProperty.notes && (
-                                        <div className="hub-notes">
-                                            <div className="hub-stat-label" style={{ marginBottom: 8 }}>Notes</div>
-                                            <p className="hub-notes-text">{selectedProperty.notes}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {activeTab === 'tenants' && (
-                                <div className="hub-tenants">
-                                    <Tenants embeddedPropertyId={selectedProperty.id} />
-                                    <div style={{ margin: 'var(--space-2xl) 0', borderBottom: '1px solid var(--border)' }}></div>
-                                    <Agreements embeddedPropertyId={selectedProperty.id} />
-                                </div>
-                            )}
-
-                            {activeTab === 'rent' && (
-                                <div className="hub-financials">
-                                    <RentLedger embeddedPropertyId={selectedProperty.id} />
-                                </div>
-                            )}
-
-                            {activeTab === 'expenses' && (
-                                <div className="hub-financials">
-                                    <Expenses embeddedPropertyId={selectedProperty.id} />
-                                </div>
-                            )}
-
-                            {activeTab === 'maintenance' && (
-                                <div className="hub-maintenance">
-                                    <Maintenance embeddedPropertyId={selectedProperty.id} />
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </SlidePanel>
-
-            <ExpenseFormModal
-                isOpen={showExpenseModal}
-                onClose={() => setShowExpenseModal(false)}
-                initialPropertyId={selectedProperty?.id || ''}
-            />
-
             {/* Delete Confirmation */}
             <ConfirmDialog
                 isOpen={!!deleteId}
@@ -884,6 +810,6 @@ export default function Properties() {
                 title="Delete Property"
                 message="Are you sure you want to delete this property? All associated records (tenants, rent, taxes, etc.) will remain but won't be linked."
             />
-        </div >
+        </div>
     );
 }

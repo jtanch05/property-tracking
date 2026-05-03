@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Landing.css';
-import { GlowingEffectDemo } from '@/components/ui/glowing-effect-demo';
 
 // --- SVG Icons (inline, consistent 24x24 viewBox) ---
 const IconBuilding = () => (
@@ -114,7 +113,7 @@ function StatCounter({ value, label, suffix = '' }) {
 }
 
 // Feature card
-function FeatureCard({ icon, title, description, delay = 0, gradient }) {
+function FeatureCard({ icon, title, description, delay = 0 }) {
     const [ref, inView] = useInView(0.1);
     return (
         <div
@@ -122,7 +121,7 @@ function FeatureCard({ icon, title, description, delay = 0, gradient }) {
             className={`lp-feature-card ${inView ? 'animate-in' : ''}`}
             style={{ transitionDelay: `${delay}ms` }}
         >
-            <div className="lp-feature-icon" style={{ background: gradient }}>
+            <div className="lp-feature-icon">
                 {icon}
             </div>
             <h3 className="lp-feature-title">{title}</h3>
@@ -132,24 +131,59 @@ function FeatureCard({ icon, title, description, delay = 0, gradient }) {
 }
 
 // Testimonial card
-function TestimonialCard({ initials, name, role, text, delay = 0 }) {
-    const [ref, inView] = useInView(0.1);
+function RotatingTestimonial() {
+    const testimonials = [
+        {
+            text: "PropTrack finally gave me a single place to track all my leases, rents, and maintenance. The automated email alerts save me at least a few hours every week.",
+            name: "Michael R.",
+            role: "Private Landlord · 8 properties",
+            initials: "MR"
+        },
+        {
+            text: "The Google Calendar sync is a game-changer. All my lease renewals and inspection dates just appear in my calendar automatically — no manual entry.",
+            name: "Sarah C.",
+            role: "Property Manager · 24 properties",
+            initials: "SC"
+        },
+        {
+            text: "Clean interface, fast, and the PDF export is exactly what I needed for end-of-year reporting. The minimalism is a huge plus.",
+            name: "James T.",
+            role: "Real Estate Investor · 15 properties",
+            initials: "JT"
+        }
+    ];
+
+    const [current, setCurrent] = useState(0);
+    
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrent((prev) => (prev + 1) % testimonials.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [testimonials.length]);
+
+    const active = testimonials[current];
+
     return (
-        <div
-            ref={ref}
-            className={`lp-testimonial-card ${inView ? 'animate-in' : ''}`}
-            style={{ transitionDelay: `${delay}ms` }}
-        >
-            <div className="lp-testimonial-stars">
-                {[...Array(5)].map((_, i) => <IconStar key={i} />)}
-            </div>
-            <p className="lp-testimonial-text">"{text}"</p>
-            <div className="lp-testimonial-author">
-                <div className="lp-testimonial-avatar">{initials}</div>
+        <div className="lp-testimonial-editorial">
+            <div className="lp-testimonial-quote-mark">"</div>
+            <p className="lp-testimonial-text-large" key={`text-${current}`}>{active.text}</p>
+            <div className="lp-testimonial-author-large" key={`author-${current}`}>
+                <div className="lp-testimonial-avatar-large">{active.initials}</div>
                 <div>
-                    <div className="lp-testimonial-name">{name}</div>
-                    <div className="lp-testimonial-role">{role}</div>
+                    <div className="lp-testimonial-name-large">{active.name}</div>
+                    <div className="lp-testimonial-role-large">{active.role}</div>
                 </div>
+            </div>
+            <div className="lp-testimonial-indicators">
+                {testimonials.map((_, i) => (
+                    <button 
+                        key={i} 
+                        className={`lp-indicator ${i === current ? 'lp-indicator--active' : ''}`}
+                        onClick={() => setCurrent(i)}
+                        aria-label={`Go to testimonial ${i + 1}`}
+                    />
+                ))}
             </div>
         </div>
     );
@@ -241,60 +275,10 @@ export default function Landing() {
                     </div>
 
                     <div className="lp-hero-trust">
-                        <div className="lp-trust-avatars">
-                            {['#2C2C2C', '#3a3a3a', '#484848', '#565656', '#646464'].map((c, i) => (
-                                <div key={i} className="lp-avatar" style={{ background: c, zIndex: 5 - i }} />
-                            ))}
-                        </div>
                         <span className="lp-trust-text">Trusted by property investors &amp; managers</span>
                     </div>
                 </div>
 
-                {/* Hero UI Mockup */}
-                <div className="lp-hero-mockup" aria-hidden="true">
-                    <div className="lp-mockup-window">
-                        <div className="lp-mockup-titlebar">
-                            <span className="lp-mockup-dot" style={{ background: '#3a3a3a' }} />
-                            <span className="lp-mockup-dot" style={{ background: '#4a4a4a' }} />
-                            <span className="lp-mockup-dot" style={{ background: '#5a5a5a' }} />
-                            <span className="lp-mockup-url">proptrack.app/dashboard</span>
-                        </div>
-                        <div className="lp-mockup-body">
-                            {/* Stats row */}
-                            <div className="lp-mockup-stats">
-                                {[
-                                    { label: 'Properties', value: '12' },
-                                    { label: 'Monthly Revenue', value: '$24.8k' },
-                                    { label: 'Active Tenants', value: '18' },
-                                    { label: 'Occupancy', value: '94%' },
-                                ].map((s, i) => (
-                                    <div key={i} className="lp-mockup-stat">
-                                        <div className="lp-mockup-stat-val">{s.value}</div>
-                                        <div className="lp-mockup-stat-lbl">{s.label}</div>
-                                    </div>
-                                ))}
-                            </div>
-                            {/* Alert items */}
-                            <div className="lp-mockup-alerts">
-                                <div className="lp-mockup-alert-header">
-                                    <span>Upcoming Alerts</span>
-                                    <span className="lp-mockup-badge">3 new</span>
-                                </div>
-                                {[
-                                    { text: 'Lease expiry — 14 Elm St', type: 'warn', time: 'in 7 days' },
-                                    { text: 'Rent due — Unit 4B', type: 'info', time: 'Tomorrow' },
-                                    { text: 'Maintenance complete — 22 Oak Ave', type: 'success', time: 'Just now' },
-                                ].map((a, i) => (
-                                    <div key={i} className={`lp-mockup-alert-item lp-mockup-alert--${a.type}`}>
-                                        <div className="lp-mockup-alert-dot" />
-                                        <span>{a.text}</span>
-                                        <span className="lp-mockup-alert-time">{a.time}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </section>
 
             {/* ---- STATS STRIP ---- */}
@@ -322,8 +306,33 @@ export default function Landing() {
                         </p>
                     </div>
 
-                    {/* Interactive bento grid with glowing mouse-tracking border effect */}
-                    <GlowingEffectDemo />
+                    {/* Bento grid features */}
+                    <div className="lp-features-grid">
+                        <FeatureCard 
+                            icon={<IconBuilding />}
+                            title="Property Portfolio"
+                            description="Track all your assets in one unified dashboard. Keep detailed records of every unit, tenant, and lease."
+                            delay={0}
+                        />
+                        <FeatureCard 
+                            icon={<IconFileText />}
+                            title="Rent Ledgers"
+                            description="Never lose track of payments. Log rent, handle partial payments, and generate PDF receipts instantly."
+                            delay={100}
+                        />
+                        <FeatureCard 
+                            icon={<IconTrendUp />}
+                            title="Cash Flow Analytics"
+                            description="Monitor income vs expenses. Generate beautifully formatted monthly and annual P&L statements."
+                            delay={200}
+                        />
+                        <FeatureCard 
+                            icon={<IconCalendar />}
+                            title="Calendar Sync"
+                            description="Automatically sync lease renewals, inspections, and rent dates to your Google Calendar."
+                            delay={300}
+                        />
+                    </div>
                 </div>
             </section>
 
@@ -337,29 +346,7 @@ export default function Landing() {
                             See what investors and landlords say about managing their portfolios with PropTrack.
                         </p>
                     </div>
-                    <div className="lp-testimonials-grid">
-                        <TestimonialCard
-                            initials="MR"
-                            name="Michael R."
-                            role="Private Landlord · 8 properties"
-                            text="PropTrack finally gave me a single place to track all my leases, rents, and maintenance. The automated email alerts save me at least a few hours every week."
-                            delay={0}
-                        />
-                        <TestimonialCard
-                            initials="SC"
-                            name="Sarah C."
-                            role="Property Manager · 24 properties"
-                            text="The Google Calendar sync is a game-changer. All my lease renewals and inspection dates just appear in my calendar automatically — no manual entry."
-                            delay={100}
-                        />
-                        <TestimonialCard
-                            initials="JT"
-                            name="James T."
-                            role="Real Estate Investor · 15 properties"
-                            text="Clean interface, fast, and the PDF export is exactly what I needed for end-of-year reporting. The dark theme is a bonus — easy on the eyes during late-night reviews."
-                            delay={200}
-                        />
-                    </div>
+                    <RotatingTestimonial />
                 </div>
             </section>
 

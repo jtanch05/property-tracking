@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppProvider';
 import { formatCurrency, formatDate } from '../utils/formatters';
-import { parseISO, isAfter, isBefore, addDays } from 'date-fns';
-import { Receipt, Droplets, Shield, Landmark, Wrench, Plus, Filter, Search, CheckCircle, AlertTriangle, Edit3, Trash2, FileText } from 'lucide-react';
+import { parseISO, addDays } from 'date-fns';
+import { Receipt, Droplets, Shield, Landmark, Plus, Search, CheckCircle, Edit3, Trash2, FileText } from 'lucide-react';
 import { exportToPDF } from '../utils/export';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
@@ -15,8 +15,7 @@ const CATEGORIES = {
     tax: { label: 'Taxes', icon: Receipt, color: 'var(--danger)', bg: 'var(--danger-bg)' },
     utility: { label: 'Utilities', icon: Droplets, color: 'var(--info)', bg: 'var(--info-bg)' },
     insurance: { label: 'Insurance', icon: Shield, color: 'var(--success)', bg: 'var(--success-bg)' },
-    mgmt: { label: 'Mgmt Fees', icon: Landmark, color: 'var(--accent)', bg: 'var(--accent-bg)' },
-    maintenance: { label: 'Maintenance', icon: Wrench, color: 'var(--warning)', bg: 'var(--warning-bg)' }
+    mgmt: { label: 'Mgmt Fees', icon: Landmark, color: 'var(--accent)', bg: 'var(--accent-bg)' }
 };
 
 export default function Expenses({ embeddedPropertyId = null }) {
@@ -26,7 +25,6 @@ export default function Expenses({ embeddedPropertyId = null }) {
         utilityRecords,
         insuranceRecords,
         managementFees,
-        maintenanceRecords,
         addTaxRecord,
         addUtilityRecord,
         addInsuranceRecord,
@@ -38,8 +36,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
         deleteTaxRecord,
         deleteUtilityRecord,
         deleteInsuranceRecord,
-        deleteManagementFee,
-        deleteMaintenanceRecord
+        deleteManagementFee
     } = useApp();
 
     const [filterCategory, setFilterCategory] = useState('all');
@@ -72,10 +69,6 @@ export default function Expenses({ embeddedPropertyId = null }) {
     }
 
     function openEdit(item) {
-        if (item.type === 'maintenance') {
-            alert('Please modify maintenance records directly from the Maintenance tab.');
-            return;
-        }
         setEditingItem(item);
         setForm({
             expenseCategory: item.type,
@@ -95,7 +88,6 @@ export default function Expenses({ embeddedPropertyId = null }) {
         if (deleteItem.type === 'utility') deleteUtilityRecord(deleteItem.id);
         if (deleteItem.type === 'insurance') deleteInsuranceRecord(deleteItem.id);
         if (deleteItem.type === 'mgmt') deleteManagementFee(deleteItem.id);
-        if (deleteItem.type === 'maintenance') deleteMaintenanceRecord(deleteItem.id);
         setDeleteItem(null);
     }
 
@@ -171,20 +163,8 @@ export default function Expenses({ embeddedPropertyId = null }) {
             raw: r
         }));
 
-        // Maintenance
-        maintenanceRecords.forEach(r => list.push({
-            id: r.id,
-            type: 'maintenance',
-            date: r.reportedDate,
-            amount: Number(r.cost),
-            status: r.status === 'closed' ? 'paid' : 'pending',
-            propertyId: r.propertyId,
-            description: r.description,
-            raw: r
-        }));
-
         return list.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }, [taxRecords, utilityRecords, insuranceRecords, managementFees, maintenanceRecords]);
+    }, [taxRecords, utilityRecords, insuranceRecords, managementFees]);
 
     // Filtering
     const filteredExpenses = useMemo(() => {
@@ -251,7 +231,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
                 <div className="section-header">
                     <div>
                         <h1 className="section-title">Expenses</h1>
-                        <p className="section-subtitle">Track taxes, utilities, insurance, fees & repairs</p>
+                        <p className="section-subtitle">Track taxes, utilities, insurance and management fees</p>
                     </div>
                     <div style={{ display: 'flex', gap: 12 }}>
                         <div className="search-box">
@@ -350,7 +330,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
                                     const prop = properties.find(p => p.id === item.propertyId);
 
                                     return (
-                                        <tr key={item.id} className="interactive-row" onClick={() => item.type !== 'maintenance' ? openEdit(item) : null} style={{ cursor: item.type === 'maintenance' ? 'default' : 'pointer' }}>
+                                        <tr key={item.id} className="interactive-row" onClick={() => openEdit(item)} style={{ cursor: 'pointer' }}>
                                             <td>
                                                 <div style={{
                                                     display: 'flex',
@@ -402,9 +382,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
                                             </td>
                                             <td>
                                                 <div className="property-actions" style={{ opacity: 1, display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
-                                                    {item.type !== 'maintenance' && (
-                                                        <button className="btn-icon" onClick={(e) => { e.stopPropagation(); openEdit(item); }}><Edit3 size={16} /></button>
-                                                    )}
+                                                    <button className="btn-icon" onClick={(e) => { e.stopPropagation(); openEdit(item); }}><Edit3 size={16} /></button>
                                                     <button className="btn-icon btn-icon-danger" onClick={(e) => { e.stopPropagation(); setDeleteItem(item); }}><Trash2 size={16} /></button>
                                                 </div>
                                             </td>

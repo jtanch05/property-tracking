@@ -1,85 +1,43 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink, Link, useLocation } from 'react-router-dom';
-import { useApp } from '../../context/AppProvider';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthProvider';
 import {
-    LayoutDashboard, Building2, Users, FileText, Wallet, Wrench, Clock, Settings,
-    Bell, ChevronLeft, Menu, Home, BarChart3, Receipt, HardHat, LogOut, Check
+    LayoutDashboard, Building2, Clock, Settings,
+    Bell, Home, LogOut, Check, Menu, ChevronLeft
 } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import ClientAutomation from '../common/ClientAutomation';
 import './Layout.css';
 import './Notifications.css';
 
-const NAV_SECTIONS = [
-    {
-        label: 'Overview',
-        items: [
-            { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-            { to: '/timeline', icon: Clock, label: 'Timeline' },
-        ],
-    },
-    {
-        label: 'Management',
-        items: [
-            { to: '/properties', icon: Building2, label: 'Properties' },
-            { to: '/tenants', icon: Users, label: 'Tenants' },
-            { to: '/agreements', icon: FileText, label: 'Agreements' },
-        ],
-    },
-    {
-        label: 'Finance',
-        items: [
-            { to: '/rent', icon: Wallet, label: 'Rent Ledger' },
-            { to: '/cashflow', icon: BarChart3, label: 'Cash Flow' },
-        ],
-    },
-    {
-        label: 'Expenses',
-        items: [
-            { to: '/expenses', icon: Receipt, label: 'Expenses' },
-        ],
-    },
-    {
-        label: 'Operations',
-        items: [
-            { to: '/maintenance', icon: Wrench, label: 'Maintenance' },
-            { to: '/vendors', icon: HardHat, label: 'Vendors' },
-        ],
-    },
-    {
-        label: 'System',
-        items: [
-            { to: '/settings', icon: Settings, label: 'Settings' },
-        ],
-    },
+const NAV_ITEMS = [
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/properties', icon: Building2, label: 'Properties' },
+    { to: '/timeline', icon: Clock, label: 'Timeline' },
 ];
 
 const BOTTOM_NAV = [
     { to: '/', icon: Home, label: 'Home' },
     { to: '/properties', icon: Building2, label: 'Properties' },
-    { to: '/rent', icon: Wallet, label: 'Rent' },
-    { to: '/expenses', icon: Receipt, label: 'Expenses' },
+    { to: '/timeline', icon: Clock, label: 'Timeline' },
     { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function Layout({ children }) {
-    const { properties, settings, setSettings, alerts, selectedProperty } = useApp();
     const { user, logout } = useAuth();
     const location = useLocation();
-    const [collapsed, setCollapsed] = useState(false);
+    
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [sidebarExpanded, setSidebarExpanded] = useState(false);
     const userMenuRef = useRef(null);
     const notifMenuRef = useRef(null);
 
-    // Initialize notifications hook
     const {
         permissionStatus, requestPermission,
         notifications, unreadCount, markAsRead, markAllAsRead
     } = useNotifications();
 
-    // Close menus on click outside
     useEffect(() => {
         function handleClickOutside(e) {
             if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
@@ -93,171 +51,147 @@ export default function Layout({ children }) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Prompt for notification permission on first load if default
     useEffect(() => {
         if (permissionStatus === 'default' && user) {
-            // Optional: you could make this a deliberate button click instead of auto-prompting
             // requestPermission(); 
         }
     }, [permissionStatus, user]);
 
-    function handlePropertySwitch(e) {
-        setSettings(prev => ({ ...prev, selectedPropertyId: e.target.value || null }));
-    }
-
     return (
-        <div className={`layout ${collapsed ? 'sidebar-collapsed' : ''}`}>
-            {/* Silent Background Automation for Free Tier */}
+        <div className={`layout ${sidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
             <ClientAutomation />
 
-            {/* Sidebar */}
             <aside className="sidebar">
-                <div className="sidebar-header">
-                    <div className="sidebar-logo">
-                        <Building2 size={22} className="logo-icon" />
-                        {!collapsed && <span className="logo-text">PropTrack</span>}
+                <div className="sidebar-top">
+                    <div className="sidebar-brand">
+                        <div className="sidebar-logo" title="PropTrack">
+                            <Building2 size={22} className="logo-icon" />
+                            <span className="brand-label">PropTrack</span>
+                        </div>
+                        <button
+                            className="sidebar-toggle"
+                            type="button"
+                            title={sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+                            onClick={() => setSidebarExpanded(prev => !prev)}
+                        >
+                            {sidebarExpanded ? <ChevronLeft size={18} /> : <Menu size={18} />}
+                        </button>
                     </div>
-                    <button className="btn-icon sidebar-toggle" onClick={() => setCollapsed(!collapsed)}>
-                        {collapsed ? <Menu size={18} /> : <ChevronLeft size={18} />}
-                    </button>
+
+                    <nav className="sidebar-nav">
+                        {NAV_ITEMS.map(item => {
+                            const Icon = item.icon;
+                            return (
+                                <NavLink
+                                    key={item.to}
+                                    to={item.to}
+                                    end={item.to === '/'}
+                                    className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                                    title={item.label}
+                                >
+                                    <Icon size={20} />
+                                    <span className="nav-label">{item.label}</span>
+                                </NavLink>
+                            );
+                        })}
+                    </nav>
                 </div>
 
+                <div className="sidebar-bottom">
+                    <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title="Settings">
+                        <Settings size={20} />
+                        <span className="nav-label">Settings</span>
+                    </NavLink>
 
-                {/* Nav */}
-                <nav className="sidebar-nav">
-                    {NAV_SECTIONS.map(section => (
-                        <div key={section.label} className="nav-section">
-                            {!collapsed && <span className="nav-section-header">{section.label}</span>}
-                            {section.items.map(item => {
-                                const Icon = item.icon;
-                                return (
-                                    <NavLink
-                                        key={item.to}
-                                        to={item.to}
-                                        end={item.to === '/'}
-                                        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                                        title={collapsed ? item.label : undefined}
-                                    >
-                                        <Icon size={18} />
-                                        {!collapsed && <span>{item.label}</span>}
-                                    </NavLink>
-                                );
-                            })}
-                        </div>
-                    ))}
-                </nav>
-            </aside>
+                    <div className="user-menu-wrapper" ref={notifMenuRef}>
+                        <button
+                            className="nav-item alert-bell"
+                            title="Notifications"
+                            onClick={() => setShowNotifications(!showNotifications)}
+                        >
+                            <Bell size={20} />
+                            <span className="nav-label">Notifications</span>
+                            {unreadCount > 0 && (
+                                <span className="alert-count">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                            )}
+                        </button>
 
-            {/* Main Wrapper */}
-            <div className="main-wrapper">
-                {/* Top Bar */}
-                <header className="topbar">
-                    <div className="topbar-left">
-                        {selectedProperty ? (
-                            <div className="topbar-property">
-                                <Building2 size={16} />
-                                <span>{selectedProperty.nickname}</span>
-                            </div>
-                        ) : (
-                            <span className="topbar-title">All Properties</span>
-                        )}
-                    </div>
-                    <div className="topbar-right">
-
-                        {/* Notifications Menu */}
-                        <div className="user-menu-wrapper" ref={notifMenuRef}>
-                            <button
-                                className="alert-bell"
-                                title="Notifications"
-                                onClick={() => setShowNotifications(!showNotifications)}
-                            >
-                                <Bell size={18} />
-                                {unreadCount > 0 && (
-                                    <span className="alert-count">{unreadCount > 9 ? '9+' : unreadCount}</span>
-                                )}
-                            </button>
-
-                            {showNotifications && (
-                                <div className="notifications-dropdown">
-                                    <div className="notifications-header">
-                                        <span className="notifications-title">Notifications</span>
-                                        {unreadCount > 0 && (
-                                            <button className="btn-ghost btn-sm" onClick={markAllAsRead}>
-                                                <Check size={14} /> Mark all read
-                                            </button>
-                                        )}
+                        {showNotifications && (
+                            <div className="notifications-dropdown slide-right-bottom">
+                                <div className="notifications-header">
+                                    <span className="notifications-title">Notifications</span>
+                                    {unreadCount > 0 && (
+                                        <button className="btn-ghost btn-sm" onClick={markAllAsRead}>
+                                            <Check size={14} /> Mark all read
+                                        </button>
+                                    )}
+                                </div>
+                                {permissionStatus === 'default' && (
+                                    <div className="notifications-permission-banner">
+                                        <p>Enable push notifications for rent reminders</p>
+                                        <button className="btn btn-primary btn-sm" onClick={requestPermission}>Enable</button>
                                     </div>
-
-                                    {permissionStatus === 'default' && (
-                                        <div className="notifications-permission-banner">
-                                            <p>Enable push notifications for rent reminders</p>
-                                            <button className="btn btn-primary btn-sm" onClick={requestPermission}>Enable</button>
+                                )}
+                                <div className="notifications-list">
+                                    {notifications.length > 0 ? (
+                                        notifications.map(n => (
+                                            <div
+                                                key={n.id}
+                                                className={`notification-item ${!n.read ? 'unread' : ''}`}
+                                                onClick={() => markAsRead(n.id)}
+                                            >
+                                                <div className="notification-content">
+                                                    <h4>{n.title}</h4>
+                                                    <p>{n.body}</p>
+                                                    <span className="notification-time">
+                                                        {new Date(n.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </div>
+                                                {!n.read && <div className="notification-dot" />}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="notifications-empty">
+                                            <Bell size={24} style={{ opacity: 0.5, marginBottom: 8 }} />
+                                            <p>No new notifications</p>
                                         </div>
                                     )}
-
-                                    <div className="notifications-list">
-                                        {notifications.length > 0 ? (
-                                            notifications.map(n => (
-                                                <div
-                                                    key={n.id}
-                                                    className={`notification-item ${!n.read ? 'unread' : ''}`}
-                                                    onClick={() => markAsRead(n.id)}
-                                                >
-                                                    <div className="notification-content">
-                                                        <h4>{n.title}</h4>
-                                                        <p>{n.body}</p>
-                                                        <span className="notification-time">
-                                                            {new Date(n.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
-                                                    </div>
-                                                    {!n.read && <div className="notification-dot" />}
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="notifications-empty">
-                                                <Bell size={24} style={{ opacity: 0.5, marginBottom: 8 }} />
-                                                <p>No new notifications</p>
-                                            </div>
-                                        )}
-                                    </div>
                                 </div>
-                            )}
-                        </div>
-
-                        {/* User avatar & menu */}
-                        <div className="user-menu-wrapper" ref={userMenuRef}>
-                            <button className="user-avatar-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
-                                {user?.photoURL ? (
-                                    <img src={user.photoURL} alt="" className="user-avatar" referrerPolicy="no-referrer" />
-                                ) : (
-                                    <div className="user-avatar-fallback">
-                                        {(user?.displayName || user?.email || '?')[0].toUpperCase()}
-                                    </div>
-                                )}
-                            </button>
-                            {showUserMenu && (
-                                <div className="user-dropdown">
-                                    <div className="user-dropdown-info">
-                                        <span className="user-dropdown-name">{user?.displayName || 'User'}</span>
-                                        <span className="user-dropdown-email">{user?.email}</span>
-                                    </div>
-                                    <button className="user-dropdown-item" onClick={() => { logout(); setShowUserMenu(false); }}>
-                                        <LogOut size={16} />
-                                        Sign Out
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
-                </header>
 
-                {/* Page Content */}
-                <main className="main-content page-enter">
-                    {children}
-                </main>
-            </div>
+                    {/* User Profile */}
+                    <div className="user-menu-wrapper" ref={userMenuRef}>
+                        <button className="user-avatar-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
+                            {user?.photoURL ? (
+                                <img src={user.photoURL} alt="" className="user-avatar" referrerPolicy="no-referrer" />
+                            ) : (
+                                <div className="user-avatar-fallback">
+                                    {(user?.displayName || user?.email || '?')[0].toUpperCase()}
+                                </div>
+                            )}
+                        </button>
+                        {showUserMenu && (
+                            <div className="user-dropdown slide-right-bottom">
+                                <div className="user-dropdown-info">
+                                    <span className="user-dropdown-name">{user?.displayName || 'User'}</span>
+                                    <span className="user-dropdown-email">{user?.email}</span>
+                                </div>
+                                <button className="user-dropdown-item" onClick={() => { logout(); setShowUserMenu(false); }}>
+                                    <LogOut size={16} />
+                                    Sign Out
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </aside>
 
-            {/* Bottom Nav (Mobile) */}
+            <main className="main-wrapper">
+                {children}
+            </main>
+
             <nav className="bottom-nav">
                 {BOTTOM_NAV.map(item => {
                     const Icon = item.icon;
