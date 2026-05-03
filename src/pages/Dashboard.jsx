@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '../context/AppProvider';
 import { formatCurrency, formatDate, formatRelativeDate, formatMonth } from '../utils/formatters';
 import {
@@ -7,9 +7,13 @@ import {
     ArrowUpRight, ArrowDownRight, BarChart3, PieChart, Activity, Bell
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Modal from '../components/common/Modal';
 import './Dashboard.css';
 
 export default function Dashboard() {
+    const [showCashflowModal, setShowCashflowModal] = useState(false);
+    const [showExpensesModal, setShowExpensesModal] = useState(false);
+
     const {
         properties, filteredData, alerts, rentRecords,
         taxRecords, utilityRecords, insuranceRecords, managementFees, maintenanceRecords
@@ -136,6 +140,16 @@ export default function Dashboard() {
         return items.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
     }, [rentRecords, taxRecords, maintenanceRecords]);
 
+    const allExpenses = useMemo(() => {
+        const items = [];
+        taxRecords.forEach(r => items.push({ id: `tax-${r.id}`, category: 'Tax', date: r.dueDate, amount: r.amount, desc: r.type }));
+        utilityRecords.forEach(r => items.push({ id: `util-${r.id}`, category: 'Utility', date: r.date, amount: r.amount, desc: r.type }));
+        insuranceRecords.forEach(r => items.push({ id: `ins-${r.id}`, category: 'Insurance', date: r.startDate, amount: r.premium, desc: r.provider }));
+        managementFees.forEach(r => items.push({ id: `mgmt-${r.id}`, category: 'Mgmt Fee', date: r.nextDueDate, amount: r.amount, desc: 'Management Fee' }));
+        maintenanceRecords.forEach(r => items.push({ id: `maint-${r.id}`, category: 'Maintenance', date: r.reportedDate, amount: r.cost, desc: r.description }));
+        return items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    }, [taxRecords, utilityRecords, insuranceRecords, managementFees, maintenanceRecords]);
+
     const urgentAlerts = alerts.slice(0, 5);
 
     return (
@@ -177,9 +191,9 @@ export default function Dashboard() {
                         <span className="stat-label">Total Expenses</span>
                         <span className="stat-value">{formatCurrency(expenseData.grandTotal)}</span>
                     </div>
-                    <Link to="/expenses" style={{ color: 'var(--text-tertiary)', padding: '4px' }} title="View Breakdown">
+                    <button onClick={() => setShowExpensesModal(true)} style={{ color: 'var(--text-tertiary)', padding: '4px', cursor: 'pointer', background: 'transparent', border: 'none' }} title="View Breakdown">
                         <ArrowRight size={18} />
-                    </Link>
+                    </button>
                 </div>
 
                 <div className="card stat-card">
@@ -220,9 +234,9 @@ export default function Dashboard() {
                                 <BarChart3 size={18} style={{ marginRight: 8 }} />
                                 Monthly Cash Flow
                             </h2>
-                            <Link to="/cashflow" className="btn btn-ghost btn-sm">
+                            <button onClick={() => setShowCashflowModal(true)} className="btn btn-ghost btn-sm">
                                 Details <ArrowRight size={14} />
-                            </Link>
+                            </button>
                         </div>
                         <div className="card" style={{ padding: 'var(--space-lg)' }}>
                             <div className="chart-legend">
@@ -250,9 +264,9 @@ export default function Dashboard() {
                                 <PieChart size={18} style={{ marginRight: 8 }} />
                                 Expense Breakdown
                             </h2>
-                            <Link to="/expenses" className="btn btn-ghost btn-sm">
+                            <button onClick={() => setShowExpensesModal(true)} className="btn btn-ghost btn-sm">
                                 View All <ArrowRight size={14} />
-                            </Link>
+                            </button>
                         </div>
                         <div className="card" style={{ padding: 'var(--space-lg)' }}>
                             {expenseData.grandTotal > 0 ? (
@@ -401,6 +415,63 @@ export default function Dashboard() {
                     </Link>
                 </div>
             )}
+
+            <Modal isOpen={showCashflowModal} onClose={() => setShowCashflowModal(false)} title="Monthly Cash Flow Details">
+                <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                        <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-secondary)', zIndex: 1 }}>
+                            <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                                <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '600' }}>Month</th>
+                                <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '600' }}>Income</th>
+                                <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '600' }}>Expenses</th>
+                                <th style={{ padding: '12px 8px', textAlign: 'right', fontWeight: '600' }}>Net</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {monthlyTrend.map(m => (
+                                <tr key={m.month} style={{ borderBottom: '1px solid var(--border)' }}>
+                                    <td style={{ padding: '12px 8px' }}>{new Date(m.month + '-01').toLocaleDateString('en', { month: 'long', year: 'numeric' })}</td>
+                                    <td style={{ padding: '12px 8px', color: 'var(--success)' }}>{formatCurrency(m.income)}</td>
+                                    <td style={{ padding: '12px 8px', color: 'var(--danger)' }}>{formatCurrency(m.expense)}</td>
+                                    <td style={{ padding: '12px 8px', textAlign: 'right', color: m.net >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: 'bold' }}>{m.net >= 0 ? '+' : ''}{formatCurrency(m.net)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Modal>
+
+            <Modal isOpen={showExpensesModal} onClose={() => setShowExpensesModal(false)} title="All Expenses">
+                <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                        <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-secondary)', zIndex: 1 }}>
+                            <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                                <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '600' }}>Date</th>
+                                <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '600' }}>Category</th>
+                                <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '600' }}>Description</th>
+                                <th style={{ padding: '12px 8px', textAlign: 'right', fontWeight: '600' }}>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {allExpenses.map(e => (
+                                <tr key={e.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                    <td style={{ padding: '12px 8px' }}>{formatDate(e.date) || '-'}</td>
+                                    <td style={{ padding: '12px 8px' }}>
+                                        <span className="badge badge-neutral">{e.category}</span>
+                                    </td>
+                                    <td style={{ padding: '12px 8px' }}>{e.desc}</td>
+                                    <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: '500' }}>{formatCurrency(e.amount || 0)}</td>
+                                </tr>
+                            ))}
+                            {allExpenses.length === 0 && (
+                                <tr>
+                                    <td colSpan="4" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-tertiary)' }}>No expenses recorded.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </Modal>
         </div>
     );
 }
