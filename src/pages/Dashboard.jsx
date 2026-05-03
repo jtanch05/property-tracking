@@ -30,24 +30,17 @@ export default function Dashboard() {
     const totalExpected = thisMonthRent.reduce((sum, r) => sum + (r.amountDue || 0), 0);
     const totalOutstanding = totalExpected - totalCollected;
 
-    // Occupancy
-    const occupiedCount = properties.filter(p =>
-        tenants.some(t => t.propertyId === p.id && t.status === 'active')
-    ).length;
-    const vacantCount = totalProperties - occupiedCount;
-    const occupancyRate = totalProperties > 0 ? Math.round((occupiedCount / totalProperties) * 100) : 0;
-
-    // Open maintenance
+    // --- Open maintenance (kept for reference in other calculations if needed) ---
     const openMaintenance = filteredMaintenance.filter(m => m.status === 'open').length;
 
     // --- Expense Calculations ---
     const expenseData = useMemo(() => {
         const categories = [
-            { key: 'tax', label: 'Taxes', icon: Receipt, color: '#f87171', records: taxRecords, getAmount: r => Number(r.amount) || 0 },
-            { key: 'utility', label: 'Utilities', icon: Droplets, color: '#60a5fa', records: utilityRecords, getAmount: r => Number(r.amount) || 0 },
+            { key: 'tax', label: 'Taxes', icon: Receipt, color: '#f87171', records: taxRecords.filter(r => r.status === 'paid'), getAmount: r => Number(r.amount) || 0 },
+            { key: 'utility', label: 'Utilities', icon: Droplets, color: '#60a5fa', records: utilityRecords.filter(r => r.status === 'paid' || !r.status), getAmount: r => Number(r.amount) || 0 },
             { key: 'insurance', label: 'Insurance', icon: Shield, color: '#34d399', records: insuranceRecords, getAmount: r => Number(r.premium) || 0 },
-            { key: 'mgmt', label: 'Mgmt Fees', icon: Landmark, color: '#666666', records: managementFees, getAmount: r => Number(r.amount) || 0 },
-            { key: 'maintenance', label: 'Maintenance', icon: Wrench, color: '#fbbf24', records: maintenanceRecords, getAmount: r => Number(r.cost) || 0 },
+            { key: 'mgmt', label: 'Mgmt Fees', icon: Landmark, color: '#666666', records: managementFees.filter(r => r.status === 'paid' || !r.status), getAmount: r => Number(r.amount) || 0 },
+            { key: 'maintenance', label: 'Maintenance', icon: Wrench, color: '#fbbf24', records: maintenanceRecords.filter(r => r.status === 'closed' || r.status === 'resolved'), getAmount: r => Number(r.cost) || 0 },
         ];
 
         let grandTotal = 0;
@@ -82,10 +75,10 @@ export default function Dashboard() {
                 .reduce((sum, r) => sum + (Number(r.amountPaid) || 0), 0);
 
             const expenseForMonth = [
-                ...taxRecords.filter(r => (r.dueDate || '').startsWith(month)),
-                ...utilityRecords.filter(r => (r.date || '').startsWith(month)),
-                ...managementFees.filter(r => (r.nextDueDate || '').startsWith(month)),
-                ...maintenanceRecords.filter(r => (r.reportedDate || '').startsWith(month)),
+                ...taxRecords.filter(r => r.status === 'paid' && (r.dueDate || '').startsWith(month)),
+                ...utilityRecords.filter(r => (r.status === 'paid' || !r.status) && (r.date || '').startsWith(month)),
+                ...managementFees.filter(r => (r.status === 'paid' || !r.status) && (r.nextDueDate || '').startsWith(month)),
+                ...maintenanceRecords.filter(r => (r.status === 'closed' || r.status === 'resolved') && (r.reportedDate || '').startsWith(month)),
             ].reduce((sum, r) => sum + (Number(r.amount) || Number(r.cost) || 0), 0);
 
             return { month, income, expense: expenseForMonth, net: income - expenseForMonth };
@@ -98,20 +91,20 @@ export default function Dashboard() {
     const recentActivity = useMemo(() => {
         const items = [];
 
-        rentRecords.slice(-5).forEach(r => {
+        rentRecords.filter(r => r.status === 'paid').slice(-5).forEach(r => {
             items.push({
                 id: `rent-${r.id}`,
                 type: 'income',
                 icon: Wallet,
                 color: 'var(--success)',
-                label: `Rent ${r.status === 'paid' ? 'collected' : 'recorded'}`,
+                label: 'Rent collected',
                 detail: formatMonth(r.month),
                 amount: Number(r.amountPaid || r.amountDue) || 0,
                 date: r.paidDate || r.month + '-01',
             });
         });
 
-        taxRecords.slice(-3).forEach(r => {
+        taxRecords.filter(r => r.status === 'paid').slice(-3).forEach(r => {
             items.push({
                 id: `tax-${r.id}`,
                 type: 'expense',
@@ -124,14 +117,14 @@ export default function Dashboard() {
             });
         });
 
-        maintenanceRecords.slice(-3).forEach(r => {
+        maintenanceRecords.filter(r => r.status === 'closed' || r.status === 'resolved').slice(-3).forEach(r => {
             items.push({
                 id: `maint-${r.id}`,
                 type: 'expense',
                 icon: Wrench,
                 color: '#fbbf24',
                 label: r.description || 'Maintenance',
-                detail: r.status === 'open' ? 'Open' : 'Resolved',
+                detail: 'Resolved',
                 amount: Number(r.cost) || 0,
                 date: r.reportedDate,
             });
@@ -142,11 +135,11 @@ export default function Dashboard() {
 
     const allExpenses = useMemo(() => {
         const items = [];
-        taxRecords.forEach(r => items.push({ id: `tax-${r.id}`, category: 'Tax', date: r.dueDate, amount: r.amount, desc: r.type }));
-        utilityRecords.forEach(r => items.push({ id: `util-${r.id}`, category: 'Utility', date: r.date, amount: r.amount, desc: r.type }));
+        taxRecords.filter(r => r.status === 'paid').forEach(r => items.push({ id: `tax-${r.id}`, category: 'Tax', date: r.dueDate, amount: r.amount, desc: r.type }));
+        utilityRecords.filter(r => r.status === 'paid' || !r.status).forEach(r => items.push({ id: `util-${r.id}`, category: 'Utility', date: r.date, amount: r.amount, desc: r.type }));
         insuranceRecords.forEach(r => items.push({ id: `ins-${r.id}`, category: 'Insurance', date: r.startDate, amount: r.premium, desc: r.provider }));
-        managementFees.forEach(r => items.push({ id: `mgmt-${r.id}`, category: 'Mgmt Fee', date: r.nextDueDate, amount: r.amount, desc: 'Management Fee' }));
-        maintenanceRecords.forEach(r => items.push({ id: `maint-${r.id}`, category: 'Maintenance', date: r.reportedDate, amount: r.cost, desc: r.description }));
+        managementFees.filter(r => r.status === 'paid' || !r.status).forEach(r => items.push({ id: `mgmt-${r.id}`, category: 'Mgmt Fee', date: r.nextDueDate, amount: r.amount, desc: 'Management Fee' }));
+        maintenanceRecords.filter(r => r.status === 'closed' || r.status === 'resolved').forEach(r => items.push({ id: `maint-${r.id}`, category: 'Maintenance', date: r.reportedDate, amount: r.cost, desc: r.description }));
         return items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
     }, [taxRecords, utilityRecords, insuranceRecords, managementFees, maintenanceRecords]);
 
@@ -165,90 +158,64 @@ export default function Dashboard() {
                 </Link>
             </div>
 
-            {/* Stats Grid */}
-            <div className="stats-grid">
-
-                <div className="card stat-card">
-                    <div className="stat-icon" style={{ background: 'var(--success-bg)', color: 'var(--success)' }}>
-                        <ArrowUpRight size={20} />
-                    </div>
-                    <div className="stat-info" style={{ flex: 1 }}>
-                        <span className="stat-label">Total Income</span>
-                        <span className="stat-value">{formatCurrency(totalRentIncome)}</span>
-                        {totalOutstanding > 0 && (
-                            <span className="stat-detail">
-                                <span className="badge badge-warning">{formatCurrency(totalOutstanding)} outstanding</span>
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-                <div className="card stat-card">
-                    <div className="stat-icon" style={{ background: 'var(--danger-bg)', color: 'var(--danger)' }}>
-                        <ArrowDownRight size={20} />
-                    </div>
-                    <div className="stat-info" style={{ flex: 1 }}>
-                        <span className="stat-label">Total Expenses</span>
-                        <span className="stat-value">{formatCurrency(expenseData.grandTotal)}</span>
-                    </div>
-                    <button onClick={() => setShowExpensesModal(true)} style={{ color: 'var(--text-tertiary)', padding: '4px', cursor: 'pointer', background: 'transparent', border: 'none' }} title="View Breakdown">
-                        <ArrowRight size={18} />
-                    </button>
-                </div>
-
-                <div className="card stat-card">
-                    <div className="stat-icon" style={{ background: netCashFlow >= 0 ? 'var(--success-bg)' : 'var(--danger-bg)', color: netCashFlow >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                        <TrendingUp size={20} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-label">Net Cash Flow</span>
-                        <span className="stat-value" style={{ color: netCashFlow >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                            {netCashFlow >= 0 ? '+' : ''}{formatCurrency(netCashFlow)}
+            {/* Consolidated Stats Overview */}
+            <div className="stats-overview">
+                <div className="stat-item">
+                    <span className="stat-label">Total Income</span>
+                    <span className="stat-value">{formatCurrency(totalRentIncome)}</span>
+                    {totalOutstanding > 0 && (
+                        <span className="stat-detail">
+                            <span style={{ color: 'var(--warning)', fontSize: 12 }}>{formatCurrency(totalOutstanding)} outstanding</span>
                         </span>
-                    </div>
+                    )}
                 </div>
 
-                <div className="card stat-card">
-                    <div className="stat-icon" style={{ background: 'var(--warning-bg)', color: 'var(--warning)' }}>
-                        <AlertTriangle size={20} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-label">Open Issues</span>
-                        <span className="stat-value">{openMaintenance}</span>
-                        {alerts.length > 0 && (
-                            <span className="stat-detail">
-                                <span className="badge badge-info">{alerts.length} alerts</span>
-                            </span>
-                        )}
-                    </div>
+                <div className="stat-item clickable" onClick={() => setShowExpensesModal(true)}>
+                    <span className="stat-label">Total Expenses</span>
+                    <span className="stat-value">{formatCurrency(expenseData.grandTotal)}</span>
+                    <ArrowRight size={16} className="stat-arrow" />
+                </div>
+
+                <div className="stat-item">
+                    <span className="stat-label">Net Cash Flow</span>
+                    <span className="stat-value" style={{ color: netCashFlow >= 0 ? 'var(--accent)' : 'var(--danger)' }}>
+                        {netCashFlow >= 0 ? '+' : ''}{formatCurrency(netCashFlow)}
+                    </span>
+                </div>
+
+                <div className="stat-item">
+                    <span className="stat-label">Action Required</span>
+                    <span className="stat-value">{alerts.length}</span>
+                    {openMaintenance > 0 && (
+                        <span className="stat-detail">
+                            <span style={{ color: 'var(--text-tertiary)', fontSize: 12 }}>incl. {openMaintenance} maintenance</span>
+                        </span>
+                    )}
                 </div>
             </div>
 
             {/* Charts Row */}
             {totalProperties > 0 && (
-                <div className="dashboard-grid">
+                <div className="dashboard-grid asymmetric">
                     {/* Monthly Cash Flow */}
-                    <div className="dashboard-section">
-                        <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
-                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)', display: 'flex', alignItems: 'center' }}>
-                                <BarChart3 size={18} style={{ marginRight: 8 }} />
-                                Monthly Cash Flow
-                            </h2>
+                    <div className="card" style={{ padding: 0 }}>
+                        <div className="card-header">
+                            <h2 className="card-title">Monthly Cash Flow</h2>
                             <button onClick={() => setShowCashflowModal(true)} className="btn btn-ghost btn-sm">
                                 Details <ArrowRight size={14} />
                             </button>
                         </div>
-                        <div className="card" style={{ padding: 'var(--space-lg)' }}>
+                        <div className="card-body">
                             <div className="chart-legend">
-                                <span className="legend-item"><span className="legend-dot" style={{ background: 'var(--success)' }} /> Income</span>
-                                <span className="legend-item"><span className="legend-dot" style={{ background: 'var(--danger)' }} /> Expenses</span>
+                                <span className="legend-item"><span className="legend-dot" style={{ background: 'var(--accent)' }} /> Income</span>
+                                <span className="legend-item"><span className="legend-dot" style={{ background: 'var(--text-tertiary)' }} /> Expenses</span>
                             </div>
                             <div className="bar-chart">
                                 {monthlyTrend.map(m => (
                                     <div key={m.month} className="bar-group">
                                         <div className="bars">
-                                            <div className="bar bar-income" style={{ height: `${Math.max((m.income / chartMax) * 120, 2)}px` }} title={`Income: ${formatCurrency(m.income)}`} />
-                                            <div className="bar bar-expense" style={{ height: `${Math.max((m.expense / chartMax) * 120, 2)}px` }} title={`Expenses: ${formatCurrency(m.expense)}`} />
+                                            {m.income > 0 && <div className="bar bar-income" style={{ height: `${(m.income / chartMax) * 120}px` }} title={`Income: ${formatCurrency(m.income)}`} />}
+                                            {m.expense > 0 && <div className="bar bar-expense" style={{ height: `${(m.expense / chartMax) * 120}px` }} title={`Expenses: ${formatCurrency(m.expense)}`} />}
                                         </div>
                                         <span className="bar-label">{new Date(m.month + '-01').toLocaleDateString('en', { month: 'short' })}</span>
                                     </div>
@@ -258,30 +225,25 @@ export default function Dashboard() {
                     </div>
 
                     {/* Expense Breakdown */}
-                    <div className="dashboard-section">
-                        <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
-                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)', display: 'flex', alignItems: 'center' }}>
-                                <PieChart size={18} style={{ marginRight: 8 }} />
-                                Expense Breakdown
-                            </h2>
+                    <div className="card" style={{ padding: 0 }}>
+                        <div className="card-header">
+                            <h2 className="card-title">Expense Breakdown</h2>
                             <button onClick={() => setShowExpensesModal(true)} className="btn btn-ghost btn-sm">
                                 View All <ArrowRight size={14} />
                             </button>
                         </div>
-                        <div className="card" style={{ padding: 'var(--space-lg)' }}>
+                        <div className="card-body">
                             {expenseData.grandTotal > 0 ? (
                                 <div className="expense-breakdown">
                                     {expenseData.breakdown.filter(c => c.total > 0).map(cat => {
                                         const pct = Math.round((cat.total / expenseData.grandTotal) * 100);
-                                        const Icon = cat.icon;
                                         return (
                                             <div key={cat.key} className="breakdown-row">
                                                 <div className="breakdown-label">
-                                                    <Icon size={16} style={{ color: cat.color }} />
                                                     <span>{cat.label}</span>
                                                 </div>
                                                 <div className="breakdown-bar-track">
-                                                    <div className="breakdown-bar-fill" style={{ width: `${pct}%`, background: cat.color }} />
+                                                    <div className="breakdown-bar-fill" style={{ width: `${pct}%`, background: 'var(--text-tertiary)' }} />
                                                 </div>
                                                 <div className="breakdown-value">
                                                     <span className="breakdown-amount">{formatCurrency(cat.total)}</span>
@@ -296,9 +258,8 @@ export default function Dashboard() {
                                     </div>
                                 </div>
                             ) : (
-                                <div style={{ textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--text-tertiary)' }}>
-                                    <Receipt size={32} style={{ marginBottom: 8, opacity: 0.5 }} />
-                                    <p>No expenses recorded yet</p>
+                                <div style={{ textAlign: 'center', padding: 'var(--space-lg)', color: 'var(--text-tertiary)' }}>
+                                    <p style={{ fontSize: 13 }}>No expenses recorded yet</p>
                                 </div>
                             )}
                         </div>
@@ -309,21 +270,19 @@ export default function Dashboard() {
             {/* Activity + Alerts */}
             {totalProperties > 0 && (
                 <div className="dashboard-grid">
-                    <div className="dashboard-section">
-                        <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
-                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)', display: 'flex', alignItems: 'center' }}>
-                                <Activity size={18} style={{ marginRight: 8 }} />
-                                Recent Activity
-                            </h2>
+                    {/* Recent Activity */}
+                    <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
+                        <div className="card-header">
+                            <h2 className="card-title">Recent Activity</h2>
                         </div>
-                        <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        <div style={{ overflow: 'hidden', flex: 1 }}>
                             {recentActivity.length > 0 ? (
                                 <div className="activity-list">
                                     {recentActivity.map(item => {
                                         const Icon = item.icon;
                                         return (
                                             <div key={item.id} className="activity-item">
-                                                <div className="activity-icon" style={{ color: item.color }}>
+                                                <div className="activity-icon" style={{ color: 'var(--text-tertiary)' }}>
                                                     <Icon size={16} />
                                                 </div>
                                                 <div className="activity-info">
@@ -331,7 +290,7 @@ export default function Dashboard() {
                                                     <span className="activity-detail">{item.detail}</span>
                                                 </div>
                                                 <div className="activity-right">
-                                                    <span className={`activity-amount ${item.type}`}>
+                                                    <span className="activity-amount" style={{ color: item.type === 'income' ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                                                         {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
                                                     </span>
                                                     <span className="activity-date">{formatDate(item.date)}</span>
@@ -342,66 +301,45 @@ export default function Dashboard() {
                                 </div>
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--text-tertiary)', height: '100%' }}>
-                                    <Activity size={32} style={{ marginBottom: 12, opacity: 0.5 }} />
-                                    <p>No activity yet</p>
+                                    <p style={{ fontSize: 13 }}>No activity yet</p>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="dashboard-section">
-                        <div className="section-header" style={{ marginBottom: 'var(--space-md)' }}>
-                            <h2 className="section-title" style={{ fontSize: 'var(--font-lg)', display: 'flex', alignItems: 'center' }}>
-                                <Bell size={18} style={{ marginRight: 8 }} /> Upcoming Alerts
-                            </h2>
+                    {/* Upcoming Alerts */}
+                    <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
+                        <div className="card-header">
+                            <h2 className="card-title">Upcoming Alerts</h2>
                             <Link to="/timeline" className="btn btn-ghost btn-sm">
                                 View All <ArrowRight size={14} />
                             </Link>
                         </div>
-                        {urgentAlerts.length > 0 ? (
-                            <div className="alert-list">
-                                {urgentAlerts.map(alert => (
-                                    <div key={alert.id} className={`alert-item alert-${alert.severity}`}>
-                                        <div className="alert-dot" />
-                                        <div className="alert-content">
-                                            <span className="alert-title">{alert.title}</span>
-                                            <span className="alert-message">{alert.message}</span>
+                        <div style={{ flex: 1 }}>
+                            {urgentAlerts.length > 0 ? (
+                                <div className="alert-list">
+                                    {urgentAlerts.map(alert => (
+                                        <div key={alert.id} className={`alert-item alert-${alert.severity}`}>
+                                            <div className="alert-dot" />
+                                            <div className="alert-content">
+                                                <span className="alert-title">{alert.title}</span>
+                                                <span className="alert-message">{alert.message}</span>
+                                            </div>
+                                            <span className="alert-date">{formatRelativeDate(alert.date)}</span>
                                         </div>
-                                        <span className="alert-date">{formatRelativeDate(alert.date)}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--text-tertiary)', flex: 1 }}>
-                                <Bell size={32} style={{ marginBottom: 12, opacity: 0.5 }} />
-                                <p>No alerts — all clear!</p>
-                            </div>
-                        )}
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-xl)', color: 'var(--text-tertiary)', height: '100%' }}>
+                                    <p style={{ fontSize: 13 }}>No alerts — all clear</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* Occupancy Bar */}
-            {totalProperties > 0 && (
-                <div className="dashboard-section">
-                    <div className="card occupancy-card">
-                        <div className="occupancy-header">
-                            <span className="occupancy-label">Occupancy Rate</span>
-                            <span className="occupancy-value">{occupancyRate}%</span>
-                        </div>
-                        <div className="occupancy-bar-track">
-                            <div className="occupancy-bar-fill" style={{
-                                width: `${occupancyRate}%`,
-                                background: occupancyRate >= 80 ? 'var(--success)' : occupancyRate >= 50 ? 'var(--warning)' : 'var(--danger)',
-                            }} />
-                        </div>
-                        <div className="occupancy-details">
-                            <span>{occupiedCount} of {totalProperties} occupied</span>
-                            {vacantCount > 0 && <span style={{ color: 'var(--danger)' }}>{vacantCount} vacant</span>}
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {/* Empty State */}
             {totalProperties === 0 && (

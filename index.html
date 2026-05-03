@@ -6,6 +6,19 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PropTrack MY</title>
+  <script>
+    (function() {
+      try {
+        var localTheme = localStorage.getItem('theme');
+        if (localTheme) {
+          document.documentElement.setAttribute('data-theme', localTheme);
+        } else {
+          var sysTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', sysTheme);
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 
 <body>

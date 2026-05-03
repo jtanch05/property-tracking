@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppProvider';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { parseISO, addDays } from 'date-fns';
-import { Receipt, Droplets, Shield, Landmark, Plus, Search, CheckCircle, Edit3, Trash2, FileText } from 'lucide-react';
+import { Receipt, Droplets, Shield, Landmark, Plus, Search, CheckCircle, Edit3, Trash2, FileText, BadgeCheck } from 'lucide-react';
 import { exportToPDF } from '../utils/export';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
@@ -51,7 +51,8 @@ export default function Expenses({ embeddedPropertyId = null }) {
         date: new Date().toISOString().split('T')[0],
         status: 'paid',
         specificType: '',
-        notes: ''
+        notes: '',
+        taxDeductible: null
     });
 
     function openAdd() {
@@ -62,7 +63,8 @@ export default function Expenses({ embeddedPropertyId = null }) {
             date: new Date().toISOString().split('T')[0],
             status: 'paid',
             specificType: '',
-            notes: ''
+            notes: '',
+            taxDeductible: null
         });
         setEditingItem(null);
         setShowForm(true);
@@ -77,7 +79,8 @@ export default function Expenses({ embeddedPropertyId = null }) {
             date: item.date,
             status: item.status,
             specificType: item.raw.taxType || item.raw.type || item.raw.insuranceType || item.raw.feeType || '',
-            notes: item.raw.notes || ''
+            notes: item.raw.notes || '',
+            taxDeductible: item.raw.taxDeductible ?? null
         });
         setShowForm(true);
     }
@@ -94,7 +97,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
     function handleSubmit(e) {
         e.preventDefault();
         const amt = Number(form.amount) || 0;
-        const payload = { propertyId: form.propertyId, amount: amt, status: form.status, notes: form.notes };
+        const payload = { propertyId: form.propertyId, amount: amt, status: form.status, notes: form.notes, taxDeductible: form.taxDeductible };
 
         if (editingItem) {
             if (form.expenseCategory === 'tax') updateTaxRecord(editingItem.id, { ...payload, dueDate: form.date, paymentDate: form.status === 'paid' ? form.date : '', taxType: form.specificType, type: form.specificType });
@@ -121,9 +124,10 @@ export default function Expenses({ embeddedPropertyId = null }) {
             type: 'tax',
             date: r.dueDate,
             amount: Number(r.amount),
-            status: r.status, // paid, pending, overdue
+            status: r.status,
             propertyId: r.propertyId,
             description: r.type === 'quit_rent' ? 'Quit Rent' : 'Assessment Tax',
+            taxDeductible: r.taxDeductible ?? null,
             raw: r
         }));
 
@@ -136,6 +140,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
             status: r.status,
             propertyId: r.propertyId,
             description: `${r.type.charAt(0).toUpperCase() + r.type.slice(1)} Bill`,
+            taxDeductible: r.taxDeductible ?? null,
             raw: r
         }));
 
@@ -143,11 +148,12 @@ export default function Expenses({ embeddedPropertyId = null }) {
         insuranceRecords.forEach(r => list.push({
             id: r.id,
             type: 'insurance',
-            date: r.startDate, // Using start date as the expense date
-            amount: Number(r.premiumAmount || (Number(r.coverageAmount) * 0.005) || r.amount), // Support premium field
+            date: r.startDate,
+            amount: Number(r.premiumAmount || (Number(r.coverageAmount) * 0.005) || r.amount),
             status: 'active',
             propertyId: r.propertyId,
             description: `${r.insuranceType} Policy`,
+            taxDeductible: r.taxDeductible ?? null,
             raw: r
         }));
 
@@ -160,6 +166,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
             status: r.status,
             propertyId: r.propertyId,
             description: `${r.provider} Fee`,
+            taxDeductible: r.taxDeductible ?? null,
             raw: r
         }));
 
@@ -208,21 +215,59 @@ export default function Expenses({ embeddedPropertyId = null }) {
                 property: prop ? prop.nickname : 'Unknown',
                 date: formatDate(item.date),
                 status: (item.status || 'Pending').toUpperCase(),
+                deductible: item.taxDeductible === true ? 'Yes' : item.taxDeductible === false ? 'No' : '-',
                 amount: formatCurrency(item.amount)
             };
         });
 
-        // Add total row
         exportData.push({
             category: 'TOTAL',
             description: '',
             property: '',
             date: '',
             status: '',
+            deductible: '',
             amount: formatCurrency(totalAmount)
         });
 
         exportToPDF(exportData, 'expenses-report', 'Property Expenses Report');
+    };
+
+    const handleExportLHDN = () => {
+        const deductibleItems = allExpenses.filter(item => item.taxDeductible === true);
+
+        // Group by Year of Assessment (calendar year)
+        const byYA = {};
+        deductibleItems.forEach(item => {
+            const year = item.date ? new Date(item.date).getFullYear() : 'Unknown';
+            const ya = `YA ${year}`;
+            if (!byYA[ya]) byYA[ya] = [];
+            byYA[ya].push(item);
+        });
+
+        const exportData = [];
+        Object.keys(byYA).sort().reverse().forEach(ya => {
+            const items = byYA[ya];
+            exportData.push({ category: ya, description: '--- Year of Assessment ---', property: '', date: '', status: '', amount: '' });
+            items.forEach(item => {
+                const prop = properties.find(p => p.id === item.propertyId);
+                exportData.push({
+                    category: CATEGORIES[item.type]?.label || item.type,
+                    description: item.description,
+                    property: prop ? prop.nickname : 'Unknown',
+                    date: formatDate(item.date),
+                    status: (item.status || '').toUpperCase(),
+                    amount: formatCurrency(item.amount)
+                });
+            });
+            const subtotal = items.reduce((sum, i) => sum + (i.amount || 0), 0);
+            exportData.push({ category: '', description: '', property: '', date: '', status: `${ya} Subtotal`, amount: formatCurrency(subtotal) });
+        });
+
+        const grandTotal = deductibleItems.reduce((sum, i) => sum + (i.amount || 0), 0);
+        exportData.push({ category: 'GRAND TOTAL', description: '', property: '', date: '', status: '', amount: formatCurrency(grandTotal) });
+
+        exportToPDF(exportData, 'lhdn-allowable-deductions', 'LHDN Allowable Deductions Report');
     };
 
     return (
@@ -245,6 +290,9 @@ export default function Expenses({ embeddedPropertyId = null }) {
                         </div>
                         <button className="btn btn-outline" onClick={handleExportPDF}>
                             <FileText size={16} /> Export PDF
+                        </button>
+                        <button className="btn btn-outline" onClick={handleExportLHDN} title="Export LHDN Allowable Deductions Report">
+                            <BadgeCheck size={16} /> LHDN Report
                         </button>
                         <button className="btn btn-primary" onClick={openAdd}>
                             <Plus size={16} /> Log Expense
@@ -318,6 +366,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
                                 <th>Property</th>
                                 <th>Date</th>
                                 <th>Status</th>
+                                <th style={{ textAlign: 'center' }}>Deductible</th>
                                 <th style={{ textAlign: 'right' }}>Amount</th>
                                 <th style={{ width: 80 }}></th>
                             </tr>
@@ -377,6 +426,17 @@ export default function Expenses({ embeddedPropertyId = null }) {
                                                     </span>
                                                 )}
                                             </td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                {item.taxDeductible === true && (
+                                                    <span className="badge badge-success" style={{ fontSize: 11 }}>Yes</span>
+                                                )}
+                                                {item.taxDeductible === false && (
+                                                    <span className="badge badge-neutral" style={{ fontSize: 11 }}>No</span>
+                                                )}
+                                                {item.taxDeductible == null && (
+                                                    <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}>—</span>
+                                                )}
+                                            </td>
                                             <td style={{ textAlign: 'right', fontWeight: 600 }}>
                                                 {formatCurrency(item.amount)}
                                             </td>
@@ -400,7 +460,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
                         {filteredExpenses.length > 0 && (
                             <tfoot>
                                 <tr style={{ background: 'var(--bg-secondary)', fontWeight: 700 }}>
-                                    <td colSpan="5" style={{ textAlign: 'right' }}>Total</td>
+                                    <td colSpan="6" style={{ textAlign: 'right' }}>Total</td>
                                     <td style={{ textAlign: 'right' }}>{formatCurrency(totalAmount)}</td>
                                     <td></td>
                                 </tr>
@@ -457,13 +517,29 @@ export default function Expenses({ embeddedPropertyId = null }) {
                         </div>
                     </div>
 
-                    <div className="form-group">
-                        <label>Status</label>
-                        <ToggleGroup
-                            options={[{ value: 'paid', label: 'Paid' }, { value: 'pending', label: 'Unpaid / Pending' }]}
-                            value={form.status}
-                            onChange={val => setForm(p => ({ ...p, status: val }))}
-                        />
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label>Status</label>
+                            <ToggleGroup
+                                options={[{ value: 'paid', label: 'Paid' }, { value: 'pending', label: 'Unpaid / Pending' }]}
+                                value={form.status}
+                                onChange={val => setForm(p => ({ ...p, status: val }))}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Tax Deductible (LHDN)</label>
+                            <ToggleGroup
+                                options={[
+                                    { value: true, label: 'Yes' },
+                                    { value: false, label: 'No' }
+                                ]}
+                                value={form.taxDeductible}
+                                onChange={val => setForm(p => ({ ...p, taxDeductible: val }))}
+                            />
+                            <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 4, display: 'block' }}>
+                                Per LHDN: quit rent, assessment tax, daily repairs, fire insurance premiums are deductible. Initial capital expenditure (first tenant ads, stamp duty) is NOT.
+                            </span>
+                        </div>
                     </div>
 
                     <div className="form-group">

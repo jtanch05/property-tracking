@@ -3,26 +3,26 @@
 
 /* ======= Design Tokens ======= */
 :root {
-    --bg-primary: #f5f2f0;
+    --bg-primary: #f4f3ee;
     --bg-secondary: #ffffff;
-    --bg-tertiary: #ede9e5;
+    --bg-tertiary: #f4f3ee;
     --bg-elevated: #ffffff;
-    --bg-hover: #e8e4e0;
+    --bg-hover: #eae8e1;
 
     --glass-bg: rgba(255, 255, 255, 0.72);
     --glass-border: rgba(0, 0, 0, 0.06);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
     --glass-blur: blur(16px);
 
-    --text-primary: #000000;
-    --text-secondary: #333333;
-    --text-tertiary: #7b7b7b;
-    --text-muted: #bcbcbc;
+    --text-primary: #1a1918;
+    --text-secondary: #4a4845;
+    --text-tertiary: #b1ada1;
+    --text-muted: #d0cec5;
 
-    --accent: #1a1a1a;
-    --accent-hover: #333333;
-    --accent-bg: rgba(0, 0, 0, 0.05);
-    --accent-border: rgba(0, 0, 0, 0.15);
+    --accent: #c15f3c;
+    --accent-hover: #a85132;
+    --accent-bg: rgba(193, 95, 60, 0.1);
+    --accent-border: rgba(193, 95, 60, 0.2);
 
     --success: #16a34a;
     --success-bg: rgba(22, 163, 74, 0.10);
@@ -33,8 +33,8 @@
     --info: #4b5563;
     --info-bg: rgba(75, 85, 99, 0.10);
 
-    --border: #e8e4e0;
-    --border-strong: #d6d6d6;
+    --border: #e6e4dc;
+    --border-strong: #b1ada1;
     --divider: rgba(0, 0, 0, 0.04);
 
     --space-xs: 4px;
@@ -52,7 +52,7 @@
     --radius-full: 9999px;
 
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-display: 'Playfair Display', 'Georgia', serif;
+    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-xs: 0.75rem;
     --font-sm: 0.8125rem;
     --font-base: 0.875rem;
@@ -136,9 +136,11 @@ html {
 
 body {
     font-family: var(--font-family);
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     background: var(--bg-primary);
     color: var(--text-primary);
-    line-height: 1.6;
+    line-height: 1.5;
+    letter-spacing: -0.011em;
     min-height: 100vh;
     overflow-x: hidden;
 }
@@ -285,13 +287,13 @@ label {
 }
 
 .btn-primary {
-    background: var(--text-primary);
-    color: var(--bg-primary);
+    background: var(--accent);
+    color: var(--bg-secondary);
     box-shadow: none;
 }
 
 .btn-primary:hover {
-    background: var(--text-secondary);
+    background: var(--accent-hover);
     box-shadow: var(--shadow-sm);
     transform: translateY(-1px);
 }
@@ -412,8 +414,9 @@ label {
 
 .section-title {
     font-size: var(--font-xl);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-primary);
+    letter-spacing: -0.02em;
 }
 
 .section-subtitle {
@@ -510,7 +513,9 @@ input[type="number"] {
 
 .stat-label {
     font-size: var(--font-sm);
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
+    font-weight: 400;
+    letter-spacing: 0.01em;
     margin-bottom: var(--space-xs);
 }
 
@@ -518,6 +523,8 @@ input[type="number"] {
     font-size: var(--font-2xl);
     font-weight: 700;
     color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
 }
 
 .stat-change {
@@ -620,6 +627,7 @@ input[type="number"] {
     color: var(--text-primary);
     border-bottom: 1px solid var(--border);
     vertical-align: middle;
+    font-variant-numeric: tabular-nums;
 }
 
 .data-table tbody tr {

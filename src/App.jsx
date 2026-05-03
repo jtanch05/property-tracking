@@ -23,7 +23,9 @@ function ThemeInitializer({ children }) {
   const { settings } = useApp();
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', settings.theme || 'dark');
+    const activeTheme = settings.theme || 'dark';
+    document.documentElement.setAttribute('data-theme', activeTheme);
+    localStorage.setItem('theme', activeTheme);
   }, [settings.theme]);
 
   return children;
