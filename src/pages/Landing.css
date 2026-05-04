@@ -521,8 +521,8 @@ html {
     padding: 35px; /* much larger padding for the background */
     border-radius: 40px; /* larger rounded corners */
     background: #E6AE8C;  /* fallback for old browsers */
-    background: -webkit-linear-gradient(to right, #A8CECF, #E6AE8C);  /* Chrome 10-25, Safari 5.1-6 */
-    background: linear-gradient(to right, #e7eaf4, #E6AE8C); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    background: -webkit-linear-gradient(to right, #000000, #E6AE8C);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #000000, #E6AE8C); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12);
 }
 
@@ -896,12 +896,6 @@ html {
 
 .lp-integration-icon--app {
     color: #a0a0a0;
-}
-
-.lp-integration-icon--resend {
-    padding: 0;
-    overflow: hidden;
-    border-radius: 14px;
 }
 
 .lp-integration-connector {

@@ -51,13 +51,6 @@ export default function ClientAutomation() {
                         date: serverTimestamp()
                     });
                     alertsGenerated++;
-
-                    // Trigger Native Browser Notification immediately if they are actively using the app during the run
-                    if (Notification.permission === 'granted') {
-                        new Notification('Lease Expiring Soon', {
-                            body: `The lease for ${tenantName} at ${propName} is expiring in 30 days.`
-                        });
-                    }
                 }
 
                 // Execute batch writes

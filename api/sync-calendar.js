@@ -1,5 +1,5 @@
 // /api/sync-calendar.js
-// Called daily by Make.com (alongside send-alerts)
+// Called by a scheduled backend job.
 // For every user who has connected Google Calendar:
 //   1. Read their property alerts from Firestore
 //   2. Create or update events directly in their Google Calendar

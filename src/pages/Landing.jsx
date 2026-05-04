@@ -13,11 +13,6 @@ const IconCalendar = () => (
         <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4" /><path d="M8 2v4" /><path d="M3 10h18" />
     </svg>
 );
-const IconMail = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-    </svg>
-);
 const IconFileText = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
         <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M10 9H8" /><path d="M16 13H8" /><path d="M16 17H8" />
@@ -134,7 +129,7 @@ function FeatureCard({ icon, title, description, delay = 0 }) {
 function RotatingTestimonial() {
     const testimonials = [
         {
-            text: "PropTrack finally gave me a single place to track all my leases, rents, and maintenance. The automated email alerts save me at least a few hours every week.",
+            text: "PropTrack finally gave me a single place to track all my leases, rents, and maintenance. The dashboard saves me at least a few hours every week.",
             name: "Michael R.",
             role: "Private Landlord · 8 properties",
             initials: "MR"
@@ -261,7 +256,7 @@ export default function Landing() {
 
                     <p className="lp-hero-subtitle">
                         PropTrack unifies your entire real estate portfolio — properties, tenants, leases, expenses
-                        and maintenance — with smart alerts, Google Calendar sync, and automated email notifications.
+                        and maintenance — with smart alerts, Google Calendar sync, and clean reporting.
                     </p>
 
                     <div className="lp-hero-actions">
@@ -368,8 +363,7 @@ export default function Landing() {
                         <span className="lp-section-tag">Integrations</span>
                         <h2 className="lp-section-title">Connected to the tools you already use</h2>
                         <p className="lp-section-subtitle">
-                            PropTrack integrates seamlessly with Google Calendar and Resend to automate
-                            your workflow — so alerts go exactly where you need them.
+                            PropTrack integrates with Google Calendar so important property dates appear where you already plan your day.
                         </p>
                     </div>
 
@@ -400,27 +394,22 @@ export default function Landing() {
                             </ul>
                         </div>
 
-                        {/* Email Integration card */}
                         <div className="lp-integration-card lp-integration-card--featured">
                             <div className="lp-integration-icon-wrap">
-                                <div className="lp-integration-icon lp-integration-icon--resend">
-                                    <svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor">
-                                        <rect width="32" height="32" rx="8" fill="#000" />
-                                        <path d="M9 8h8a5 5 0 0 1 0 10h-8V8Zm4 4v2h4a1 1 0 1 0 0-2h-4Zm-4 6h4l5 6h-5l-4-6Z" fill="#fff" />
-                                    </svg>
+                                <div className="lp-integration-icon lp-integration-icon--app">
+                                    <IconFileText />
                                 </div>
                                 <div className="lp-integration-connector" />
                                 <div className="lp-integration-icon lp-integration-icon--app">
-                                    <IconMail />
+                                    <IconTrendUp />
                                 </div>
                             </div>
-                            <h3 className="lp-integration-title">Automated Email Alerts</h3>
+                            <h3 className="lp-integration-title">Reports & Analytics</h3>
                             <p className="lp-integration-desc">
-                                Powered by Resend, PropTrack delivers beautifully formatted alert emails on your schedule —
-                                daily, weekly, bi-weekly, or monthly — so you're always informed without lifting a finger.
+                                Export full statements and review portfolio performance without rebuilding spreadsheets by hand.
                             </p>
                             <ul className="lp-integration-list">
-                                {['Configurable alert frequency', 'Rich HTML email templates', 'Instant critical notifications', 'Reliable delivery via Resend API'].map((item) => (
+                                {['Full statement PDF export', 'Cash flow summaries', 'Expense breakdowns', 'Portfolio-level reporting'].map((item) => (
                                     <li key={item} className="lp-integration-list-item">
                                         <span className="lp-check-icon"><IconCheck /></span>
                                         {item}
@@ -442,9 +431,9 @@ export default function Landing() {
                     <div className="lp-steps">
                         {[
                             { num: '01', title: 'Create your account', desc: 'Sign up with Google, add your properties and tenant details in minutes.' },
-                            { num: '02', title: 'Connect integrations', desc: 'Link Google Calendar via OAuth and configure your email notification preferences.' },
-                            { num: '03', title: 'Set your alerts', desc: 'Choose what matters — rent due, lease expiry, maintenance — and how often you want updates.' },
-                            { num: '04', title: 'Stay in control', desc: 'Watch your dashboard update in real-time and receive automated calendar events and email summaries.' },
+                            { num: '02', title: 'Connect calendar', desc: 'Link Google Calendar via OAuth so important property dates appear automatically.' },
+                            { num: '03', title: 'Track your records', desc: 'Keep rent, expenses, leases, maintenance, and vendors organized in one workspace.' },
+                            { num: '04', title: 'Stay in control', desc: 'Watch your dashboard update in real-time and export clean statements when needed.' },
                         ].map((step, i) => (
                             <div key={i} className="lp-step">
                                 <div className="lp-step-num">{step.num}</div>
@@ -474,7 +463,7 @@ export default function Landing() {
                                 <p className="lp-pricing-tagline">Perfect for getting started</p>
                             </div>
                             <ul className="lp-pricing-features">
-                                {['Up to 5 properties', 'Basic tenant management', 'Manual PDF export', 'Email alerts (weekly)', 'Firestore secure storage'].map(f => (
+                                {['Up to 5 properties', 'Basic tenant management', 'Manual PDF export', 'Google Calendar sync', 'Firestore secure storage'].map(f => (
                                     <li key={f}><span className="lp-check-icon lp-check-icon--muted"><IconCheck /></span>{f}</li>
                                 ))}
                             </ul>
@@ -490,7 +479,7 @@ export default function Landing() {
                                 <p className="lp-pricing-tagline">For active property managers</p>
                             </div>
                             <ul className="lp-pricing-features">
-                                {['Unlimited properties', 'Full tenant & lease management', 'Google Calendar sync', 'Automated email alerts', 'Cash flow analytics', 'Priority support'].map(f => (
+                                {['Unlimited properties', 'Full tenant & lease management', 'Google Calendar sync', 'Full statement export', 'Cash flow analytics', 'Priority support'].map(f => (
                                     <li key={f}><span className="lp-check-icon"><IconCheck /></span>{f}</li>
                                 ))}
                             </ul>

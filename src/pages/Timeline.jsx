@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppProvider';
 import { formatRelativeDate } from '../utils/formatters';
-import { FileText, Wallet, Receipt, Shield, Wrench, AlertCircle, Bell, Calendar, MessageCircle, Landmark } from 'lucide-react';
-import { generateSingleICS, generateBulkICS, downloadICS } from '../utils/calendar';
+import { FileText, Wallet, Receipt, Shield, Wrench, AlertCircle, Bell, MessageCircle, Landmark } from 'lucide-react';
 import { sendSelfReminder } from '../utils/whatsapp';
 import './Timeline.css';
 
@@ -41,17 +40,6 @@ export default function Timeline() {
 
     const months = Object.keys(grouped).sort();
 
-    function exportSingleAlert(alert) {
-        const ics = generateSingleICS(alert);
-        downloadICS(ics, `proptrack-${alert.type}`);
-    }
-
-    function exportAllAlerts() {
-        if (filtered.length === 0) return;
-        const ics = generateBulkICS(filtered);
-        downloadICS(ics, 'proptrack-all-alerts');
-    }
-
     return (
         <div className="timeline-page">
             <div className="section-header">
@@ -59,11 +47,6 @@ export default function Timeline() {
                     <h1 className="section-title">Timeline & Alerts</h1>
                     <p className="section-subtitle">{alerts.length} alerts across all properties</p>
                 </div>
-                {alerts.length > 0 && (
-                    <button className="btn btn-secondary" onClick={exportAllAlerts} title="Export all to calendar">
-                        <Calendar size={16} /> Export All .ics
-                    </button>
-                )}
             </div>
 
             {alerts.length > 0 && (
@@ -101,9 +84,6 @@ export default function Timeline() {
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                                                 <span className="timeline-date">{formatRelativeDate(alert.date)}</span>
-                                                <button className="btn-icon" title="Export to calendar" onClick={() => exportSingleAlert(alert)} style={{ padding: 4 }}>
-                                                    <Calendar size={14} />
-                                                </button>
                                                 <button className="btn-icon" title="WhatsApp self-reminder" onClick={() => sendSelfReminder(alert)} style={{ padding: 4 }}>
                                                     <MessageCircle size={14} />
                                                 </button>

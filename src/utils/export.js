@@ -1,47 +1,5 @@
-// JSON export/import for data backup
-import { getStorageItem } from './storage';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-
-const DATA_KEYS = [
-    'properties', 'tenants', 'agreements', 'rentRecords', 'taxRecords',
-    'utilityRecords', 'insuranceRecords', 'maintenanceRecords',
-    'vendors', 'managementFees', 'payouts', 'deposits', 'settings',
-];
-
-export function exportAllData(sourceData = null) {
-    const data = {};
-    DATA_KEYS.forEach(key => {
-        const value = sourceData ? sourceData[key] : getStorageItem(key);
-        if (value !== null && value !== undefined) data[key] = value;
-    });
-    data._exportedAt = new Date().toISOString();
-    data._version = '1.0';
-    return data;
-}
-
-export function downloadBackup(sourceData = null) {
-    const data = exportAllData(sourceData);
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `proptrack-backup-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-export function importData(jsonString) {
-    try {
-        const data = JSON.parse(jsonString);
-        if (!data._version) throw new Error('Invalid backup file: missing version');
-        return { success: true, data, keys: Object.keys(data).filter(k => !k.startsWith('_')) };
-    } catch (e) {
-        return { success: false, error: e.message };
-    }
-}
 
 export function exportToCSV(data, filename) {
     if (!data || data.length === 0) return;

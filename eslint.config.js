@@ -18,21 +18,6 @@ export default defineConfig([
     },
   },
   {
-    files: ['public/firebase-messaging-sw.js'],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: {
-        ...globals.serviceworker,
-        firebase: 'readonly',
-        importScripts: 'readonly',
-      },
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'script',
-      },
-    },
-  },
-  {
     files: ['src/**/*.{js,jsx}'],
     extends: [
       js.configs.recommended,

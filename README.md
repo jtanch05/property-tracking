@@ -8,9 +8,7 @@ PropTrack MY is a React + Vite property portfolio management app for tracking pr
 - Vite 7
 - Firebase Auth
 - Firestore
-- Firebase Cloud Messaging
 - Google Calendar API
-- Resend email alerts
 - jsPDF exports
 - Lucide React icons
 - Tailwind CSS utilities where needed
@@ -23,10 +21,7 @@ PropTrack MY is a React + Vite property portfolio management app for tracking pr
 - Property, tenant, agreement, rent, expense, maintenance, vendor, payout, and deposit tracking
 - Dashboard summaries and alert timeline
 - PDF exports and full statement export
-- JSON backup/import
 - WhatsApp reminder helpers
-- Configurable alert frequency
-- Resend email alert digests
 - Google Calendar OAuth and alert event sync
 - Dark and light themes
 
@@ -81,10 +76,8 @@ VITE_FIREBASE_API_KEY=
 VITE_FIREBASE_AUTH_DOMAIN=
 VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_STORAGE_BUCKET=
-VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
 VITE_FIREBASE_MEASUREMENT_ID=
-VITE_FIREBASE_VAPID_KEY=
 ```
 
 Server/API integrations:
@@ -93,7 +86,6 @@ Server/API integrations:
 FIREBASE_PROJECT_ID=
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY=
-RESEND_API_KEY=
 ALERT_SECRET=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -108,7 +100,3 @@ npm run build
 npm run lint
 npm run preview
 ```
-
-## Notes
-
-The Firebase Messaging service worker lives in `public/firebase-messaging-sw.js`. Because it is served as a public service worker file, it cannot use Vite `import.meta.env` directly. Keep its Firebase public config synchronized with the active Firebase project.
