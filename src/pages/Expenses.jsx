@@ -278,7 +278,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
                         <h1 className="section-title">Expenses</h1>
                         <p className="section-subtitle">Track taxes, utilities, insurance and management fees</p>
                     </div>
-                    <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                         <div className="search-box">
                             <Search size={18} />
                             <input
@@ -304,7 +304,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
             {embeddedPropertyId && (
                 <div className="flex justify-between items-center mb-6" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
                     <h3 className="text-lg font-semibold" style={{ fontSize: '1.125rem', fontWeight: 600 }}>Property Expenses</h3>
-                    <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                         <div className="search-box" style={{ margin: 0 }}>
                             <Search size={18} />
                             <input

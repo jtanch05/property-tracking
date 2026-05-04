@@ -1,73 +1,108 @@
 .settings-page {
-    max-width: 900px;
+    max-width: 800px;
     margin: 0 auto;
+    padding-bottom: 60px;
 }
 
 .settings-section {
-    margin-bottom: var(--space-xl);
+    margin-bottom: 40px;
 }
 
 .settings-section-title {
-    font-size: var(--font-md);
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-bottom: var(--space-md);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
 }
 
 .settings-card {
     padding: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.4) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 1);
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+/* Dark mode fallback for glassmorphism */
+[data-theme="dark"] .settings-card {
+    background: var(--bg-secondary);
+    border-color: var(--border);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
 }
 
 .settings-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-md) var(--space-lg);
-    gap: var(--space-md);
+    padding: 20px 24px;
+    gap: 20px;
+    transition: background 0.2s ease;
+}
+
+.settings-item:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .settings-item:hover {
+    background: var(--bg-hover);
 }
 
 .settings-item-info {
     display: flex;
     align-items: center;
-    gap: var(--space-md);
+    gap: 16px;
+    flex: 1;
 }
 
-.settings-item-info svg {
-    color: var(--text-tertiary);
+.settings-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    background: rgba(193, 95, 60, 0.1);
+    color: #c15f3c;
 }
 
-.settings-item-info>div {
+.settings-icon-wrapper.danger {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+.settings-icon-wrapper.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.settings-item-info > div {
     display: flex;
     flex-direction: column;
+    gap: 4px;
 }
 
 .settings-label {
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-primary);
-    font-size: var(--font-base);
+    font-size: 16px;
 }
 
 .settings-desc {
-    font-size: var(--font-sm);
-    color: var(--text-tertiary);
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.4;
 }
 
 .settings-divider {
     height: 1px;
     background: var(--border);
-    margin: 0 var(--space-lg);
-}
-
-@media (max-width: 600px) {
-    .settings-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .settings-item button {
-        align-self: flex-end;
-    }
+    margin: 0;
+    opacity: 0.6;
 }
 
 /* Theme Toggle Switch */
@@ -76,6 +111,7 @@
     align-items: center;
     cursor: pointer;
     position: relative;
+    flex-shrink: 0;
 }
 
 .theme-switch input {
@@ -86,30 +122,45 @@
 }
 
 .switch-track {
-    width: 44px;
-    height: 24px;
-    background-color: var(--border);
+    width: 50px;
+    height: 28px;
+    background-color: var(--border-strong);
     border-radius: 9999px;
     position: relative;
     transition: background-color 0.3s ease;
 }
 
-.theme-switch input:checked+.switch-track {
-    background-color: var(--success);
+.theme-switch input:checked + .switch-track {
+    background-color: #c15f3c;
 }
 
 .switch-thumb {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     background-color: #fff;
     border-radius: 50%;
     position: absolute;
     top: 2px;
     left: 2px;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.theme-switch input:checked+.switch-track .switch-thumb {
-    transform: translateX(20px);
+.theme-switch input:checked + .switch-track .switch-thumb {
+    transform: translateX(22px);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+    .settings-item {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px;
+    }
+
+    .settings-item button,
+    .settings-item .theme-switch {
+        align-self: flex-start;
+        margin-top: 8px;
+    }
 }

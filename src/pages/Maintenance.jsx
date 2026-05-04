@@ -87,33 +87,91 @@ export default function Maintenance({ embeddedPropertyId = null }) {
             )}
 
             {filtered.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {filtered.map(m => {
-                        const prop = properties.find(p => p.id === m.propertyId);
-                        const vendor = vendors.find(v => v.id === m.vendorId);
-                        const mType = MAINTENANCE_TYPES.find(t => t.value === m.issueType);
-                        return (
-                            <div key={m.id} className="card" style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                                    <div style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: m.status === 'open' ? 'var(--warning-bg)' : 'var(--success-bg)', color: m.status === 'open' ? 'var(--warning)' : 'var(--success)' }}>
-                                        {m.status === 'open' ? <Clock size={18} /> : <CheckCircle size={18} />}
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span style={{ fontWeight: 600 }}>{m.description || mType?.label || m.issueType}</span>
-                                        <span style={{ fontSize: 'var(--font-sm)', color: 'var(--text-secondary)' }}>{prop?.nickname || '—'} · {mType?.label || m.issueType}{vendor ? ` · ${vendor.name}` : ''}</span>
-                                        <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)' }}>Reported {formatDate(m.reportedDate)}</span>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    {m.cost > 0 && <span style={{ fontWeight: 700 }}>{formatCurrency(m.cost)}</span>}
-                                    <span className={`badge badge-${m.status === 'open' ? 'warning' : 'success'}`}>{m.status}</span>
-                                    {m.status === 'open' && <button className="btn btn-sm btn-primary" onClick={() => updateMaintenanceRecord(m.id, { status: 'closed', resolvedDate: new Date().toISOString().split('T')[0] })}>Close</button>}
-                                    <button className="btn-icon" onClick={() => openEdit(m)}><Edit3 size={16} /></button>
-                                    <button className="btn-icon" onClick={() => setDeleteId(m.id)}><Trash2 size={16} /></button>
-                                </div>
-                            </div>
-                        );
-                    })}
+                <div className="card" style={{ padding: 0, overflow: 'hidden', borderRadius: 'var(--radius-lg)' }}>
+                    <div className="table-container" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Property</th>
+                                    <th>Vendor</th>
+                                    <th>Reported</th>
+                                    <th>Status</th>
+                                    <th style={{ textAlign: 'right' }}>Cost</th>
+                                    <th style={{ width: 80 }}></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filtered.map(m => {
+                                    const prop = properties.find(p => p.id === m.propertyId);
+                                    const vendor = vendors.find(v => v.id === m.vendorId);
+                                    const mType = MAINTENANCE_TYPES.find(t => t.value === m.issueType);
+                                    return (
+                                        <tr key={m.id} className="interactive-row" onClick={() => openEdit(m)} style={{ cursor: 'pointer' }}>
+                                            <td>
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 8,
+                                                    color: 'var(--text-primary)',
+                                                    fontWeight: 500
+                                                }}>
+                                                    <div style={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        borderRadius: '50%',
+                                                        background: 'var(--bg-secondary)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        color: 'var(--text-secondary)'
+                                                    }}>
+                                                        <Wrench size={14} />
+                                                    </div>
+                                                    <span style={{ fontSize: 13 }}>{mType?.label || m.issueType}</span>
+                                                </div>
+                                            </td>
+                                            <td style={{ fontWeight: 500 }}>{m.description || '—'}</td>
+                                            <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                                                {prop?.nickname || '—'}
+                                            </td>
+                                            <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                                                {vendor?.name || '—'}
+                                            </td>
+                                            <td style={{ color: 'var(--text-tertiary)', fontSize: 13 }}>
+                                                {formatDate(m.reportedDate)}
+                                            </td>
+                                            <td>
+                                                {m.status === 'open' ? (
+                                                    <span
+                                                        className="badge badge-warning"
+                                                        style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                                                        onClick={(e) => { e.stopPropagation(); updateMaintenanceRecord(m.id, { status: 'closed', resolvedDate: new Date().toISOString().split('T')[0] }); }}
+                                                        title="Click to close issue"
+                                                    >
+                                                        Open
+                                                        <CheckCircle size={12} style={{ opacity: 0.7 }} />
+                                                    </span>
+                                                ) : (
+                                                    <span className="badge badge-success">Closed</span>
+                                                )}
+                                            </td>
+                                            <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                                                {m.cost > 0 ? formatCurrency(m.cost) : '—'}
+                                            </td>
+                                            <td>
+                                                <div className="property-actions" style={{ opacity: 1, display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
+                                                    <button className="btn-icon" onClick={(e) => { e.stopPropagation(); openEdit(m); }}><Edit3 size={16} /></button>
+                                                    <button className="btn-icon btn-icon-danger" onClick={(e) => { e.stopPropagation(); setDeleteId(m.id); }}><Trash2 size={16} /></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             ) : maintenanceRecords.length === 0 ? (
                 <div className="empty-state"><Wrench size={56} /><h3>No maintenance records</h3><p>Log repairs, services, and scheduled maintenance.</p><button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Log Issue</button></div>

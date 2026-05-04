@@ -6,7 +6,7 @@ import ConfirmDialog from '../components/common/ConfirmDialog';
 import CustomSelect from '../components/common/CustomSelect';
 import { formatCurrency, formatMonth, formatDate } from '../utils/formatters';
 import { differenceInDays, parseISO } from 'date-fns';
-import { Plus, Wallet, Edit3, Trash2, CheckCircle, Clock, AlertCircle, MessageCircle, Minus, FileText } from 'lucide-react';
+import { Plus, Wallet, Edit3, Trash2, CheckCircle, Clock, AlertCircle, MessageCircle, Minus, FileText, ChevronDown, ChevronRight, CalendarClock, XCircle } from 'lucide-react';
 import { sendRentReminder } from '../utils/whatsapp';
 import { exportToPDF } from '../utils/export';
 import './RentLedger.css';
@@ -23,10 +23,12 @@ export default function RentLedger({ embeddedPropertyId = null }) {
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(EMPTY_RENT);
     const [deleteId, setDeleteId] = useState(null);
+    const [showClearAll, setShowClearAll] = useState(false);
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterProp, setFilterProp] = useState('');
     const [expandedId, setExpandedId] = useState(null);
     const [showCollected, setShowCollected] = useState(false);
+    const [showUpcoming, setShowUpcoming] = useState(false);
 
     const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 
@@ -36,10 +38,12 @@ export default function RentLedger({ embeddedPropertyId = null }) {
         .filter(r => !filterProp || r.propertyId === filterProp)
         .sort((a, b) => b.month.localeCompare(a.month));
 
-    // Split into two groups
-    const outstanding = filtered.filter(r => r.status !== 'paid');
+    // Split into three smart groups
+    const overdueAndDue = filtered.filter(r => r.status !== 'paid' && r.month <= currentMonth);
+    const upcoming = filtered.filter(r => r.status !== 'paid' && r.month > currentMonth);
     const collected = filtered.filter(r => r.status === 'paid');
     const collectedTotal = collected.reduce((s, r) => s + (Number(r.amountPaid) || 0), 0);
+    const upcomingTotal = upcoming.reduce((s, r) => s + (Number(r.amountDue) || 0), 0);
 
     const availableDeductions = useMemo(() => {
         if (!form.propertyId) return [];
@@ -282,7 +286,12 @@ export default function RentLedger({ embeddedPropertyId = null }) {
                             {totalDeductions > 0 && <span style={{ color: 'var(--warning)' }}> (−{formatCurrency(totalDeductions)} deductions)</span>}
                         </p>
                     </div>
-                    <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        {filtered.length > 0 && (
+                            <button className="btn btn-ghost" style={{ color: 'var(--danger)' }} onClick={() => setShowClearAll(true)}>
+                                <XCircle size={16} /> Clear All
+                            </button>
+                        )}
                         <button className="btn btn-outline" onClick={handleExportPDF}>
                             <FileText size={16} /> Export PDF
                         </button>
@@ -294,7 +303,12 @@ export default function RentLedger({ embeddedPropertyId = null }) {
             {embeddedPropertyId && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
                     <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Rent Ledger</h3>
-                    <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        {filtered.length > 0 && (
+                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => setShowClearAll(true)}>
+                                <XCircle size={14} /> Clear All
+                            </button>
+                        )}
                         <button className="btn btn-outline btn-sm" onClick={handleExportPDF}>
                             <FileText size={14} /> Export
                         </button>
@@ -330,27 +344,82 @@ export default function RentLedger({ embeddedPropertyId = null }) {
 
             {filtered.length > 0 ? (
                 <div className="rent-list">
-                    {/* Outstanding & Current Section */}
-                    {outstanding.length > 0 && (
+                    {/* Section 1: Overdue & Due Now — always expanded */}
+                    {overdueAndDue.length > 0 && (
                         <div>
-                            <div style={{ fontSize: 'var(--font-xs)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid var(--border)' }}>
-                                Outstanding & Current ({outstanding.length})
+                            <div className="rent-section-header">
+                                <div className="rent-section-label" style={{ color: 'var(--danger)' }}>
+                                    <AlertCircle size={14} />
+                                    Overdue & Due Now ({overdueAndDue.length})
+                                </div>
                             </div>
-                            {outstanding.sort((a, b) => a.month.localeCompare(b.month)).map(r => renderRentCard(r))}
+                            {overdueAndDue.sort((a, b) => a.month.localeCompare(b.month)).map(r => renderRentCard(r))}
                         </div>
                     )}
 
-                    {/* Collected Section */}
+                    {/* Section 2: Upcoming — collapsed by default, compact rows */}
+                    {upcoming.length > 0 && (
+                        <div style={{ marginTop: overdueAndDue.length > 0 ? 'var(--space-lg)' : 0 }}>
+                            <button
+                                className="rent-section-toggle"
+                                onClick={() => setShowUpcoming(prev => !prev)}
+                                type="button"
+                            >
+                                <div className="rent-section-label" style={{ color: 'var(--text-secondary)' }}>
+                                    {showUpcoming ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                    <CalendarClock size={14} />
+                                    Upcoming ({upcoming.length} months)
+                                </div>
+                                <span className="rent-section-summary">{formatCurrency(upcomingTotal)} scheduled</span>
+                            </button>
+                            {showUpcoming && (
+                                <div className="rent-upcoming-list">
+                                    {upcoming.sort((a, b) => a.month.localeCompare(b.month)).map(r => {
+                                        const prop = properties.find(p => p.id === r.propertyId);
+                                        const deductions = r.deductions || [];
+                                        const deductionTotal = deductions.reduce((s, d) => s + (d.amount || 0), 0);
+                                        const netAmount = (r.amountDue || 0) - deductionTotal;
+                                        return (
+                                            <div key={r.id} className="rent-upcoming-row" onClick={() => openEdit(r)}>
+                                                <div className="rent-upcoming-left">
+                                                    <span className="rent-upcoming-month">{formatMonth(r.month)}</span>
+                                                    <span className="rent-upcoming-prop">{prop?.nickname || '—'}</span>
+                                                </div>
+                                                <div className="rent-upcoming-right">
+                                                    <span className="rent-upcoming-amount">{formatCurrency(netAmount)}</span>
+                                                    <div className="rent-upcoming-actions">
+                                                        <button className="btn-icon" onClick={(e) => { e.stopPropagation(); openEdit(r); }}><Edit3 size={14} /></button>
+                                                        <button className="btn-icon" onClick={(e) => { e.stopPropagation(); setDeleteId(r.id); }}><Trash2 size={14} /></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Section 3: Collected — collapsed by default */}
                     {collected.length > 0 && (
-                        <div style={{ marginTop: outstanding.length > 0 ? 'var(--space-lg)' : 0 }}>
-                            <div style={{ fontSize: 'var(--font-xs)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid var(--border)' }}>
-                                Collected ({collected.length}) · {formatCurrency(collectedTotal)}
-                            </div>
-                            {collected.map(r => renderRentCard(r))}
+                        <div style={{ marginTop: (overdueAndDue.length > 0 || upcoming.length > 0) ? 'var(--space-lg)' : 0 }}>
+                            <button
+                                className="rent-section-toggle"
+                                onClick={() => setShowCollected(prev => !prev)}
+                                type="button"
+                            >
+                                <div className="rent-section-label" style={{ color: 'var(--success)' }}>
+                                    {showCollected ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                                    <CheckCircle size={14} />
+                                    Collected ({collected.length})
+                                </div>
+                                <span className="rent-section-summary">{formatCurrency(collectedTotal)} received</span>
+                            </button>
+                            {showCollected && collected.map(r => renderRentCard(r))}
                         </div>
                     )}
 
-                    {outstanding.length === 0 && collected.length === 0 && (
+                    {overdueAndDue.length === 0 && upcoming.length === 0 && collected.length === 0 && (
                         <div className="empty-state">
                             <Wallet size={56} />
                             <h3>No matching records</h3>
@@ -479,6 +548,19 @@ export default function RentLedger({ embeddedPropertyId = null }) {
             </Modal>
 
             <ConfirmDialog isOpen={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { deleteRentRecord(deleteId); setDeleteId(null); }} title="Delete Rent Record" message="Remove this rent record?" />
+            <ConfirmDialog
+                isOpen={showClearAll}
+                onClose={() => setShowClearAll(false)}
+                onConfirm={() => {
+                    const targetRecords = embeddedPropertyId
+                        ? rentRecords.filter(r => r.propertyId === embeddedPropertyId)
+                        : filtered;
+                    targetRecords.forEach(r => deleteRentRecord(r.id));
+                    setShowClearAll(false);
+                }}
+                title="Clear All Rent Records"
+                message={`This will permanently delete ${embeddedPropertyId ? rentRecords.filter(r => r.propertyId === embeddedPropertyId).length : filtered.length} rent record(s). This action cannot be undone.`}
+            />
         </div>
     );
 }

@@ -106,6 +106,120 @@
     margin-left: auto;
 }
 
+/* ── Section Headers & Toggle ── */
+.rent-section-header {
+    font-size: var(--font-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+}
+
+.rent-section-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.rent-section-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.rent-section-toggle:hover {
+    background: var(--bg-tertiary, var(--bg-secondary));
+    border-color: var(--text-tertiary);
+}
+
+.rent-section-summary {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+    font-weight: 500;
+}
+
+/* ── Compact Upcoming Rows ── */
+.rent-upcoming-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.rent-upcoming-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border-bottom: 1px solid var(--border);
+}
+
+.rent-upcoming-row:last-child {
+    border-bottom: none;
+}
+
+.rent-upcoming-row:hover {
+    background: var(--bg-secondary);
+}
+
+.rent-upcoming-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rent-upcoming-month {
+    font-weight: 600;
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+    min-width: 100px;
+}
+
+.rent-upcoming-prop {
+    font-size: var(--font-sm);
+    color: var(--text-tertiary);
+}
+
+.rent-upcoming-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rent-upcoming-amount {
+    font-weight: 600;
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+}
+
+.rent-upcoming-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.rent-upcoming-row:hover .rent-upcoming-actions {
+    opacity: 1;
+}
+
 .filter-select {
     max-width: 220px;
     padding: 8px 32px 8px 12px;

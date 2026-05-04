@@ -122,7 +122,9 @@ export default function Settings() {
                 <div className="card settings-card">
                     <div className="settings-item">
                         <div className="settings-item-info">
-                            {settings.theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
+                            <div className="settings-icon-wrapper">
+                                {settings.theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
+                            </div>
                             <div>
                                 <span className="settings-label">Theme</span>
                                 <span className="settings-desc">Currently using {settings.theme} mode</span>
@@ -148,7 +150,9 @@ export default function Settings() {
                 <div className="card settings-card">
                     <div className="settings-item">
                         <div className="settings-item-info">
-                            <Download size={20} />
+                            <div className="settings-icon-wrapper">
+                                <Download size={20} />
+                            </div>
                             <div>
                                 <span className="settings-label">Export Backup</span>
                                 <span className="settings-desc">Download all data as JSON ({sizeKB} KB)</span>
@@ -161,7 +165,9 @@ export default function Settings() {
 
                     <div className="settings-item">
                         <div className="settings-item-info">
-                            <Upload size={20} />
+                            <div className="settings-icon-wrapper">
+                                <Upload size={20} />
+                            </div>
                             <div>
                                 <span className="settings-label">Import Backup</span>
                                 <span className="settings-desc">Restore data from a JSON backup file</span>
@@ -175,7 +181,9 @@ export default function Settings() {
 
                     <div className="settings-item">
                         <div className="settings-item-info">
-                            <Trash2 size={20} style={{ color: 'var(--danger)' }} />
+                            <div className="settings-icon-wrapper danger">
+                                <Trash2 size={20} />
+                            </div>
                             <div>
                                 <span className="settings-label">Clear All Data</span>
                                 <span className="settings-desc">Permanently delete all stored data</span>
@@ -188,7 +196,9 @@ export default function Settings() {
 
                     <div className="settings-item">
                         <div className="settings-item-info">
-                            <FileText size={20} style={{ color: 'var(--accent)' }} />
+                            <div className="settings-icon-wrapper">
+                                <FileText size={20} />
+                            </div>
                             <div>
                                 <span className="settings-label">Export Full Statement</span>
                                 <span className="settings-desc">Download a detailed PDF covering all properties, finances, expenses &amp; operations</span>
@@ -205,7 +215,9 @@ export default function Settings() {
                 <div className="card settings-card">
                     <div className="settings-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
                         <div className="settings-item-info">
-                            <Bell size={20} style={{ color: 'var(--accent)' }} />
+                            <div className="settings-icon-wrapper">
+                                <Bell size={20} />
+                            </div>
                             <div>
                                 <span className="settings-label">Alert Email</span>
                                 <span className="settings-desc">Daily digest of overdue rent, expiring agreements, tax due dates &amp; more</span>
@@ -231,7 +243,9 @@ export default function Settings() {
                     {/* Notification Frequency */}
                     <div className="settings-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
                         <div className="settings-item-info">
-                            <Bell size={20} style={{ color: 'var(--accent)' }} />
+                            <div className="settings-icon-wrapper">
+                                <Bell size={20} />
+                            </div>
                             <div>
                                 <span className="settings-label">Notification Frequency</span>
                                 <span className="settings-desc">How often you want to receive alert emails</span>
@@ -265,7 +279,9 @@ export default function Settings() {
 
                     <div className="settings-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
                         <div className="settings-item-info">
-                            <Shield size={20} style={{ color: 'var(--text-tertiary)' }} />
+                            <div className="settings-icon-wrapper">
+                                <Shield size={20} />
+                            </div>
                             <div>
                                 <span className="settings-label">Your User ID</span>
                                 <span className="settings-desc">Needed when setting up Make.com automation. Copy and paste into the Body content field.</span>
@@ -307,7 +323,9 @@ export default function Settings() {
 
                     <div className="settings-item">
                         <div className="settings-item-info">
-                            <Calendar size={20} style={{ color: calendarConnected ? 'var(--success, #888888)' : 'var(--accent)' }} />
+                            <div className={`settings-icon-wrapper ${calendarConnected ? 'success' : ''}`}>
+                                <Calendar size={20} />
+                            </div>
                             <div>
                                 <span className="settings-label">
                                     {calendarConnected ? '✅ Connected to Google Calendar' : 'Connect Google Calendar'}
@@ -334,7 +352,9 @@ export default function Settings() {
 
                     <div className="settings-item">
                         <div className="settings-item-info">
-                            <Shield size={20} style={{ color: 'var(--text-tertiary)' }} />
+                            <div className="settings-icon-wrapper">
+                                <Shield size={20} />
+                            </div>
                             <div>
                                 <span className="settings-label">Privacy</span>
                                 <span className="settings-desc">PropTrack only creates/updates alert events. It cannot read, edit or delete your existing Google Calendar events.</span>
@@ -350,7 +370,9 @@ export default function Settings() {
                 <div className="card settings-card">
                     <div className="settings-item">
                         <div className="settings-item-info">
-                            <Shield size={20} />
+                            <div className="settings-icon-wrapper">
+                                <Shield size={20} />
+                            </div>
                             <div>
                                 <span className="settings-label">PropTrack MY</span>
                                 <span className="settings-desc">v1.0 · Malaysia Property Management · No data leaves your device</span>

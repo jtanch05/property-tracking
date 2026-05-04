@@ -67,8 +67,14 @@ export default function Agreements({ embeddedPropertyId = null }) {
         const months = [];
 
         // Build list of YYYY-MM strings from start to end
+        // Only include the end date's month if the lease covers it fully
+        // (i.e. the end date is on the last day of that month)
         let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
-        const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+        const endDay = end.getDate();
+        const lastDayOfEndMonth = new Date(end.getFullYear(), end.getMonth() + 1, 0).getDate();
+        const endMonth = endDay >= lastDayOfEndMonth
+            ? new Date(end.getFullYear(), end.getMonth(), 1)
+            : new Date(end.getFullYear(), end.getMonth() - 1, 1);
         while (cursor <= endMonth) {
             months.push(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`);
             cursor.setMonth(cursor.getMonth() + 1);
@@ -353,7 +359,7 @@ export default function Agreements({ embeddedPropertyId = null }) {
                                         const start = parseISO(updated.startDate);
                                         const monthsMap = { '6_months': 6, '1_year': 12, '2_years': 24, '3_years': 36 };
                                         const m = monthsMap[val] || 12;
-                                        const end = new Date(start.getFullYear(), start.getMonth() + m, start.getDate());
+                                        const end = new Date(start.getFullYear(), start.getMonth() + m, start.getDate() - 1);
                                         updated.endDate = end.toISOString().split('T')[0];
                                     }
                                     setForm(updated);
@@ -377,7 +383,7 @@ export default function Agreements({ embeddedPropertyId = null }) {
                                     const start = parseISO(startDate);
                                     const monthsMap = { '6_months': 6, '1_year': 12, '2_years': 24, '3_years': 36 };
                                     const m = monthsMap[form.type] || 12;
-                                    const end = new Date(start.getFullYear(), start.getMonth() + m, start.getDate());
+                                    const end = new Date(start.getFullYear(), start.getMonth() + m, start.getDate() - 1);
                                     updated.endDate = end.toISOString().split('T')[0];
                                 }
                                 setForm(updated);
@@ -411,7 +417,11 @@ export default function Agreements({ embeddedPropertyId = null }) {
                                 const end = parseISO(form.endDate);
                                 let count = 0;
                                 let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
-                                const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+                                const endDay = end.getDate();
+                                const lastDayOfEndMonth = new Date(end.getFullYear(), end.getMonth() + 1, 0).getDate();
+                                const endMonth = endDay >= lastDayOfEndMonth
+                                    ? new Date(end.getFullYear(), end.getMonth(), 1)
+                                    : new Date(end.getFullYear(), end.getMonth() - 1, 1);
                                 while (cursor <= endMonth) { count++; cursor.setMonth(cursor.getMonth() + 1); }
                                 return (
                                     <span>

@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthProvider';
 import {
     LayoutDashboard, Building2, Clock, Settings,
-    Home, LogOut, Menu, ChevronLeft
+    Home, LogOut, Menu, ChevronLeft, Contact
 } from 'lucide-react';
 import ClientAutomation from '../common/ClientAutomation';
 import './Layout.css';
@@ -11,12 +11,14 @@ import './Layout.css';
 const NAV_ITEMS = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/properties', icon: Building2, label: 'Properties' },
+    { to: '/vendors', icon: Contact, label: 'Vendors' },
     { to: '/timeline', icon: Clock, label: 'Timeline' },
 ];
 
 const BOTTOM_NAV = [
     { to: '/', icon: Home, label: 'Home' },
     { to: '/properties', icon: Building2, label: 'Properties' },
+    { to: '/vendors', icon: Contact, label: 'Vendors' },
     { to: '/timeline', icon: Clock, label: 'Timeline' },
     { to: '/settings', icon: Settings, label: 'Settings' },
 ];
@@ -49,7 +51,9 @@ export default function Layout({ children }) {
                 <div className="sidebar-top">
                     <div className="sidebar-brand">
                         <div className="sidebar-logo" title="PropTrack">
-                            <Building2 size={22} className="logo-icon" />
+                            <div className="sidebar-logo-icon">
+                                <Building2 size={20} />
+                            </div>
                             <span className="brand-label">PropTrack</span>
                         </div>
                         <button
@@ -90,13 +94,16 @@ export default function Layout({ children }) {
                     {/* User Profile */}
                     <div className="user-menu-wrapper" ref={userMenuRef}>
                         <button className="user-avatar-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
-                            {user?.photoURL ? (
-                                <img src={user.photoURL} alt="" className="user-avatar" referrerPolicy="no-referrer" />
-                            ) : (
-                                <div className="user-avatar-fallback">
-                                    {(user?.displayName || user?.email || '?')[0].toUpperCase()}
-                                </div>
-                            )}
+                            <div className="user-avatar-circle">
+                                {user?.photoURL ? (
+                                    <img src={user.photoURL} alt="" className="user-avatar" referrerPolicy="no-referrer" />
+                                ) : (
+                                    <div className="user-avatar-fallback">
+                                        {(user?.displayName || user?.email || '?')[0].toUpperCase()}
+                                    </div>
+                                )}
+                            </div>
+                            <span className="user-name-label">{user?.displayName || user?.email || 'User'}</span>
                         </button>
                         {showUserMenu && (
                             <div className="user-dropdown slide-right-bottom">
