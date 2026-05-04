@@ -60,12 +60,15 @@ export function computeAlerts({ agreements = [], taxRecords = [], insuranceRecor
         const days = differenceInDays(today, dueDate);
 
         if (days > 0) {
+            const isPartial = r.status === 'partial';
             alerts.push({
                 id: `rent-overdue-${r.id}`,
                 type: 'rent_overdue',
                 severity: days > 14 ? 'danger' : 'warning',
-                title: 'Rent Overdue',
-                message: `${propName} — rent overdue by ${days} days`,
+                title: isPartial ? 'Rent Balance Due' : 'Rent Overdue',
+                message: isPartial
+                    ? `${propName} — partial payment received, balance still due (${days} days overdue)`
+                    : `${propName} — rent overdue by ${days} days`,
                 date: `${r.month}-01`,
                 daysUntil: -days,
                 entityId: r.id,

@@ -3,7 +3,6 @@ import { useApp } from '../context/AppProvider';
 import { PAYMENT_METHODS } from '../data/malaysiaData';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
-import ToggleGroup from '../components/common/ToggleGroup';
 import CustomSelect from '../components/common/CustomSelect';
 import { formatCurrency, formatMonth, formatDate } from '../utils/formatters';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -13,13 +12,13 @@ import { exportToPDF } from '../utils/export';
 import './RentLedger.css';
 
 const EMPTY_RENT = {
-    propertyId: '', tenantId: '', month: '', amountDue: '', amountPaid: '',
+    propertyId: '', tenantId: '', agreementId: '', month: '', amountDue: '', amountPaid: '',
     status: 'unpaid', paymentDate: '', paymentMethod: 'transfer', notes: '',
     deductions: [],
 };
 
 export default function RentLedger({ embeddedPropertyId = null }) {
-    const { rentRecords, addRentRecord, updateRentRecord, deleteRentRecord, properties, tenants, maintenanceRecords, payouts, addPayout, updatePayout } = useApp();
+    const { rentRecords, addRentRecord, updateRentRecord, deleteRentRecord, properties, tenants, agreements, maintenanceRecords, payouts, addPayout, updatePayout } = useApp();
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(EMPTY_RENT);
@@ -27,6 +26,9 @@ export default function RentLedger({ embeddedPropertyId = null }) {
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterProp, setFilterProp] = useState('');
     const [expandedId, setExpandedId] = useState(null);
+    const [showCollected, setShowCollected] = useState(false);
+
+    const currentMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 
     const filtered = rentRecords
         .filter(r => embeddedPropertyId ? r.propertyId === embeddedPropertyId : true)
@@ -34,13 +36,16 @@ export default function RentLedger({ embeddedPropertyId = null }) {
         .filter(r => !filterProp || r.propertyId === filterProp)
         .sort((a, b) => b.month.localeCompare(a.month));
 
-    // Available maintenance records that can be deducted (same property, has cost, status closed/open)
+    // Split into two groups
+    const outstanding = filtered.filter(r => r.status !== 'paid');
+    const collected = filtered.filter(r => r.status === 'paid');
+    const collectedTotal = collected.reduce((s, r) => s + (Number(r.amountPaid) || 0), 0);
+
     const availableDeductions = useMemo(() => {
         if (!form.propertyId) return [];
         return maintenanceRecords
             .filter(m => m.propertyId === form.propertyId && m.cost > 0)
             .filter(m => {
-                // Exclude already-linked ones (unless editing this record)
                 const alreadyLinked = form.deductions.some(d => d.maintenanceId === m.id);
                 return !alreadyLinked;
             });
@@ -73,7 +78,6 @@ export default function RentLedger({ embeddedPropertyId = null }) {
             amountPaid: netAmount,
             paymentDate: new Date().toISOString().split('T')[0],
         });
-        // Auto-generate payouts if property has co-owners
         autoGeneratePayouts(r, netAmount);
     }
 
@@ -99,7 +103,17 @@ export default function RentLedger({ embeddedPropertyId = null }) {
 
     function handleSubmit(e) {
         e.preventDefault();
-        const data = { ...form, amountDue: Number(form.amountDue) || 0, amountPaid: Number(form.amountPaid) || 0 };
+        const amountDue = Number(form.amountDue) || 0;
+        const amountPaid = Number(form.amountPaid) || 0;
+        const deductionTotal = form.deductions.reduce((s, d) => s + (d.amount || 0), 0);
+        const netAmount = amountDue - deductionTotal;
+
+        let computedStatus = 'unpaid';
+        if (amountPaid > 0 && amountPaid < netAmount) computedStatus = 'partial';
+        else if (amountPaid >= netAmount && netAmount > 0) computedStatus = 'paid';
+        else if (amountPaid > 0 && netAmount <= 0) computedStatus = 'paid';
+
+        const data = { ...form, amountDue, amountPaid, status: computedStatus };
         if (editingId) updateRentRecord(editingId, data);
         else addRentRecord(data);
         setShowForm(false);
@@ -132,7 +146,7 @@ export default function RentLedger({ embeddedPropertyId = null }) {
 
     const totalDue = filtered.reduce((s, r) => s + (r.amountDue || 0), 0);
     const totalDeductions = filtered.reduce((s, r) => s + ((r.deductions || []).reduce((ds, d) => ds + (d.amount || 0), 0)), 0);
-    const totalPaid = filtered.filter(r => r.status === 'paid').reduce((s, r) => s + (r.amountPaid || 0), 0);
+    const totalPaid = filtered.reduce((s, r) => s + (Number(r.amountPaid) || 0), 0);
 
     const propTenants = form.propertyId ? tenants.filter(t => t.propertyId === form.propertyId) : [];
     const formDeductionTotal = form.deductions.reduce((s, d) => s + (d.amount || 0), 0);
@@ -162,6 +176,101 @@ export default function RentLedger({ embeddedPropertyId = null }) {
         exportToPDF(exportData, 'rent-ledger-report', 'Rent Ledger Statement');
     };
 
+    function renderRentCard(r) {
+        const prop = properties.find(p => p.id === r.propertyId);
+        const tenant = tenants.find(t => t.id === r.tenantId);
+        const overdue = getDaysOverdue(r);
+        const deductions = r.deductions || [];
+        const deductionTotal = deductions.reduce((s, d) => s + (d.amount || 0), 0);
+        const netAmount = (r.amountDue || 0) - deductionTotal;
+        const isExpanded = expandedId === r.id;
+        const rentPayouts = payouts.filter(p => p.rentRecordId === r.id);
+
+        return (
+            <div key={r.id} className={`card rent-card ${r.status}`}>
+                <div className="rent-row">
+                    <div className="rent-left">
+                        <div className={`rent-status-icon ${r.status}`}>
+                            {r.status === 'paid' ? <CheckCircle size={18} /> : overdue > 0 ? <AlertCircle size={18} /> : <Clock size={18} />}
+                        </div>
+                        <div className="rent-info">
+                            <span className="rent-month">{formatMonth(r.month)}</span>
+                            <span className="rent-prop">{prop?.nickname || '—'}</span>
+                            {overdue > 0 && r.status !== 'paid' && <span className="rent-overdue">{overdue} days overdue</span>}
+                        </div>
+                    </div>
+
+                    <div className="rent-amounts">
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            {deductionTotal > 0 && <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)', textDecoration: 'line-through' }}>{formatCurrency(r.amountDue)}</span>}
+                            <span className="rent-amount">{formatCurrency(netAmount)}</span>
+                            {r.status === 'partial' && <span style={{ fontSize: 'var(--font-xs)', color: 'var(--warning)', fontWeight: 600 }}>Balance: {formatCurrency(netAmount - r.amountPaid)}</span>}
+                        </div>
+                        {(r.status === 'paid' || r.status === 'partial') && <span className="rent-paid-date">{r.status === 'paid' ? 'Paid' : 'Partially Paid'} {formatDate(r.paymentDate)}</span>}
+                    </div>
+
+                    <div className="rent-actions">
+                        {r.status !== 'paid' && (
+                            <>
+                                <button className="btn btn-sm btn-primary" onClick={() => quickPay(r)}>Mark Paid</button>
+                                {tenant?.phone && (
+                                    <button className="btn-icon" title="Send WhatsApp reminder" onClick={() => sendRentReminder(tenant, r, prop)}>
+                                        <MessageCircle size={16} />
+                                    </button>
+                                )}
+                            </>
+                        )}
+                        <button className="btn-icon" onClick={() => openEdit(r)}><Edit3 size={16} /></button>
+                        <button className="btn-icon" onClick={() => setDeleteId(r.id)}><Trash2 size={16} /></button>
+                    </div>
+                </div>
+
+                {(deductions.length > 0 || rentPayouts.length > 0) && (
+                    <div>
+                        <button className="btn btn-ghost btn-sm" style={{ marginTop: 8, fontSize: 'var(--font-xs)' }} onClick={() => setExpandedId(isExpanded ? null : r.id)}>
+                            {isExpanded ? '▾ Hide details' : `▸ ${deductions.length > 0 ? `${deductions.length} deduction(s)` : ''}${rentPayouts.length > 0 ? ` · ${rentPayouts.length} payout(s)` : ''}`}
+                        </button>
+                        {isExpanded && (
+                            <div style={{ marginTop: 8, padding: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', fontSize: 'var(--font-sm)' }}>
+                                {deductions.length > 0 && (
+                                    <div style={{ marginBottom: rentPayouts.length > 0 ? 12 : 0 }}>
+                                        <span style={{ fontWeight: 600, color: 'var(--text-secondary)', fontSize: 'var(--font-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Deductions</span>
+                                        {deductions.map((d, i) => (
+                                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                                                <span style={{ color: 'var(--warning)' }}>− {d.description}</span>
+                                                <span style={{ color: 'var(--warning)', fontWeight: 600 }}>−{formatCurrency(d.amount)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {rentPayouts.length > 0 && (
+                                    <div>
+                                        <span style={{ fontWeight: 600, color: 'var(--text-secondary)', fontSize: 'var(--font-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Owner Split</span>
+                                        {rentPayouts.map(p => (
+                                            <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                                                <span>{p.ownerName} ({p.splitPercent}%)</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <span style={{ fontWeight: 600 }}>{formatCurrency(p.amount)}</span>
+                                                    <span className={`badge badge-${p.status === 'paid' ? 'success' : 'warning'}`} style={{ fontSize: 'var(--font-xs)' }}>{p.status}</span>
+                                                    {p.status === 'pending' && (
+                                                        <button className="btn btn-sm btn-ghost" style={{ padding: '2px 6px', fontSize: 'var(--font-xs)' }}
+                                                            onClick={() => updatePayout(p.id, { status: 'paid', paidDate: new Date().toISOString().split('T')[0] })}>
+                                                            ✓ Paid
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className={embeddedPropertyId ? "rent-page-embedded" : "rent-page"}>
             {!embeddedPropertyId && (
@@ -183,8 +292,8 @@ export default function RentLedger({ embeddedPropertyId = null }) {
             )}
 
             {embeddedPropertyId && (
-                <div className="flex justify-between items-center mb-6" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
-                    <h3 className="text-lg font-semibold" style={{ fontSize: '1.125rem', fontWeight: 600 }}>Rent Ledger</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Rent Ledger</h3>
                     <div style={{ display: 'flex', gap: 12 }}>
                         <button className="btn btn-outline btn-sm" onClick={handleExportPDF}>
                             <FileText size={14} /> Export
@@ -210,9 +319,9 @@ export default function RentLedger({ embeddedPropertyId = null }) {
                         </div>
                     )}
                     <div className="filter-tabs">
-                        {['all', 'paid', 'unpaid'].map(f => (
+                        {['all', 'paid', 'unpaid', 'partial'].map(f => (
                             <button key={f} className={`btn btn-sm ${filterStatus === f ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setFilterStatus(f)}>
-                                {f === 'all' ? 'All' : f === 'paid' ? 'Paid' : 'Unpaid'}
+                                {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
                             </button>
                         ))}
                     </div>
@@ -221,112 +330,38 @@ export default function RentLedger({ embeddedPropertyId = null }) {
 
             {filtered.length > 0 ? (
                 <div className="rent-list">
-                    {filtered.map(r => {
-                        const prop = properties.find(p => p.id === r.propertyId);
-                        const tenant = tenants.find(t => t.id === r.tenantId);
-                        const overdue = getDaysOverdue(r);
-                        const deductions = r.deductions || [];
-                        const deductionTotal = deductions.reduce((s, d) => s + (d.amount || 0), 0);
-                        const netAmount = (r.amountDue || 0) - deductionTotal;
-                        const isExpanded = expandedId === r.id;
-
-                        // Payouts for this rent record
-                        const rentPayouts = payouts.filter(p => p.rentRecordId === r.id);
-
-                        return (
-                            <div key={r.id} className={`card rent-card ${r.status}`}>
-                                <div className="rent-row">
-                                    <div className="rent-left">
-                                        <div className={`rent-status-icon ${r.status}`}>
-                                            {r.status === 'paid' ? <CheckCircle size={18} /> : overdue > 0 ? <AlertCircle size={18} /> : <Clock size={18} />}
-                                        </div>
-                                        <div className="rent-info">
-                                            <span className="rent-month">{formatMonth(r.month)}</span>
-                                            <span className="rent-prop">{prop?.nickname || '—'}</span>
-                                            {overdue > 0 && r.status !== 'paid' && <span className="rent-overdue">{overdue} days overdue</span>}
-                                        </div>
-                                    </div>
-
-                                    <div className="rent-amounts">
-                                        {deductionTotal > 0 ? (
-                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                                <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)', textDecoration: 'line-through' }}>{formatCurrency(r.amountDue)}</span>
-                                                <span className="rent-amount">{formatCurrency(netAmount)}</span>
-                                            </div>
-                                        ) : (
-                                            <span className="rent-amount">{formatCurrency(r.amountDue)}</span>
-                                        )}
-                                        {r.status === 'paid' && <span className="rent-paid-date">Paid {formatDate(r.paymentDate)}</span>}
-                                    </div>
-
-                                    <div className="rent-actions">
-                                        {r.status !== 'paid' && (
-                                            <>
-                                                <button className="btn btn-sm btn-primary" onClick={() => quickPay(r)}>Mark Paid</button>
-                                                {tenant?.phone && (
-                                                    <button className="btn-icon" title="Send WhatsApp reminder" onClick={() => sendRentReminder(tenant, r, prop)}>
-                                                        <MessageCircle size={16} />
-                                                    </button>
-                                                )}
-                                            </>
-                                        )}
-                                        <button className="btn-icon" onClick={() => openEdit(r)}><Edit3 size={16} /></button>
-                                        <button className="btn-icon" onClick={() => setDeleteId(r.id)}><Trash2 size={16} /></button>
-                                    </div>
-                                </div>
-
-                                {/* Deduction & Payout details (expandable) */}
-                                {(deductions.length > 0 || rentPayouts.length > 0) && (
-                                    <div>
-                                        <button className="btn btn-ghost btn-sm" style={{ marginTop: 8, fontSize: 'var(--font-xs)' }} onClick={() => setExpandedId(isExpanded ? null : r.id)}>
-                                            {isExpanded ? '▾ Hide details' : `▸ ${deductions.length > 0 ? `${deductions.length} deduction(s)` : ''}${rentPayouts.length > 0 ? ` · ${rentPayouts.length} payout(s)` : ''}`}
-                                        </button>
-                                        {isExpanded && (
-                                            <div style={{ marginTop: 8, padding: '12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', fontSize: 'var(--font-sm)' }}>
-                                                {deductions.length > 0 && (
-                                                    <div style={{ marginBottom: rentPayouts.length > 0 ? 12 : 0 }}>
-                                                        <span style={{ fontWeight: 600, color: 'var(--text-secondary)', fontSize: 'var(--font-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Deductions</span>
-                                                        {deductions.map((d, i) => (
-                                                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                                                                <span style={{ color: 'var(--warning)' }}>− {d.description}</span>
-                                                                <span style={{ color: 'var(--warning)', fontWeight: 600 }}>−{formatCurrency(d.amount)}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                {rentPayouts.length > 0 && (
-                                                    <div>
-                                                        <span style={{ fontWeight: 600, color: 'var(--text-secondary)', fontSize: 'var(--font-xs)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Owner Split</span>
-                                                        {rentPayouts.map(p => (
-                                                            <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                                                                <span>{p.ownerName} ({p.splitPercent}%)</span>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                                    <span style={{ fontWeight: 600 }}>{formatCurrency(p.amount)}</span>
-                                                                    <span className={`badge badge-${p.status === 'paid' ? 'success' : 'warning'}`} style={{ fontSize: 'var(--font-xs)' }}>{p.status}</span>
-                                                                    {p.status === 'pending' && (
-                                                                        <button className="btn btn-sm btn-ghost" style={{ padding: '2px 6px', fontSize: 'var(--font-xs)' }}
-                                                                            onClick={() => updatePayout(p.id, { status: 'paid', paidDate: new Date().toISOString().split('T')[0] })}>
-                                                                            ✓ Paid
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                    {/* Outstanding & Current Section */}
+                    {outstanding.length > 0 && (
+                        <div>
+                            <div style={{ fontSize: 'var(--font-xs)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid var(--border)' }}>
+                                Outstanding & Current ({outstanding.length})
                             </div>
-                        );
-                    })}
+                            {outstanding.sort((a, b) => a.month.localeCompare(b.month)).map(r => renderRentCard(r))}
+                        </div>
+                    )}
+
+                    {/* Collected Section */}
+                    {collected.length > 0 && (
+                        <div style={{ marginTop: outstanding.length > 0 ? 'var(--space-lg)' : 0 }}>
+                            <div style={{ fontSize: 'var(--font-xs)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid var(--border)' }}>
+                                Collected ({collected.length}) · {formatCurrency(collectedTotal)}
+                            </div>
+                            {collected.map(r => renderRentCard(r))}
+                        </div>
+                    )}
+
+                    {outstanding.length === 0 && collected.length === 0 && (
+                        <div className="empty-state">
+                            <Wallet size={56} />
+                            <h3>No matching records</h3>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="empty-state">
                     <Wallet size={56} />
                     <h3>No rent records</h3>
-                    <p>Track monthly rent payments here.</p>
+                    <p>Create a Tenancy Agreement to auto-generate monthly records, or add one manually.</p>
                     <button className="btn btn-primary" onClick={openAdd}><Plus size={16} /> Add Record</button>
                 </div>
             )}
@@ -348,7 +383,14 @@ export default function RentLedger({ embeddedPropertyId = null }) {
                             <label>Tenant</label>
                             <CustomSelect
                                 value={form.tenantId}
-                                onChange={val => setForm(p => ({ ...p, tenantId: val }))}
+                                onChange={val => {
+                                    const tenantAgreement = agreements.find(a => a.tenantId === val && a.status === 'active');
+                                    setForm(p => ({
+                                        ...p,
+                                        tenantId: val,
+                                        amountDue: tenantAgreement ? tenantAgreement.rentAmount : p.amountDue
+                                    }));
+                                }}
                                 options={[{ value: '', label: 'Select' }, ...propTenants.map(t => ({ value: t.id, label: t.name }))]}
                                 placeholder="Select"
                             />
@@ -359,10 +401,11 @@ export default function RentLedger({ embeddedPropertyId = null }) {
                         <div className="form-group"><label>Amount Due (RM)</label><input type="number" value={form.amountDue} onChange={e => setForm(p => ({ ...p, amountDue: e.target.value }))} placeholder="1500" /></div>
                     </div>
 
-                    {/* Deductions Section */}
                     <div style={{ margin: 'var(--space-md) 0', padding: 'var(--space-md)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                            <label style={{ fontWeight: 600, margin: 0 }}><Minus size={14} style={{ marginRight: 4 }} /> Deductions</label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                            <label style={{ fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-primary)' }}>
+                                <Minus size={16} color="var(--warning)" /> Deductions
+                            </label>
                         </div>
                         {form.deductions.length > 0 && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
@@ -398,14 +441,15 @@ export default function RentLedger({ embeddedPropertyId = null }) {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Status</label>
-                            <ToggleGroup
-                                options={[
-                                    { value: 'unpaid', label: 'Unpaid' },
-                                    { value: 'paid', label: 'Paid' },
-                                ]}
-                                value={form.status}
-                                onChange={val => setForm(p => ({ ...p, status: val }))}
-                            />
+                            <div style={{ padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                {Number(form.amountPaid) >= formNetAmount && formNetAmount > 0 ? (
+                                    <><div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--success)' }} /> Paid</>
+                                ) : Number(form.amountPaid) > 0 ? (
+                                    <><div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--warning)' }} /> Partial</>
+                                ) : (
+                                    <><div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text-tertiary)' }} /> Unpaid</>
+                                )}
+                            </div>
                         </div>
                         <div className="form-group"><label>Payment Date</label><input type="date" value={form.paymentDate} onChange={e => setForm(p => ({ ...p, paymentDate: e.target.value }))} /></div>
                     </div>
@@ -418,7 +462,13 @@ export default function RentLedger({ embeddedPropertyId = null }) {
                                 options={PAYMENT_METHODS}
                             />
                         </div>
-                        <div className="form-group"><label>Amount Paid (RM)</label><input type="number" value={form.amountPaid} onChange={e => setForm(p => ({ ...p, amountPaid: e.target.value }))} placeholder={formDeductionTotal > 0 ? String(formNetAmount) : '1500'} /></div>
+                        <div className="form-group">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                                <label>Amount Paid (RM)</label>
+                                <button type="button" onClick={() => setForm(p => ({ ...p, amountPaid: formNetAmount, paymentDate: p.paymentDate || new Date().toISOString().split('T')[0] }))} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 'var(--font-xs)', cursor: 'pointer', fontWeight: 600 }}>Paid in Full</button>
+                            </div>
+                            <input type="number" value={form.amountPaid} onChange={e => setForm(p => ({ ...p, amountPaid: e.target.value }))} placeholder={formDeductionTotal > 0 ? String(formNetAmount) : '1500'} />
+                        </div>
                     </div>
                     <div className="form-group"><label>Notes</label><input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Optional notes" /></div>
                     <div className="modal-footer" style={{ padding: 'var(--space-md) 0 0', borderTop: '1px solid var(--border)' }}>

@@ -53,9 +53,8 @@ export default function Dashboard() {
         return { breakdown, grandTotal };
     }, [taxRecords, utilityRecords, insuranceRecords, managementFees, maintenanceRecords]);
 
-    // All-time rent income
+    // All-time rent income (sum of all amounts actually paid)
     const totalRentIncome = rentRecords
-        .filter(r => r.status === 'paid')
         .reduce((sum, r) => sum + (Number(r.amountPaid) || 0), 0);
 
     const netCashFlow = totalRentIncome - expenseData.grandTotal;
@@ -71,7 +70,7 @@ export default function Dashboard() {
 
         return months.map(month => {
             const income = rentRecords
-                .filter(r => r.month === month && r.status === 'paid')
+                .filter(r => r.month === month)
                 .reduce((sum, r) => sum + (Number(r.amountPaid) || 0), 0);
 
             const expenseForMonth = [
@@ -91,16 +90,16 @@ export default function Dashboard() {
     const recentActivity = useMemo(() => {
         const items = [];
 
-        rentRecords.filter(r => r.status === 'paid').slice(-5).forEach(r => {
+        rentRecords.filter(r => r.status === 'paid' || r.status === 'partial').slice(-5).forEach(r => {
             items.push({
                 id: `rent-${r.id}`,
                 type: 'income',
                 icon: Wallet,
                 color: 'var(--success)',
-                label: 'Rent collected',
+                label: r.status === 'partial' ? 'Partial Rent collected' : 'Rent collected',
                 detail: formatMonth(r.month),
-                amount: Number(r.amountPaid || r.amountDue) || 0,
-                date: r.paidDate || r.month + '-01',
+                amount: Number(r.amountPaid) || 0,
+                date: r.paidDate || r.paymentDate || r.month + '-01',
             });
         });
 

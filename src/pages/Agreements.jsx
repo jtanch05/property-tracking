@@ -8,7 +8,7 @@ import CustomSelect from '../components/common/CustomSelect';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { exportToPDF } from '../utils/export';
 import { differenceInDays, parseISO } from 'date-fns';
-import { Plus, FileText, Edit3, Trash2, Shield, ArrowDown, ArrowUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, FileText, Edit3, Trash2, Shield, ArrowUp, ChevronDown, ChevronUp } from 'lucide-react';
 import './Agreements.css';
 
 const EMPTY_AGREEMENT = {
@@ -26,7 +26,7 @@ const DEPOSIT_TYPES = [
 ];
 
 export default function Agreements({ embeddedPropertyId = null }) {
-    const { agreements, addAgreement, updateAgreement, deleteAgreement, properties, tenants, deposits, addDeposit, updateDeposit, deleteDeposit } = useApp();
+    const { agreements, addAgreement, updateAgreement, deleteAgreement, properties, tenants, deposits, addDeposit, updateDeposit, deleteDeposit, rentRecords, addRentRecord } = useApp();
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(EMPTY_AGREEMENT);
@@ -35,7 +35,7 @@ export default function Agreements({ embeddedPropertyId = null }) {
 
     // Deposit form state
     const [showDepositForm, setShowDepositForm] = useState(false);
-    const [depositTarget, setDepositTarget] = useState(null); // agreementId
+    const [depositTarget, setDepositTarget] = useState(null);
     const [depositForm, setDepositForm] = useState({ type: 'security', amount: '', status: 'held', notes: '' });
     const [editingDepositId, setEditingDepositId] = useState(null);
 
@@ -55,16 +55,68 @@ export default function Agreements({ embeddedPropertyId = null }) {
         setShowForm(true);
     }
 
-    function handleSubmit(e) {
+    /**
+     * Generate monthly rent records for every month in the agreement period.
+     * Skips months that already have a rent record for the same property + tenant.
+     */
+    async function generateRentRecords(agreementId, data) {
+        if (!data.startDate || !data.endDate || !data.rentAmount) return;
+
+        const start = parseISO(data.startDate);
+        const end = parseISO(data.endDate);
+        const months = [];
+
+        // Build list of YYYY-MM strings from start to end
+        let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+        const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+        while (cursor <= endMonth) {
+            months.push(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`);
+            cursor.setMonth(cursor.getMonth() + 1);
+        }
+
+        // For each month, check if a rent record already exists
+        for (const month of months) {
+            const exists = rentRecords.some(r =>
+                r.propertyId === data.propertyId &&
+                r.tenantId === data.tenantId &&
+                r.month === month
+            );
+            if (!exists) {
+                await addRentRecord({
+                    propertyId: data.propertyId,
+                    tenantId: data.tenantId,
+                    agreementId: agreementId,
+                    month,
+                    amountDue: Number(data.rentAmount) || 0,
+                    amountPaid: 0,
+                    status: 'unpaid',
+                    paymentDate: '',
+                    paymentMethod: 'transfer',
+                    notes: '',
+                    deductions: [],
+                });
+            }
+        }
+    }
+
+    async function handleSubmit(e) {
         e.preventDefault();
+        // Close form IMMEDIATELY to prevent double-click
+        setShowForm(false);
         const data = {
             ...form,
             rentAmount: Number(form.rentAmount) || 0,
             noticePeriodMonths: Number(form.noticePeriodMonths) || 2,
         };
-        if (editingId) updateAgreement(editingId, data);
-        else addAgreement(data);
-        setShowForm(false);
+        if (editingId) {
+            await updateAgreement(editingId, data);
+            await generateRentRecords(editingId, data);
+        } else {
+            const newId = await addAgreement(data);
+            if (newId) {
+                await generateRentRecords(newId, data);
+            }
+        }
     }
 
     function getExpiryInfo(endDate) {
@@ -160,6 +212,12 @@ export default function Agreements({ embeddedPropertyId = null }) {
                         const totalDeposits = agreementDeposits.filter(d => d.status === 'held').reduce((s, d) => s + (d.amount || 0), 0);
                         const isExpanded = expandedId === a.id;
 
+                        // Rent collection progress for this agreement
+                        const linkedRent = rentRecords.filter(r => r.agreementId === a.id);
+                        const paidCount = linkedRent.filter(r => r.status === 'paid').length;
+                        const totalMonths = linkedRent.length;
+                        const collectedAmount = linkedRent.reduce((s, r) => s + (Number(r.amountPaid) || 0), 0);
+
                         return (
                             <div key={a.id} className="card agreement-card">
                                 <div className="agreement-header">
@@ -179,6 +237,29 @@ export default function Agreements({ embeddedPropertyId = null }) {
                                     <div className="agreement-detail"><span className="detail-label">Deposits Held</span><span>{formatCurrency(totalDeposits)}</span></div>
                                     <div className="agreement-detail"><span className="detail-label">Notice</span><span>{a.noticePeriodMonths} months</span></div>
                                 </div>
+
+                                {/* Rent Collection Progress */}
+                                {totalMonths > 0 && (
+                                    <div style={{ marginTop: 8, padding: '8px 0', borderTop: '1px solid var(--border)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                            <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                Rent Collection
+                                            </span>
+                                            <span style={{ fontSize: 'var(--font-xs)', color: 'var(--text-tertiary)' }}>
+                                                {paidCount}/{totalMonths} months · {formatCurrency(collectedAmount)}
+                                            </span>
+                                        </div>
+                                        <div style={{ height: 4, background: 'var(--bg-tertiary)', borderRadius: 2, overflow: 'hidden' }}>
+                                            <div style={{
+                                                height: '100%',
+                                                width: `${totalMonths > 0 ? (paidCount / totalMonths) * 100 : 0}%`,
+                                                background: paidCount === totalMonths ? 'var(--success)' : 'var(--accent)',
+                                                borderRadius: 2,
+                                                transition: 'width 0.3s ease',
+                                            }} />
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Deposits Section */}
                                 <div style={{ marginTop: 8, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
@@ -265,7 +346,18 @@ export default function Agreements({ embeddedPropertyId = null }) {
                             <label>Agreement Type</label>
                             <CustomSelect
                                 value={form.type}
-                                onChange={val => setForm(prev => ({ ...prev, type: val }))}
+                                onChange={val => {
+                                    const updated = { ...form, type: val };
+                                    // Auto-calculate end date if start date exists
+                                    if (val !== 'custom' && updated.startDate) {
+                                        const start = parseISO(updated.startDate);
+                                        const monthsMap = { '6_months': 6, '1_year': 12, '2_years': 24, '3_years': 36 };
+                                        const m = monthsMap[val] || 12;
+                                        const end = new Date(start.getFullYear(), start.getMonth() + m, start.getDate());
+                                        updated.endDate = end.toISOString().split('T')[0];
+                                    }
+                                    setForm(updated);
+                                }}
                                 options={AGREEMENT_TYPES}
                             />
                         </div>
@@ -275,8 +367,26 @@ export default function Agreements({ embeddedPropertyId = null }) {
                         </div>
                     </div>
                     <div className="form-row">
-                        <div className="form-group"><label>Start Date *</label><input type="date" value={form.startDate} onChange={e => setForm(prev => ({ ...prev, startDate: e.target.value }))} required /></div>
-                        <div className="form-group"><label>End Date *</label><input type="date" value={form.endDate} onChange={e => setForm(prev => ({ ...prev, endDate: e.target.value }))} required /></div>
+                        <div className="form-group">
+                            <label>Start Date *</label>
+                            <input type="date" value={form.startDate} onChange={e => {
+                                const startDate = e.target.value;
+                                const updated = { ...form, startDate };
+                                // Auto-calculate end date based on type
+                                if (form.type !== 'custom' && startDate) {
+                                    const start = parseISO(startDate);
+                                    const monthsMap = { '6_months': 6, '1_year': 12, '2_years': 24, '3_years': 36 };
+                                    const m = monthsMap[form.type] || 12;
+                                    const end = new Date(start.getFullYear(), start.getMonth() + m, start.getDate());
+                                    updated.endDate = end.toISOString().split('T')[0];
+                                }
+                                setForm(updated);
+                            }} required />
+                        </div>
+                        <div className="form-group">
+                            <label>End Date {form.type === 'custom' ? '*' : '(auto)'}</label>
+                            <input type="date" value={form.endDate} onChange={e => setForm(prev => ({ ...prev, endDate: e.target.value }))} required disabled={form.type !== 'custom'} />
+                        </div>
                     </div>
                     <div className="form-row">
                         <div className="form-group"><label>Monthly Rent (RM)</label><input type="number" placeholder="1500" value={form.rentAmount} onChange={e => setForm(prev => ({ ...prev, rentAmount: e.target.value }))} /></div>
@@ -292,6 +402,26 @@ export default function Agreements({ embeddedPropertyId = null }) {
                             />
                         </div>
                     </div>
+
+                    {/* Preview of months to be generated */}
+                    {form.startDate && form.endDate && form.rentAmount && (
+                        <div style={{ margin: 'var(--space-md) 0', padding: 'var(--space-sm) var(--space-md)', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', fontSize: 'var(--font-sm)', color: 'var(--text-secondary)' }}>
+                            {(() => {
+                                const start = parseISO(form.startDate);
+                                const end = parseISO(form.endDate);
+                                let count = 0;
+                                let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+                                const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+                                while (cursor <= endMonth) { count++; cursor.setMonth(cursor.getMonth() + 1); }
+                                return (
+                                    <span>
+                                        💡 Saving will auto-generate <strong>{count} monthly rent records</strong> at {formatCurrency(Number(form.rentAmount))} each
+                                        {editingId && <span style={{ color: 'var(--text-tertiary)' }}> (existing records won't be duplicated)</span>}
+                                    </span>
+                                );
+                            })()}
+                        </div>
+                    )}
 
                     <div className="modal-footer" style={{ padding: 'var(--space-md) 0 0', borderTop: '1px solid var(--border)' }}>
                         <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
