@@ -279,6 +279,17 @@ export default function Landing() {
                     </div>
                 </div>
 
+                {/* Dashboard Preview */}
+                <div className="lp-hero-preview-wrapper">
+                    <div className="lp-hero-preview-bg">
+                        <img
+                            src="/images/dashboard-preview.png"
+                            alt="PropTrack Dashboard — Real-time property portfolio overview"
+                            className="lp-hero-preview-img"
+                        />
+                    </div>
+                </div>
+
             </section>
 
             {/* ---- STATS STRIP ---- */}
