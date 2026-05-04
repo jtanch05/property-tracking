@@ -2,12 +2,21 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useApp } from '../context/AppProvider';
 import { useAuth } from '../context/AuthProvider';
 import { downloadBackup, importData, exportFullStatement } from '../utils/export';
-import { clearAllStorage, getStorageSize } from '../utils/storage';
+import { getStorageSize } from '../utils/storage';
 import { Settings as SettingsIcon, Download, Upload, Trash2, Moon, Sun, Shield, FileText, Bell, Copy, Check, Calendar, Link, Unlink } from 'lucide-react';
 import './Settings.css';
 
 export default function Settings() {
-    const { settings, setSettings, properties, tenants, agreements, rentRecords, taxRecords, utilityRecords, insuranceRecords, maintenanceRecords, managementFees, deposits } = useApp();
+    const {
+        settings, setSettings,
+        properties, tenants, agreements, rentRecords, taxRecords, utilityRecords,
+        insuranceRecords, maintenanceRecords, vendors, managementFees, payouts, deposits,
+        addProperty, addTenant, addAgreement, addRentRecord, addTaxRecord, addUtilityRecord,
+        addInsuranceRecord, addMaintenanceRecord, addVendor, addManagementFee, addPayout, addDeposit,
+        deleteProperty, deleteTenant, deleteAgreement, deleteRentRecord, deleteTaxRecord,
+        deleteUtilityRecord, deleteInsuranceRecord, deleteMaintenanceRecord, deleteVendor,
+        deleteManagementFee, deletePayout, deleteDeposit,
+    } = useApp();
     const { user } = useAuth();
     const fileInputRef = useRef(null);
     const [alertEmail, setAlertEmail] = useState(settings.alertEmail || '');
@@ -38,8 +47,39 @@ export default function Settings() {
         document.documentElement.setAttribute('data-theme', next);
     }
 
+    const backupData = {
+        properties,
+        tenants,
+        agreements,
+        rentRecords,
+        taxRecords,
+        utilityRecords,
+        insuranceRecords,
+        maintenanceRecords,
+        vendors,
+        managementFees,
+        payouts,
+        deposits,
+        settings,
+    };
+
+    const collectionActions = [
+        { key: 'properties', items: properties, add: addProperty, remove: deleteProperty },
+        { key: 'tenants', items: tenants, add: addTenant, remove: deleteTenant },
+        { key: 'agreements', items: agreements, add: addAgreement, remove: deleteAgreement },
+        { key: 'rentRecords', items: rentRecords, add: addRentRecord, remove: deleteRentRecord },
+        { key: 'taxRecords', items: taxRecords, add: addTaxRecord, remove: deleteTaxRecord },
+        { key: 'utilityRecords', items: utilityRecords, add: addUtilityRecord, remove: deleteUtilityRecord },
+        { key: 'insuranceRecords', items: insuranceRecords, add: addInsuranceRecord, remove: deleteInsuranceRecord },
+        { key: 'maintenanceRecords', items: maintenanceRecords, add: addMaintenanceRecord, remove: deleteMaintenanceRecord },
+        { key: 'vendors', items: vendors, add: addVendor, remove: deleteVendor },
+        { key: 'managementFees', items: managementFees, add: addManagementFee, remove: deleteManagementFee },
+        { key: 'payouts', items: payouts, add: addPayout, remove: deletePayout },
+        { key: 'deposits', items: deposits, add: addDeposit, remove: deleteDeposit },
+    ];
+
     function handleExport() {
-        downloadBackup();
+        downloadBackup(backupData);
     }
 
     function handleImport() {
@@ -53,8 +93,9 @@ export default function Settings() {
         reader.onload = (ev) => {
             const result = importData(ev.target.result);
             if (result.success) {
-                alert(`Imported successfully! Keys restored: ${result.keys.join(', ')}`);
-                window.location.reload();
+                restoreBackup(result.data)
+                    .then(() => alert(`Imported successfully! Keys restored: ${result.keys.join(', ')}`))
+                    .catch(err => alert(`Import failed: ${err.message}`));
             } else {
                 alert(`Import failed: ${result.error}`);
             }
@@ -63,11 +104,32 @@ export default function Settings() {
         e.target.value = '';
     }
 
-    function handleClearAll() {
+    async function restoreBackup(data) {
+        for (const action of collectionActions) {
+            const imported = data[action.key];
+            if (!Array.isArray(imported)) continue;
+            for (const item of imported) {
+                await action.add(item);
+            }
+        }
+
+        if (data.settings && typeof data.settings === 'object') {
+            await setSettings(data.settings);
+        }
+    }
+
+    async function handleClearAll() {
         if (confirm('⚠️ This will delete ALL your data permanently. Are you sure?')) {
             if (confirm('Really sure? This cannot be undone.')) {
-                clearAllStorage();
-                window.location.reload();
+                for (const action of collectionActions) {
+                    await Promise.all(action.items.map(item => action.remove(item.id)));
+                }
+                await setSettings({
+                    theme: settings.theme || 'dark',
+                    selectedPropertyId: null,
+                    pinEnabled: false,
+                    pin: null,
+                });
             }
         }
     }
@@ -90,22 +152,24 @@ export default function Settings() {
         }
     }
 
-    function handleConnectGoogleCalendar() {
+    async function handleConnectGoogleCalendar() {
         if (!user?.uid) return;
-        // Redirect to our API which redirects to Google OAuth
-        // After user approves, Google sends them back to /api/auth/google-callback
-        // which saves the token and redirects back here with ?calendar=success
-        window.location.href = `/api/auth/google?uid=${user.uid}`;
+        const token = await user.getIdToken();
+        window.location.href = `/api/auth/google?token=${encodeURIComponent(token)}`;
     }
 
-    function handleDisconnectGoogleCalendar() {
+    async function handleDisconnectGoogleCalendar() {
         setCalendarConnected(false);
         setSettings(prev => ({ ...prev, googleCalendarConnected: false }));
-        // Note: this only disconnects locally. The token in Firestore stays until
-        // the user re-connects or explicitly revokes access in their Google account.
+        const token = user ? await user.getIdToken() : null;
+        fetch('/api/auth/google-disconnect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+        }).catch(err => console.error('Google Calendar disconnect failed:', err));
     }
 
-    const sizeKB = (getStorageSize() / 1024).toFixed(1);
+    const sizeKB = (new Blob([JSON.stringify(backupData)]).size / 1024 || getStorageSize() / 1024).toFixed(1);
 
     return (
         <div className="settings-page">
@@ -375,7 +439,7 @@ export default function Settings() {
                             </div>
                             <div>
                                 <span className="settings-label">PropTrack MY</span>
-                                <span className="settings-desc">v1.0 · Malaysia Property Management · No data leaves your device</span>
+                                <span className="settings-desc">v1.0 · Malaysia Property Management · Cloud sync with Firebase</span>
                             </div>
                         </div>
                     </div>

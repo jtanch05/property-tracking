@@ -21,7 +21,8 @@ export default function Properties() {
     const [deleteId, setDeleteId] = useState(null);
     const [search, setSearch] = useState('');
 
-    const [selectedProperty, setSelectedProperty] = useState(null);
+    const [selectedPropertyId, setSelectedPropertyId] = useState(null);
+    const selectedProperty = useMemo(() => properties.find(p => p.id === selectedPropertyId) || null, [properties, selectedPropertyId]);
     const [activeTab, setActiveTab] = useState('overview');
 
     const filteredProperties = properties.filter(p =>
@@ -36,7 +37,7 @@ export default function Properties() {
         setForm(EMPTY_PROPERTY);
         setEditingId(null);
         setShowForm(true);
-        setSelectedProperty(null); // Close panel if open
+        setSelectedPropertyId(null); // Close panel if open
     }
 
     function openEdit(prop) {
@@ -46,7 +47,7 @@ export default function Properties() {
     }
 
     function openPropertyHub(prop) {
-        setSelectedProperty(prop);
+        setSelectedPropertyId(prop.id);
         setActiveTab('overview');
     }
 
@@ -123,7 +124,7 @@ export default function Properties() {
                 property={selectedProperty}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
-                onBack={() => setSelectedProperty(null)}
+                onBack={() => setSelectedPropertyId(null)}
                 onEdit={openEdit}
             />
 

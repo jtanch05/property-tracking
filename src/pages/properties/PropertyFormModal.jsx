@@ -78,7 +78,7 @@ export default function PropertyFormModal({
                         <div className="form-group">
                             <label>
                                 Strata Title
-                                {config.strata.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                {config.strata.show === 'optional' && <span className="optional-tag">(Optional)</span>}
                             </label>
                             <SegmentedControl
                                 options={[
@@ -105,7 +105,7 @@ export default function PropertyFormModal({
                         />
                     </div>
                     <div className="form-group">
-                        <label>Local Council <span className="optional-tag">Optional</span></label>
+                        <label>Local Council <span className="optional-tag">(Optional)</span></label>
                         <Select
                             value={form.localCouncil}
                             onChange={val => onChange('localCouncil', val)}
@@ -125,7 +125,7 @@ export default function PropertyFormModal({
                         <div className="form-group">
                             <label>
                                 {config.lotNumber?.label || 'Lot Number'}
-                                {config.lotNumber?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                {config.lotNumber?.show === 'optional' && <span className="optional-tag">(Optional)</span>}
                             </label>
                             <input
                                 type="text"
@@ -139,7 +139,7 @@ export default function PropertyFormModal({
                         <div className="form-group">
                             <label>
                                 {config.unitNumber?.label || 'Unit Number'}
-                                {config.unitNumber?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                {config.unitNumber?.show === 'optional' && <span className="optional-tag">(Optional)</span>}
                             </label>
                             <input
                                 type="text"
@@ -153,7 +153,7 @@ export default function PropertyFormModal({
                         <div className="form-group">
                             <label>
                                 {config.blockTower?.label || 'Block / Tower'}
-                                {config.blockTower?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                {config.blockTower?.show === 'optional' && <span className="optional-tag">(Optional)</span>}
                             </label>
                             <input
                                 type="text"
@@ -170,7 +170,7 @@ export default function PropertyFormModal({
                         <div className="form-group">
                             <label>
                                 Floor Level
-                                {config.floor?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                {config.floor?.show === 'optional' && <span className="optional-tag">(Optional)</span>}
                             </label>
                             <input
                                 type="number"
@@ -184,7 +184,7 @@ export default function PropertyFormModal({
                         <div className="form-group">
                             <label>
                                 Number of Storeys
-                                {config.storeys?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                {config.storeys?.show === 'optional' && <span className="optional-tag">(Optional)</span>}
                             </label>
                             <input
                                 type="number"
@@ -198,12 +198,12 @@ export default function PropertyFormModal({
                 </div>
 
                 <div className="form-section-header">
-                    Size & Specifications <span className="optional-tag">Optional</span>
+                    Size & Specifications <span className="optional-tag">(Optional)</span>
                 </div>
 
                 <div className="form-row">
                     <div className="form-group">
-                        <label>Built-up Size (sqft) <span className="optional-tag">Optional</span></label>
+                        <label>Built-up Size (sqft) <span className="optional-tag">(Optional)</span></label>
                         <input
                             type="number"
                             placeholder="e.g. 1200"
@@ -215,7 +215,7 @@ export default function PropertyFormModal({
                         <div className="form-group">
                             <label>
                                 Land Size (sqft)
-                                {config.landSizeSqft?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                {config.landSizeSqft?.show === 'optional' && <span className="optional-tag">(Optional)</span>}
                             </label>
                             <input
                                 type="number"
@@ -232,7 +232,7 @@ export default function PropertyFormModal({
                         <div className="form-group">
                             <label>
                                 Bedrooms
-                                {config.bedrooms?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                {config.bedrooms?.show === 'optional' && <span className="optional-tag">(Optional)</span>}
                             </label>
                             <input
                                 type="number"
@@ -247,7 +247,7 @@ export default function PropertyFormModal({
                         <div className="form-group">
                             <label>
                                 Bathrooms
-                                {config.bathrooms?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                {config.bathrooms?.show === 'optional' && <span className="optional-tag">(Optional)</span>}
                             </label>
                             <input
                                 type="number"
@@ -259,7 +259,7 @@ export default function PropertyFormModal({
                         </div>
                     )}
                     <div className="form-group">
-                        <label>Parking Bays <span className="optional-tag">Optional</span></label>
+                        <label>Parking Bays <span className="optional-tag">(Optional)</span></label>
                         <input
                             type="number"
                             placeholder="e.g. 2"
@@ -272,7 +272,7 @@ export default function PropertyFormModal({
 
                 <div className="form-row">
                     <div className="form-group">
-                        <label>Year Built <span className="optional-tag">Optional</span></label>
+                        <label>Year Built <span className="optional-tag">(Optional)</span></label>
                         <input
                             type="number"
                             placeholder="e.g. 2015"
@@ -284,7 +284,7 @@ export default function PropertyFormModal({
                         <div className="form-group">
                             <label>
                                 Furnished
-                                {config.furnished?.show === 'optional' && <span className="optional-tag">Optional</span>}
+                                {config.furnished?.show === 'optional' && <span className="optional-tag">(Optional)</span>}
                             </label>
                             <Select
                                 value={form.furnished}
@@ -304,7 +304,7 @@ export default function PropertyFormModal({
                 <div className="form-section-header">Additional</div>
 
                 <div className="form-group">
-                    <label>Notes <span className="optional-tag">Optional</span></label>
+                    <label>Notes <span className="optional-tag">(Optional)</span></label>
                     <textarea
                         placeholder="Any additional notes..."
                         value={form.notes}
@@ -316,7 +316,7 @@ export default function PropertyFormModal({
                 <div className="co-owners-section">
                     <div className="co-owners-header">
                         <label className="co-owners-label">
-                            <Users size={14} /> Co-Owners <span className="optional-tag">Optional</span>
+                            <Users size={14} /> Co-Owners <span className="optional-tag">(Optional)</span>
                         </label>
                         <Button type="button" size="sm" variant="ghost" onClick={addCoOwner}>
                             <Plus size={14} /> Add

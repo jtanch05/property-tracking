@@ -77,7 +77,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
             propertyId: item.propertyId,
             amount: item.amount,
             date: item.date,
-            status: item.status,
+            status: item.status === 'active' ? 'paid' : item.status,
             specificType: item.raw.taxType || item.raw.type || item.raw.insuranceType || item.raw.feeType || '',
             notes: item.raw.notes || '',
             taxDeductible: item.raw.taxDeductible ?? null
@@ -103,12 +103,12 @@ export default function Expenses({ embeddedPropertyId = null }) {
             if (form.expenseCategory === 'tax') updateTaxRecord(editingItem.id, { ...payload, dueDate: form.date, paymentDate: form.status === 'paid' ? form.date : '', taxType: form.specificType, type: form.specificType });
             else if (form.expenseCategory === 'utility') updateUtilityRecord(editingItem.id, { ...payload, date: form.date, type: form.specificType || 'other' });
             else if (form.expenseCategory === 'insurance') updateInsuranceRecord(editingItem.id, { ...payload, coverageAmount: amt * 200, startDate: form.date, expiryDate: addDays(parseISO(form.date), 365).toISOString().split('T')[0], insuranceType: form.specificType || 'fire', premiumAmount: amt });
-            else if (form.expenseCategory === 'mgmt') updateManagementFee(editingItem.id, { ...payload, nextDueDate: form.date, provider: 'Management Office', feeType: form.specificType || 'other', status: form.status === 'paid' ? 'active' : 'pending' });
+            else if (form.expenseCategory === 'mgmt') updateManagementFee(editingItem.id, { ...payload, nextDueDate: form.date, provider: 'Management Office', feeType: form.specificType || 'other', status: form.status });
         } else {
             if (form.expenseCategory === 'tax') addTaxRecord({ ...payload, dueDate: form.date, paymentDate: form.status === 'paid' ? form.date : '', taxType: form.specificType, type: form.specificType });
             else if (form.expenseCategory === 'utility') addUtilityRecord({ ...payload, date: form.date, type: form.specificType || 'other' });
             else if (form.expenseCategory === 'insurance') addInsuranceRecord({ ...payload, coverageAmount: amt * 200, startDate: form.date, expiryDate: addDays(parseISO(form.date), 365).toISOString().split('T')[0], insuranceType: form.specificType || 'fire', premiumAmount: amt });
-            else if (form.expenseCategory === 'mgmt') addManagementFee({ ...payload, nextDueDate: form.date, provider: 'Management Office', feeType: form.specificType || 'other', status: form.status === 'paid' ? 'active' : 'pending' });
+            else if (form.expenseCategory === 'mgmt') addManagementFee({ ...payload, nextDueDate: form.date, provider: 'Management Office', feeType: form.specificType || 'other', status: form.status });
         }
         setShowForm(false);
         setEditingItem(null);
@@ -139,7 +139,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
             amount: Number(r.amount),
             status: r.status,
             propertyId: r.propertyId,
-            description: `${r.type.charAt(0).toUpperCase() + r.type.slice(1)} Bill`,
+            description: `${(r.type || 'other').charAt(0).toUpperCase() + (r.type || 'other').slice(1)} Bill`,
             taxDeductible: r.taxDeductible ?? null,
             raw: r
         }));
@@ -202,7 +202,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
             if (item.type === 'tax') updateTaxRecord(item.id, { status: 'paid', paymentDate: today });
             if (item.type === 'utility') updateUtilityRecord(item.id, { status: 'paid' });
             if (item.type === 'insurance') updateInsuranceRecord(item.id, { status: 'paid' });
-            if (item.type === 'mgmt') updateManagementFee(item.id, { status: 'active' });
+            if (item.type === 'mgmt') updateManagementFee(item.id, { status: 'paid' });
         }
     };
 
@@ -422,7 +422,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
                                                     </span>
                                                 ) : (
                                                     <span className="badge badge-success">
-                                                        {item.status === 'active' ? 'Active' : 'Paid'}
+                                                {item.status === 'active' ? 'Active' : 'Paid'}
                                                     </span>
                                                 )}
                                             </td>
@@ -451,7 +451,7 @@ export default function Expenses({ embeddedPropertyId = null }) {
                                 })
                             ) : (
                                 <tr>
-                                    <td colSpan="7" style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>
+                                    <td colSpan="8" style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>
                                         No expenses found
                                     </td>
                                 </tr>

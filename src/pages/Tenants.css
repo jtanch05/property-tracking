@@ -94,4 +94,17 @@
     .tenant-card-right {
         align-self: flex-end;
     }
+
+    .tenant-card-left {
+        min-width: 0;
+    }
+
+    .tenant-info {
+        min-width: 0;
+    }
+
+    .tenant-info .tenant-name,
+    .tenant-prop {
+        overflow-wrap: anywhere;
+    }
 }

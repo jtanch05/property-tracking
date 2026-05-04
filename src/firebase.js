@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
-import { getMessaging } from 'firebase/messaging';
+import { getMessaging, isSupported as isMessagingSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -17,7 +17,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const messaging = getMessaging(app);
+export const messaging = await isMessagingSupported()
+    .then(supported => supported ? getMessaging(app) : null)
+    .catch(() => null);
 export const googleProvider = new GoogleAuthProvider();
 
 // Enable offline persistence

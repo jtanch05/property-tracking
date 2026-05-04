@@ -18,7 +18,7 @@ export function useNotifications() {
 
 
     useEffect(() => {
-        if (!user || permissionStatus !== 'granted') return;
+        if (!user || !messaging || permissionStatus !== 'granted') return;
 
         // Initialize Realtime Listener for Foreground Messages
         const unsubscribe = onMessage(messaging, (payload) => {
@@ -47,7 +47,7 @@ export function useNotifications() {
 
     const requestPermission = async () => {
         try {
-            if (!user) {
+            if (!user || !messaging) {
                 console.warn("User must be logged in to request notification permissions.");
                 return false;
             }

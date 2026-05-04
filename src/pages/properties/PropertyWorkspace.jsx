@@ -45,6 +45,13 @@ function PropertyOverview({ property, onEdit }) {
                     </div>
                 </div>
 
+                <div className="hub-stat-card">
+                    <div className="hub-stat-label">Title Type</div>
+                    <div className="hub-stat-value">
+                        {property.strata ? 'Strata' : 'Non-Strata'}
+                    </div>
+                </div>
+
                 {property.state && (
                     <div className="hub-stat-card">
                         <div className="hub-stat-label">Location</div>
@@ -55,11 +62,30 @@ function PropertyOverview({ property, onEdit }) {
                     </div>
                 )}
 
-                {property.builtUpSqft && (
+                {(property.unitNumber || property.lotNumber || property.blockTower || property.floor) && (
                     <div className="hub-stat-card">
-                        <div className="hub-stat-label">Built-up Size</div>
+                        <div className="hub-stat-label">Address / Unit</div>
                         <div className="hub-stat-value">
-                            {Number(property.builtUpSqft).toLocaleString()} <span className="hub-stat-unit">sqft</span>
+                            {[
+                                property.unitNumber && `Unit ${property.unitNumber}`,
+                                property.floor && `Level ${property.floor}`,
+                                property.blockTower && `${property.blockTower}`,
+                                property.lotNumber && `${property.lotNumber}`
+                            ].filter(Boolean).join(', ')}
+                        </div>
+                    </div>
+                )}
+
+                {(property.builtUpSqft || property.landSizeSqft) && (
+                    <div className="hub-stat-card">
+                        <div className="hub-stat-label">Size</div>
+                        <div className="hub-stat-value">
+                            {property.builtUpSqft && (
+                                <div>Built-up: {Number(property.builtUpSqft).toLocaleString()} <span className="hub-stat-unit">sqft</span></div>
+                            )}
+                            {property.landSizeSqft && (
+                                <div>Land: {Number(property.landSizeSqft).toLocaleString()} <span className="hub-stat-unit">sqft</span></div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -71,6 +97,15 @@ function PropertyOverview({ property, onEdit }) {
                             {property.bedrooms ? `${property.bedrooms} bed` : ''}
                             {property.bedrooms && property.bathrooms ? ' · ' : ''}
                             {property.bathrooms ? `${property.bathrooms} bath` : ''}
+                        </div>
+                    </div>
+                )}
+
+                {property.storeys && (
+                    <div className="hub-stat-card">
+                        <div className="hub-stat-label">Storeys</div>
+                        <div className="hub-stat-value">
+                            {property.storeys}
                         </div>
                     </div>
                 )}
@@ -90,7 +125,30 @@ function PropertyOverview({ property, onEdit }) {
                         <div className="hub-stat-value">{property.yearBuilt}</div>
                     </div>
                 )}
+
+                {property.furnished && (
+                    <div className="hub-stat-card">
+                        <div className="hub-stat-label">Furnished</div>
+                        <div className="hub-stat-value" style={{ textTransform: 'capitalize' }}>
+                            {property.furnished === 'partial' ? 'Partially Furnished' : property.furnished === 'fully' ? 'Fully Furnished' : 'Unfurnished'}
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {property.coOwners && property.coOwners.length > 0 && (
+                <div className="hub-notes" style={{ marginBottom: property.notes ? 0 : '32px', borderBottom: property.notes ? 'none' : undefined }}>
+                    <div className="hub-stat-label hub-notes-label">Co-Owners</div>
+                    <div className="hub-notes-text">
+                        {property.coOwners.map((owner, i) => (
+                            <div key={owner.id || i} style={{ marginBottom: '4px' }}>
+                                <strong>{owner.name || 'Unnamed'}</strong> ({owner.splitPercent}%)
+                                {owner.isPrimary && <span className="badge badge-info" style={{ fontSize: '10px', marginLeft: '6px', padding: '2px 6px' }}>Primary</span>}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {property.notes && (
                 <div className="hub-notes">

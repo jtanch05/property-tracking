@@ -8,7 +8,7 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
-import { differenceInDays, parseISO, startOfToday } from 'date-fns';
+import { computeAlerts } from '../src/utils/alerts.js';
 
 if (!getApps().length) {
     initializeApp({
@@ -122,66 +122,6 @@ async function createOrUpdateEvent(accessToken, alert) {
         );
         return 'created';
     }
-}
-
-// ── Alert computation (same as alerts.js and send-alerts.js) ─────────────────
-function computeAlerts({ properties, rentRecords, taxRecords, insuranceRecords, agreements, maintenanceRecords, managementFees }) {
-    const today = startOfToday();
-    const alerts = [];
-
-    agreements.forEach(a => {
-        if (!a.endDate) return;
-        const days = differenceInDays(parseISO(a.endDate), today);
-        const name = properties.find(p => p.id === a.propertyId)?.nickname || 'Unknown';
-        if (days <= 90 && days > 0)
-            alerts.push({ id: `agreement-${a.id}`, severity: days <= 14 ? 'danger' : 'warning', title: 'Tenancy Expiring', message: `${name} — agreement expires in ${days} days`, date: a.endDate });
-        else if (days <= 0 && days >= -30)
-            alerts.push({ id: `agreement-expired-${a.id}`, severity: 'danger', title: 'Tenancy Expired', message: `${name} — agreement expired ${Math.abs(days)} days ago`, date: a.endDate });
-    });
-
-    rentRecords.forEach(r => {
-        if (r.status === 'paid') return;
-        const name = properties.find(p => p.id === r.propertyId)?.nickname || 'Unknown';
-        const days = differenceInDays(today, parseISO(`${r.month}-01`));
-        if (days > 0)
-            alerts.push({ id: `rent-overdue-${r.id}`, severity: days > 14 ? 'danger' : 'warning', title: 'Rent Overdue', message: `${name} — rent overdue by ${days} days`, date: `${r.month}-01` });
-    });
-
-    taxRecords.forEach(t => {
-        if (t.status === 'paid' || !t.dueDate) return;
-        const days = differenceInDays(parseISO(t.dueDate), today);
-        const name = properties.find(p => p.id === t.propertyId)?.nickname || 'Unknown';
-        const label = t.taxType === 'cukai_tanah' ? 'Cukai Tanah' : 'Cukai Taksiran';
-        if (days <= 60 && days >= -30)
-            alerts.push({ id: `tax-${t.id}`, severity: days <= 0 ? 'danger' : days <= 14 ? 'warning' : 'info', title: days <= 0 ? `${label} Overdue` : `${label} Due`, message: days <= 0 ? `${name} — ${label} overdue by ${Math.abs(days)} days` : `${name} — ${label} due in ${days} days`, date: t.dueDate });
-    });
-
-    insuranceRecords.forEach(ins => {
-        if (!ins.expiryDate) return;
-        const days = differenceInDays(parseISO(ins.expiryDate), today);
-        const name = properties.find(p => p.id === ins.propertyId)?.nickname || 'Unknown';
-        if (days <= 60 && days >= -7)
-            alerts.push({ id: `insurance-${ins.id}`, severity: days <= 0 ? 'danger' : days <= 30 ? 'warning' : 'info', title: days <= 0 ? 'Insurance Expired' : 'Insurance Expiring', message: days <= 0 ? `${name} — ${ins.insuranceType} expired ${Math.abs(days)} days ago` : `${name} — ${ins.insuranceType} expires in ${days} days`, date: ins.expiryDate });
-    });
-
-    maintenanceRecords.forEach(m => {
-        if (m.status !== 'open') return;
-        const days = differenceInDays(today, parseISO(m.reportedDate));
-        const name = properties.find(p => p.id === m.propertyId)?.nickname || 'Unknown';
-        if (days > 7)
-            alerts.push({ id: `maintenance-${m.id}`, severity: days > 30 ? 'danger' : 'warning', title: 'Open Maintenance Issue', message: `${name} — "${m.description}" open for ${days} days`, date: m.reportedDate });
-    });
-
-    managementFees.forEach(fee => {
-        if (fee.status !== 'active' || !fee.nextDueDate) return;
-        const days = differenceInDays(parseISO(fee.nextDueDate), today);
-        const name = properties.find(p => p.id === fee.propertyId)?.nickname || 'Unknown';
-        const label = fee.description || fee.feeType || 'Fee';
-        if (days <= 14 && days >= -30)
-            alerts.push({ id: `mgmt-fee-${fee.id}`, severity: days <= 0 ? 'danger' : 'warning', title: days <= 0 ? 'Management Fee Overdue' : 'Management Fee Due', message: days <= 0 ? `${name} — ${label} overdue by ${Math.abs(days)} days` : `${name} — ${label} due in ${days} days`, date: fee.nextDueDate });
-    });
-
-    return alerts;
 }
 
 // ── Process one user's calendar sync ─────────────────────────────────────────

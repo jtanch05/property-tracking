@@ -3,6 +3,7 @@
 // We exchange the temporary "code" for real access + refresh tokens
 // Then save them to Firestore under the user's account
 
+import crypto from 'crypto';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
@@ -18,8 +19,21 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
+function verifyState(state) {
+    const secret = process.env.GOOGLE_STATE_SECRET || process.env.ALERT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
+    if (!secret || !state) return null;
+    const separator = state.lastIndexOf('.');
+    if (separator <= 0) return null;
+    const uid = state.slice(0, separator);
+    const sig = state.slice(separator + 1);
+    const expected = crypto.createHmac('sha256', secret).update(uid).digest('base64url');
+    if (sig.length !== expected.length) return null;
+    return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected)) ? uid : null;
+}
+
 export default async function handler(req, res) {
-    const { code, state: uid, error } = req.query;
+    const { code, state, error } = req.query;
+    const uid = verifyState(state);
     const appUrl = 'https://property-tracking.vercel.app';
 
     // User denied permission
@@ -28,7 +42,7 @@ export default async function handler(req, res) {
     }
 
     if (!uid) {
-        return res.redirect(`${appUrl}/settings?calendar=error&reason=missing_uid`);
+        return res.redirect(`${appUrl}/settings?calendar=error&reason=invalid_state`);
     }
 
     try {

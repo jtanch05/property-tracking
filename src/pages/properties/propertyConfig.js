@@ -12,7 +12,7 @@ export const FIELD_CONFIG = {
         furnished: { show: true },
     },
     landed_terrace: {
-        strata: { show: false, default: false },
+        strata: { show: 'optional', default: false },
         unitNumber: { show: false },
         blockTower: { show: false },
         floor: { show: false },
@@ -24,7 +24,7 @@ export const FIELD_CONFIG = {
         furnished: { show: true },
     },
     landed_semi: {
-        strata: { show: false, default: false },
+        strata: { show: 'optional', default: false },
         unitNumber: { show: false },
         blockTower: { show: false },
         floor: { show: false },
@@ -36,7 +36,7 @@ export const FIELD_CONFIG = {
         furnished: { show: true },
     },
     landed_bungalow: {
-        strata: { show: false, default: false },
+        strata: { show: 'optional', default: false },
         unitNumber: { show: false },
         blockTower: { show: false },
         floor: { show: false },

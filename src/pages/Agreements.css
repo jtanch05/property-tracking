@@ -64,6 +64,19 @@
 }
 
 @media (max-width: 600px) {
+    .agreement-card {
+        padding: var(--space-md);
+    }
+
+    .agreement-header {
+        gap: var(--space-sm);
+        flex-wrap: wrap;
+    }
+
+    .agreement-actions {
+        margin-left: auto;
+    }
+
     .agreement-details {
         grid-template-columns: 1fr;
     }

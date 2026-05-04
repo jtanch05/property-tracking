@@ -64,7 +64,7 @@ export default function RentLedger({ embeddedPropertyId = null }) {
 
     function openEdit(r) {
         setForm({
-            propertyId: r.propertyId || '', tenantId: r.tenantId || '', month: r.month || '',
+            propertyId: r.propertyId || '', tenantId: r.tenantId || '', agreementId: r.agreementId || '', month: r.month || '',
             amountDue: r.amountDue || '', amountPaid: r.amountPaid || '',
             status: r.status || 'unpaid', paymentDate: r.paymentDate || '',
             paymentMethod: r.paymentMethod || 'transfer', notes: r.notes || '',
@@ -86,6 +86,7 @@ export default function RentLedger({ embeddedPropertyId = null }) {
     }
 
     function autoGeneratePayouts(rentRecord, netAmount) {
+        if (payouts.some(p => p.rentRecordId === rentRecord.id)) return;
         const prop = properties.find(p => p.id === rentRecord.propertyId);
         if (!prop?.coOwners || prop.coOwners.length === 0) return;
         prop.coOwners.forEach(owner => {
@@ -118,8 +119,17 @@ export default function RentLedger({ embeddedPropertyId = null }) {
         else if (amountPaid > 0 && netAmount <= 0) computedStatus = 'paid';
 
         const data = { ...form, amountDue, amountPaid, status: computedStatus };
-        if (editingId) updateRentRecord(editingId, data);
-        else addRentRecord(data);
+        const previous = rentRecords.find(r => r.id === editingId);
+        if (editingId) {
+            updateRentRecord(editingId, data);
+            if (computedStatus === 'paid' && previous?.status !== 'paid') {
+                autoGeneratePayouts({ ...previous, ...data, id: editingId }, amountPaid);
+            }
+        } else {
+            addRentRecord(data).then(newId => {
+                if (newId && computedStatus === 'paid') autoGeneratePayouts({ ...data, id: newId }, amountPaid);
+            });
+        }
         setShowForm(false);
     }
 
@@ -453,10 +463,20 @@ export default function RentLedger({ embeddedPropertyId = null }) {
                             <CustomSelect
                                 value={form.tenantId}
                                 onChange={val => {
-                                    const tenantAgreement = agreements.find(a => a.tenantId === val && a.status === 'active');
+                                    const today = new Date();
+                                    const tenantAgreement = agreements
+                                        .filter(a => a.tenantId === val && (!form.propertyId || a.propertyId === form.propertyId))
+                                        .sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0))
+                                        .find(a => {
+                                            if (!a.startDate || !a.endDate) return true;
+                                            return new Date(a.startDate) <= today && today <= new Date(a.endDate);
+                                        }) || agreements
+                                            .filter(a => a.tenantId === val && (!form.propertyId || a.propertyId === form.propertyId))
+                                            .sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0))[0];
                                     setForm(p => ({
                                         ...p,
                                         tenantId: val,
+                                        agreementId: tenantAgreement ? tenantAgreement.id : p.agreementId,
                                         amountDue: tenantAgreement ? tenantAgreement.rentAmount : p.amountDue
                                     }));
                                 }}

@@ -174,7 +174,7 @@ export function computeAlerts({ agreements = [], taxRecords = [], insuranceRecor
 
     // --- Management Fee Due Alerts ---
     managementFees.forEach(fee => {
-        if (fee.status !== 'active' || !fee.nextDueDate) return;
+        if (fee.status === 'paid' || fee.status === 'refunded' || !fee.nextDueDate) return;
         const due = parseISO(fee.nextDueDate);
         const days = differenceInDays(due, today);
         const property = properties.find(p => p.id === fee.propertyId);

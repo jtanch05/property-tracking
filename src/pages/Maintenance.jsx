@@ -144,15 +144,31 @@ export default function Maintenance({ embeddedPropertyId = null }) {
                                             </td>
                                             <td>
                                                 {m.status === 'open' ? (
-                                                    <span
-                                                        className="badge badge-warning"
-                                                        style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                                                        onClick={(e) => { e.stopPropagation(); updateMaintenanceRecord(m.id, { status: 'closed', resolvedDate: new Date().toISOString().split('T')[0] }); }}
-                                                        title="Click to close issue"
-                                                    >
-                                                        Open
-                                                        <CheckCircle size={12} style={{ opacity: 0.7 }} />
-                                                    </span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span className="badge badge-warning">Open</span>
+                                                        <button
+                                                            style={{
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                color: 'var(--success)',
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                padding: '4px',
+                                                                borderRadius: '50%',
+                                                                transition: 'background 0.2s',
+                                                            }}
+                                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--success-bg)'}
+                                                            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                updateMaintenanceRecord(m.id, { status: 'closed', resolvedDate: new Date().toISOString().split('T')[0] });
+                                                            }}
+                                                            title="Mark as resolved"
+                                                        >
+                                                            <CheckCircle size={18} />
+                                                        </button>
+                                                    </div>
                                                 ) : (
                                                     <span className="badge badge-success">Closed</span>
                                                 )}

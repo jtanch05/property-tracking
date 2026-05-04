@@ -2,7 +2,8 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { Resend } from 'resend';
-import { differenceInDays, parseISO, startOfToday } from 'date-fns';
+import { differenceInDays, startOfToday } from 'date-fns';
+import { computeAlerts as computeSharedAlerts } from '../src/utils/alerts.js';
 
 // ── Init Firebase Admin ──────────────────────────────────────────────────────
 if (!getApps().length) {
@@ -17,84 +18,12 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-// ── Alert computation ────────────────────────────────────────────────────────
-function computeAlerts({ properties, rentRecords, taxRecords, insuranceRecords, agreements, maintenanceRecords, managementFees }) {
-    const today = startOfToday();
-    const alerts = [];
-
-    agreements.forEach(a => {
-        if (!a.endDate) return;
-        const days = differenceInDays(parseISO(a.endDate), today);
-        const name = properties.find(p => p.id === a.propertyId)?.nickname || 'Unknown';
-        if (days <= 90 && days > 0)
-            alerts.push({ severity: days <= 14 ? '🔴' : '⚠️', title: 'Tenancy Expiring', message: `${name} — agreement expires in ${days} days` });
-        else if (days <= 0 && days >= -30)
-            alerts.push({ severity: '🔴', title: 'Tenancy Expired', message: `${name} — agreement expired ${Math.abs(days)} days ago` });
-    });
-
-    rentRecords.forEach(r => {
-        if (r.status === 'paid') return;
-        const name = properties.find(p => p.id === r.propertyId)?.nickname || 'Unknown';
-        const days = differenceInDays(today, parseISO(`${r.month}-01`));
-        if (days > 0)
-            alerts.push({ severity: days > 14 ? '🔴' : '⚠️', title: 'Rent Overdue', message: `${name} — rent overdue by ${days} days` });
-    });
-
-    taxRecords.forEach(t => {
-        if (t.status === 'paid' || !t.dueDate) return;
-        const days = differenceInDays(parseISO(t.dueDate), today);
-        const name = properties.find(p => p.id === t.propertyId)?.nickname || 'Unknown';
-        const label = t.taxType === 'cukai_tanah' ? 'Cukai Tanah' : 'Cukai Taksiran';
-        if (days <= 60 && days >= -30)
-            alerts.push({
-                severity: days <= 0 ? '🔴' : days <= 14 ? '⚠️' : 'ℹ️',
-                title: days <= 0 ? `${label} Overdue` : `${label} Due`,
-                message: days <= 0 ? `${name} — ${label} overdue by ${Math.abs(days)} days` : `${name} — ${label} due in ${days} days`
-            });
-    });
-
-    insuranceRecords.forEach(ins => {
-        if (!ins.expiryDate) return;
-        const days = differenceInDays(parseISO(ins.expiryDate), today);
-        const name = properties.find(p => p.id === ins.propertyId)?.nickname || 'Unknown';
-        if (days <= 60 && days >= -7)
-            alerts.push({
-                severity: days <= 0 ? '🔴' : days <= 30 ? '⚠️' : 'ℹ️',
-                title: days <= 0 ? 'Insurance Expired' : 'Insurance Expiring',
-                message: days <= 0 ? `${name} — ${ins.insuranceType} expired ${Math.abs(days)} days ago` : `${name} — ${ins.insuranceType} expires in ${days} days`
-            });
-    });
-
-    maintenanceRecords.forEach(m => {
-        if (m.status !== 'open') return;
-        const days = differenceInDays(today, parseISO(m.reportedDate));
-        const name = properties.find(p => p.id === m.propertyId)?.nickname || 'Unknown';
-        if (days > 7)
-            alerts.push({ severity: days > 30 ? '🔴' : '⚠️', title: 'Open Maintenance Issue', message: `${name} — "${m.description}" open for ${days} days` });
-    });
-
-    managementFees.forEach(fee => {
-        if (fee.status !== 'active' || !fee.nextDueDate) return;
-        const days = differenceInDays(parseISO(fee.nextDueDate), today);
-        const name = properties.find(p => p.id === fee.propertyId)?.nickname || 'Unknown';
-        const label = fee.description || fee.feeType || 'Fee';
-        if (days <= 14 && days >= -30)
-            alerts.push({
-                severity: days <= 0 ? '🔴' : '⚠️',
-                title: days <= 0 ? 'Management Fee Overdue' : 'Management Fee Due',
-                message: days <= 0 ? `${name} — ${label} overdue by ${Math.abs(days)} days` : `${name} — ${label} due in ${days} days`
-            });
-    });
-
-    return alerts;
-}
-
 // ── HTML Email builder ───────────────────────────────────────────────────────
 function buildEmail(alerts) {
     const dateStr = new Date().toLocaleDateString('en-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const danger = alerts.filter(a => a.severity === '🔴');
-    const warning = alerts.filter(a => a.severity === '⚠️');
-    const info = alerts.filter(a => a.severity === 'ℹ️');
+    const danger = alerts.filter(a => a.severity === 'danger' || a.severity === '🔴');
+    const warning = alerts.filter(a => a.severity === 'warning' || a.severity === '⚠️');
+    const info = alerts.filter(a => a.severity === 'info' || a.severity === 'ℹ️');
 
     const renderGroup = (items, color, bg, label) => {
         if (!items.length) return '';
@@ -184,7 +113,7 @@ async function processUser(uid, resend) {
         return { uid, skipped: true, reason: `Frequency: ${freq} (last sent: ${last})` };
     }
 
-    const alerts = computeAlerts({
+    const alerts = computeSharedAlerts({
         properties: toArr(propSnap),
         rentRecords: toArr(rentSnap),
         taxRecords: toArr(taxSnap),

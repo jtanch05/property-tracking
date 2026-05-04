@@ -503,6 +503,32 @@
         grid-template-columns: 1fr 1fr;
     }
 
+    .card-header,
+    .chart-legend {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: var(--space-sm);
+    }
+
+    .card-body {
+        padding: var(--space-md);
+    }
+
+    .bar-chart {
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        scrollbar-width: none;
+    }
+
+    .bar-chart::-webkit-scrollbar {
+        display: none;
+    }
+
+    .bar-group {
+        min-width: 24px;
+    }
+
     .breakdown-label {
         width: 80px;
     }
@@ -513,6 +539,16 @@
 
     .bar {
         width: 10px;
+    }
+
+    .activity-item,
+    .alert-item {
+        padding-inline: var(--space-md);
+    }
+
+    .alert-date {
+        width: 100%;
+        white-space: normal;
     }
 }
 

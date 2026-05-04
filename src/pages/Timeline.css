@@ -76,10 +76,18 @@
 
 @media (max-width: 600px) {
     .timeline-item {
+        align-items: flex-start;
         flex-wrap: wrap;
+        gap: var(--space-sm);
+        padding-right: var(--space-sm);
+    }
+
+    .timeline-content {
+        min-width: 0;
     }
 
     .timeline-date {
         margin-left: auto;
+        white-space: normal;
     }
 }

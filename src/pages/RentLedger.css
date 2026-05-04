@@ -258,4 +258,41 @@
         min-width: auto;
         margin-left: 0;
     }
+
+    .rent-section-toggle,
+    .rent-upcoming-row {
+        align-items: flex-start;
+        gap: var(--space-sm);
+    }
+
+    .rent-section-toggle {
+        flex-direction: column;
+    }
+
+    .rent-upcoming-row {
+        flex-wrap: wrap;
+    }
+
+    .rent-upcoming-left,
+    .rent-upcoming-right {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .rent-upcoming-left {
+        flex-wrap: wrap;
+        gap: var(--space-sm);
+    }
+
+    .rent-upcoming-month {
+        min-width: 0;
+    }
+
+    .rent-upcoming-right {
+        justify-content: space-between;
+    }
+
+    .rent-upcoming-actions {
+        opacity: 1;
+    }
 }

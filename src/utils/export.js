@@ -1,5 +1,5 @@
 // JSON export/import for data backup
-import { getStorageItem, setStorageItem } from './storage';
+import { getStorageItem } from './storage';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -9,19 +9,19 @@ const DATA_KEYS = [
     'vendors', 'managementFees', 'payouts', 'deposits', 'settings',
 ];
 
-export function exportAllData() {
+export function exportAllData(sourceData = null) {
     const data = {};
     DATA_KEYS.forEach(key => {
-        const value = getStorageItem(key);
-        if (value !== null) data[key] = value;
+        const value = sourceData ? sourceData[key] : getStorageItem(key);
+        if (value !== null && value !== undefined) data[key] = value;
     });
     data._exportedAt = new Date().toISOString();
     data._version = '1.0';
     return data;
 }
 
-export function downloadBackup() {
-    const data = exportAllData();
+export function downloadBackup(sourceData = null) {
+    const data = exportAllData(sourceData);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -37,10 +37,7 @@ export function importData(jsonString) {
     try {
         const data = JSON.parse(jsonString);
         if (!data._version) throw new Error('Invalid backup file: missing version');
-        DATA_KEYS.forEach(key => {
-            if (data[key] !== undefined) setStorageItem(key, data[key]);
-        });
-        return { success: true, keys: Object.keys(data).filter(k => !k.startsWith('_')) };
+        return { success: true, data, keys: Object.keys(data).filter(k => !k.startsWith('_')) };
     } catch (e) {
         return { success: false, error: e.message };
     }
@@ -170,7 +167,7 @@ export function exportFullStatement({
         body: properties.map(p => [
             p.nickname || '—',
             [p.streetAddress, p.city].filter(Boolean).join(', ') || '—',
-            p.propertyType || '—',
+            p.type || p.propertyType || '—',
             fmtCurrency(p.purchasePrice),
             fmtCurrency(p.marketValue),
             (p.status || '—').toUpperCase(),
@@ -250,13 +247,14 @@ export function exportFullStatement({
     });
 
     // ---- 6. INSURANCE ----
-    const totalInsure = insuranceRecords.reduce((s, r) => s + (Number(r.premiumAmount) || 0), 0);
+    const getInsurancePremium = r => Number(r.premiumAmount ?? r.premium ?? r.amount ?? 0);
+    const totalInsure = insuranceRecords.reduce((s, r) => s + getInsurancePremium(r), 0);
     const sec6Y = addSectionTitle(doc, '6. INSURANCE — Fire / Landlord / MRTA', [22, 160, 133]);
     autoTable(doc, {
         head: [['Property', 'Type', 'Start Date', 'Expiry Date', 'Annual Premium']],
         body: insuranceRecords.map(r => {
             const prop = properties.find(p => p.id === r.propertyId);
-            return [prop?.nickname || '—', r.insuranceType || '—', fmtDate(r.startDate), fmtDate(r.expiryDate), fmtCurrency(r.premiumAmount)];
+            return [prop?.nickname || '—', r.insuranceType || '—', fmtDate(r.startDate), fmtDate(r.expiryDate), fmtCurrency(getInsurancePremium(r))];
         }),
         foot: [['', '', '', 'TOTAL PREMIUM', fmtCurrency(totalInsure)]],
         startY: sec6Y,

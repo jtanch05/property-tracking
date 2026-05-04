@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthProvider';
 import {
     LayoutDashboard, Building2, Clock, Settings,
-    Home, LogOut, Menu, ChevronLeft, Contact
+    Home, LogOut, Menu, ChevronLeft, Contact, ChartNoAxesCombined
 } from 'lucide-react';
 import ClientAutomation from '../common/ClientAutomation';
 import './Layout.css';
@@ -11,6 +11,7 @@ import './Layout.css';
 const NAV_ITEMS = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/properties', icon: Building2, label: 'Properties' },
+    { to: '/cashflow', icon: ChartNoAxesCombined, label: 'Cash Flow' },
     { to: '/vendors', icon: Contact, label: 'Vendors' },
     { to: '/timeline', icon: Clock, label: 'Timeline' },
 ];
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
 const BOTTOM_NAV = [
     { to: '/', icon: Home, label: 'Home' },
     { to: '/properties', icon: Building2, label: 'Properties' },
+    { to: '/cashflow', icon: ChartNoAxesCombined, label: 'Cash Flow' },
     { to: '/vendors', icon: Contact, label: 'Vendors' },
     { to: '/timeline', icon: Clock, label: 'Timeline' },
     { to: '/settings', icon: Settings, label: 'Settings' },

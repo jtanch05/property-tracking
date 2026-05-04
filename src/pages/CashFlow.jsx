@@ -7,7 +7,7 @@ import { parseISO, format, startOfMonth, endOfMonth, eachMonthOfInterval, subMon
 import './CashFlow.css';
 
 export default function CashFlow() {
-    const { properties, rentRecords, taxRecords, insuranceRecords, maintenanceRecords, managementFees } = useApp();
+    const { properties, rentRecords, taxRecords, utilityRecords, insuranceRecords, maintenanceRecords, managementFees } = useApp();
     const [filterProp, setFilterProp] = useState('');
     const [range, setRange] = useState('year'); // 'month', 'quarter', 'year'
 
@@ -74,22 +74,24 @@ export default function CashFlow() {
                 const d = parseISO(ins.startDate);
                 return isWithinInterval(d, { start: startDate, end: endDate });
             })
-            .reduce((s, ins) => s + (ins.coverageAmount ? ins.coverageAmount * 0.005 : 0), 0); // Estimate ~0.5% of coverage as premium
+            .reduce((s, ins) => s + (Number(ins.premiumAmount ?? ins.premium ?? ins.amount ?? 0)), 0);
     }, [insuranceRecords, matchesProperty, startDate, endDate]);
 
     // Expenses: management fees (annualized from frequency)
     const mgmtCosts = useMemo(() => {
         return managementFees
             .filter(matchesProperty)
-            .filter(f => f.status === 'active')
+            .filter(f => f.status === 'paid' || f.status === 'active')
+            .filter(f => !f.nextDueDate || f.status === 'active' || isWithinInterval(parseISO(f.nextDueDate), { start: startDate, end: endDate }))
             .reduce((s, f) => {
                 const amt = Number(f.amount) || 0;
+                if (f.status === 'paid') return s + amt;
                 if (f.frequency === 'monthly') return s + amt * rangeMonths;
                 if (f.frequency === 'quarterly') return s + amt * Math.ceil(rangeMonths / 3);
                 if (f.frequency === 'yearly') return s + (rangeMonths >= 12 ? amt : amt * rangeMonths / 12);
                 return s + amt;
             }, 0);
-    }, [managementFees, matchesProperty, rangeMonths]);
+    }, [managementFees, matchesProperty, rangeMonths, startDate, endDate]);
 
     const totalExpenses = maintenanceCosts + taxCosts + insuranceCosts + mgmtCosts;
     const netProfit = totalIncome - totalExpenses;
@@ -104,14 +106,36 @@ export default function CashFlow() {
                 .filter(r => r.status === 'paid' && r.month === monthStr)
                 .reduce((s, r) => s + (r.amountPaid || 0), 0);
 
-            const expenses = maintenanceRecords
+            const maintenance = maintenanceRecords
                 .filter(matchesProperty)
                 .filter(m => m.cost > 0 && m.reportedDate && format(parseISO(m.reportedDate), 'yyyy-MM') === monthStr)
                 .reduce((s, m) => s + (m.cost || 0), 0);
 
+            const tax = taxRecords
+                .filter(matchesProperty)
+                .filter(t => t.status === 'paid' && t.amount && t.dueDate && format(parseISO(t.dueDate), 'yyyy-MM') === monthStr)
+                .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+
+            const utilities = utilityRecords
+                .filter(matchesProperty)
+                .filter(u => (u.status === 'paid' || !u.status) && u.date && format(parseISO(u.date), 'yyyy-MM') === monthStr)
+                .reduce((s, u) => s + (Number(u.amount) || 0), 0);
+
+            const insurance = insuranceRecords
+                .filter(matchesProperty)
+                .filter(ins => ins.startDate && format(parseISO(ins.startDate), 'yyyy-MM') === monthStr)
+                .reduce((s, ins) => s + (Number(ins.premiumAmount ?? ins.premium ?? ins.amount ?? 0)), 0);
+
+            const management = managementFees
+                .filter(matchesProperty)
+                .filter(f => (f.status === 'paid' || !f.status) && f.nextDueDate && format(parseISO(f.nextDueDate), 'yyyy-MM') === monthStr)
+                .reduce((s, f) => s + (Number(f.amount) || 0), 0);
+
+            const expenses = maintenance + tax + utilities + insurance + management;
+
             return { month: format(month, 'MMM'), income, expenses };
         });
-    }, [months, rentRecords, maintenanceRecords, matchesProperty]);
+    }, [months, rentRecords, taxRecords, utilityRecords, insuranceRecords, maintenanceRecords, managementFees, matchesProperty]);
 
     const maxBar = Math.max(...monthlyData.map(d => Math.max(d.income, d.expenses)), 1);
 

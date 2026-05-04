@@ -18,7 +18,7 @@ export default function Dashboard() {
         properties, filteredData, alerts, rentRecords,
         taxRecords, utilityRecords, insuranceRecords, managementFees, maintenanceRecords
     } = useApp();
-    const { tenants, rentRecords: filteredRent, maintenanceRecords: filteredMaintenance } = filteredData;
+    const { rentRecords: filteredRent, maintenanceRecords: filteredMaintenance } = filteredData;
 
     // --- Stats ---
     const totalProperties = properties.length;
@@ -38,7 +38,7 @@ export default function Dashboard() {
         const categories = [
             { key: 'tax', label: 'Taxes', icon: Receipt, color: '#f87171', records: taxRecords.filter(r => r.status === 'paid'), getAmount: r => Number(r.amount) || 0 },
             { key: 'utility', label: 'Utilities', icon: Droplets, color: '#60a5fa', records: utilityRecords.filter(r => r.status === 'paid' || !r.status), getAmount: r => Number(r.amount) || 0 },
-            { key: 'insurance', label: 'Insurance', icon: Shield, color: '#34d399', records: insuranceRecords, getAmount: r => Number(r.premium) || 0 },
+            { key: 'insurance', label: 'Insurance', icon: Shield, color: '#34d399', records: insuranceRecords, getAmount: r => Number(r.premiumAmount ?? r.premium ?? r.amount ?? 0) },
             { key: 'mgmt', label: 'Mgmt Fees', icon: Landmark, color: '#666666', records: managementFees.filter(r => r.status === 'paid' || !r.status), getAmount: r => Number(r.amount) || 0 },
             { key: 'maintenance', label: 'Maintenance', icon: Wrench, color: '#fbbf24', records: maintenanceRecords.filter(r => r.status === 'closed' || r.status === 'resolved'), getAmount: r => Number(r.cost) || 0 },
         ];
@@ -76,13 +76,14 @@ export default function Dashboard() {
             const expenseForMonth = [
                 ...taxRecords.filter(r => r.status === 'paid' && (r.dueDate || '').startsWith(month)),
                 ...utilityRecords.filter(r => (r.status === 'paid' || !r.status) && (r.date || '').startsWith(month)),
+                ...insuranceRecords.filter(r => (r.startDate || '').startsWith(month)),
                 ...managementFees.filter(r => (r.status === 'paid' || !r.status) && (r.nextDueDate || '').startsWith(month)),
                 ...maintenanceRecords.filter(r => (r.status === 'closed' || r.status === 'resolved') && (r.reportedDate || '').startsWith(month)),
-            ].reduce((sum, r) => sum + (Number(r.amount) || Number(r.cost) || 0), 0);
+            ].reduce((sum, r) => sum + (Number(r.amount) || Number(r.cost) || Number(r.premiumAmount) || Number(r.premium) || 0), 0);
 
             return { month, income, expense: expenseForMonth, net: income - expenseForMonth };
         });
-    }, [rentRecords, taxRecords, utilityRecords, managementFees, maintenanceRecords]);
+    }, [rentRecords, taxRecords, utilityRecords, insuranceRecords, managementFees, maintenanceRecords]);
 
     const chartMax = Math.max(...monthlyTrend.map(m => Math.max(m.income, m.expense)), 1);
 
@@ -136,7 +137,7 @@ export default function Dashboard() {
         const items = [];
         taxRecords.filter(r => r.status === 'paid').forEach(r => items.push({ id: `tax-${r.id}`, category: 'Tax', date: r.dueDate, amount: r.amount, desc: r.type }));
         utilityRecords.filter(r => r.status === 'paid' || !r.status).forEach(r => items.push({ id: `util-${r.id}`, category: 'Utility', date: r.date, amount: r.amount, desc: r.type }));
-        insuranceRecords.forEach(r => items.push({ id: `ins-${r.id}`, category: 'Insurance', date: r.startDate, amount: r.premium, desc: r.provider }));
+        insuranceRecords.forEach(r => items.push({ id: `ins-${r.id}`, category: 'Insurance', date: r.startDate, amount: r.premiumAmount ?? r.premium ?? r.amount, desc: r.provider || r.insuranceType }));
         managementFees.filter(r => r.status === 'paid' || !r.status).forEach(r => items.push({ id: `mgmt-${r.id}`, category: 'Mgmt Fee', date: r.nextDueDate, amount: r.amount, desc: 'Management Fee' }));
         maintenanceRecords.filter(r => r.status === 'closed' || r.status === 'resolved').forEach(r => items.push({ id: `maint-${r.id}`, category: 'Maintenance', date: r.reportedDate, amount: r.cost, desc: r.description }));
         return items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
