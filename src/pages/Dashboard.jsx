@@ -15,10 +15,14 @@ export default function Dashboard() {
     const [showExpensesModal, setShowExpensesModal] = useState(false);
 
     const {
-        properties, filteredData, alerts, rentRecords,
-        taxRecords, utilityRecords, insuranceRecords, managementFees, maintenanceRecords
+        properties, filteredData, alerts
     } = useApp();
-    const { rentRecords: filteredRent, maintenanceRecords: filteredMaintenance } = filteredData;
+    const {
+        rentRecords, taxRecords, utilityRecords, insuranceRecords,
+        managementFees, maintenanceRecords
+    } = filteredData;
+    const filteredRent = rentRecords;
+    const filteredMaintenance = maintenanceRecords;
 
     // --- Stats ---
     const totalProperties = properties.length;

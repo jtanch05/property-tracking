@@ -19,6 +19,19 @@ const COLLECTION_KEYS = [
     'vendors', 'managementFees', 'payouts', 'deposits'
 ];
 
+const PROPERTY_SCOPED_KEYS = [
+    'tenants',
+    'agreements',
+    'rentRecords',
+    'taxRecords',
+    'utilityRecords',
+    'insuranceRecords',
+    'maintenanceRecords',
+    'managementFees',
+    'payouts',
+    'deposits',
+];
+
 export function AppProvider({ children }) {
     const { user } = useAuth();
     const [migrated, setMigrated] = useState(false);
@@ -182,6 +195,64 @@ export function AppProvider({ children }) {
         properties,
     }), [agreements, taxRecords, insuranceRecords, maintenanceRecords, rentRecords, managementFees, properties]);
 
+    const propertyScopedStores = useMemo(() => ({
+        tenants: tenantsStore,
+        agreements: agreementsStore,
+        rentRecords: rentRecordsStore,
+        taxRecords: taxRecordsStore,
+        utilityRecords: utilityRecordsStore,
+        insuranceRecords: insuranceRecordsStore,
+        maintenanceRecords: maintenanceRecordsStore,
+        managementFees: managementFeesStore,
+        payouts: payoutsStore,
+        deposits: depositsStore,
+    }), [
+        tenantsStore,
+        agreementsStore,
+        rentRecordsStore,
+        taxRecordsStore,
+        utilityRecordsStore,
+        insuranceRecordsStore,
+        maintenanceRecordsStore,
+        managementFeesStore,
+        payoutsStore,
+        depositsStore,
+    ]);
+
+    const deletePropertyCascade = useCallback(async (propertyId) => {
+        if (!propertyId) return;
+
+        const relatedDeletes = PROPERTY_SCOPED_KEYS.flatMap(key =>
+            propertyScopedStores[key].data
+                .filter(item => item.propertyId === propertyId)
+                .map(item => propertyScopedStores[key].deleteItem(item.id))
+        );
+
+        await Promise.all(relatedDeletes);
+        await propertiesStore.deleteItem(propertyId);
+
+        if (settings.selectedPropertyId === propertyId) {
+            await setSettings(prev => ({ ...prev, selectedPropertyId: null }));
+        }
+    }, [propertiesStore, propertyScopedStores, settings.selectedPropertyId, setSettings]);
+
+    useEffect(() => {
+        if (dataLoading || migrating || !user) return;
+
+        const validPropertyIds = new Set(properties.map(property => property.id));
+        const orphanDeletes = PROPERTY_SCOPED_KEYS.flatMap(key =>
+            propertyScopedStores[key].data
+                .filter(item => item.propertyId && !validPropertyIds.has(item.propertyId))
+                .map(item => propertyScopedStores[key].deleteItem(item.id))
+        );
+
+        if (orphanDeletes.length > 0) {
+            Promise.all(orphanDeletes).catch(error => {
+                console.error('Failed to delete orphaned property records:', error);
+            });
+        }
+    }, [dataLoading, migrating, user, properties, propertyScopedStores]);
+
     // --- Setter wrappers that match the old useLocalStorage interface ---
     // These allow pages to call setProperties(prev => [...prev, newItem]) etc.
     const createLegacySetter = useCallback(() => {
@@ -235,7 +306,7 @@ export function AppProvider({ children }) {
         // CRUD helpers
         addProperty: propertiesStore.addItem,
         updateProperty: propertiesStore.updateItem,
-        deleteProperty: propertiesStore.deleteItem,
+        deleteProperty: deletePropertyCascade,
 
         addTenant: tenantsStore.addItem,
         updateTenant: tenantsStore.updateItem,

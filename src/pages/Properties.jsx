@@ -66,9 +66,9 @@ export default function Properties() {
         setEditingId(null);
     }
 
-    function handleDelete() {
+    async function handleDelete() {
         if (deleteId) {
-            deleteProperty(deleteId);
+            await deleteProperty(deleteId);
             setDeleteId(null);
         }
     }
@@ -147,7 +147,7 @@ export default function Properties() {
                 onClose={() => setDeleteId(null)}
                 onConfirm={handleDelete}
                 title="Delete Property"
-                message="Are you sure you want to delete this property? All associated records (tenants, rent, taxes, etc.) will remain but won't be linked."
+                message="Are you sure you want to delete this property? All associated tenants, agreements, rent, expenses, maintenance, payouts, and deposits will also be permanently deleted."
             />
         </div>
     );
